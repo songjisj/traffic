@@ -164,10 +164,8 @@ def getBufferImage():
     canvas = pylab.get_current_fig_manager().canvas
     canvas.draw()
     pilImage = PIL.Image.fromstring("RGB", canvas.get_width_height(), canvas.tostring_rgb())
-    pilImage.save(buffer, "PNG")
     pilImage.save("traffic/static/traffic/plot.png", "PNG")
-    pylab.close()   
-    return buffer.getvalue();
+    pylab.close();
     
 def signalState(sgStateCode):   
     green_state_list = ["0","1","3","4","5","6","7","8",":"]

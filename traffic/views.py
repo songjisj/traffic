@@ -27,7 +27,7 @@ def questions(request):
 
 def index(request):
     rows = rowNumber()
-    green_example = get_green_time("'TRE303'", "",  'A',"'2015-07-08 13:00:24+03'", "'2015-07-08 14:00:24+03'")    
+    get_green_time("'TRE303'", "",  'A',"'2015-07-08 13:00:24+03'", "'2015-07-08 14:00:24+03'")    
     try:
         rows = request.POST['choice']
     except (KeyError):
