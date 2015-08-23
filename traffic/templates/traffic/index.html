@@ -1,0 +1,28 @@
+<html>
+    <p>Hi there!</p>
+	{% for trafficData in trafficDataList %}
+    <div>
+		<p>Time: {{ trafficData.tt }}</p>
+        <p>Location: {{ trafficData.fk_cid }}</p>
+		<p>GRINT: {{ trafficData.grint }}</p>
+		<p>row_id: {{ trafficData.row_id }}</p>
+    </div>
+	{% endfor %}
+    <p>It works!</p>
+	
+	
+    <h1>New post</h1>
+    <form method="POST" action="{% url 'traffic:index'%}">{% csrf_token %}
+		<select name = "choice">
+		<option value="1">1 raw</option>
+		<option value="2">2 raw</option>
+		<option value="3">3 raw</option>
+		<option value="4">4 raw</option>
+		</select>
+		<input type="submit" value="select" />
+    </form>
+	
+    {% load staticfiles %}
+    <img src="{% static "traffic/plot.png" %}">
+
+</html>
