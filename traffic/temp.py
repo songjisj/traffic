@@ -11,6 +11,7 @@ import PIL
 import PIL.Image
 import StringIO
 from django.conf import settings
+import ConfigParser
 
 GREEN = "GREEN"
 AMBER = "AMBER"
@@ -18,7 +19,12 @@ RED = "RED"
 UNKNOWN = "UNKNOWN"
 
 def rowNumber():
-    conn_string = "host='localhost' dbname='Traffic' user='songji' password='sVYP4f' port='5432'"
+    
+    #read configuration file
+    config = ConfigParser.RawConfigParser()
+    config.read('config.cfg')
+    
+    conn_string = config.get('Section1','conn_string') 
     conn = psycopg2.connect(conn_string)
     cursor = conn.cursor('cursor_unique_name', cursor_factory = psycopg2.extras.DictCursor)
     query = "SELECT fk_cid from controller_config_det"
@@ -138,8 +144,11 @@ def get_sg_status(location_name,conn_string,sg_name,time1,time2):
     return sg_status_sorted
 
 def get_green_time(location_name, conn_string,sg_name,time1,time2):
+    #read configuration file
+    config = ConfigParser.RawConfigParser()
+    config.read('config.cfg')
     
-    conn_string = "host='localhost' dbname='Traffic' user='songji' password='sVYP4f' port='5432'"    
+    conn_string = config.get('Section1','conn_string')  
     sg_status= get_sg_status(location_name, conn_string, sg_name, time1, time2)
     green_on = False
     minimum_green_list = []

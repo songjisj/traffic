@@ -5,7 +5,7 @@
 ##################################################################
 [project attributes]
 debug.launch-configs = (1,
-                        {'launch-hS3SfQr9DQDEvy1c': ({},
+                        {'launch-VObWplGN7IqnOc5N': ({},
         {'buildcmd': ('project',
                       ('',
                        '')),
@@ -22,15 +22,15 @@ debug.launch-configs = (1,
          'rundir': ('project',
                     '')})})
 proj.debug-sub-processes = True
-proj.directory-list = [{'dirloc': loc('..'),
+proj.directory-list = [{'dirloc': loc('.'),
                         'excludes': (),
                         'filter': '*',
                         'include_hidden': False,
                         'recursive': True,
                         'watch_for_changes': True}]
 proj.file-type = 'shared'
-proj.launch-config = {loc('../manage.py'): ('custom',
+proj.launch-config = {loc('manage.py'): ('custom',
         (u'',
-         'launch-hS3SfQr9DQDEvy1c'))}
-proj.main-file = loc('../manage.py')
-testing.test-framework = {loc('../manage.py'): ':internal djangotest'}
+         'launch-VObWplGN7IqnOc5N'))}
+proj.main-file = loc('manage.py')
+testing.test-framework = {loc('manage.py'): ':internal djangotest'}
