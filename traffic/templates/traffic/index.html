@@ -3,8 +3,8 @@
 	{% for trafficData in trafficDataList %}
     <div>
 		<p>Time: {{ trafficData.tt }}</p>
-        <p>Location: {{ trafficData.fk_cid }}</p>
-		<p>GRINT: {{ trafficData.grint }}</p>
+                <p>Location: {{ trafficData.fk_cid }}</p>
+	  	<p>GRINT: {{ trafficData.grint }}</p>
 		<p>row_id: {{ trafficData.row_id }}</p>
     </div>
 	{% endfor %}
@@ -19,10 +19,53 @@
 		<option value="3">3 raw</option>
 		<option value="4">4 raw</option>
 		</select>
-		<input type="submit" value="select" />
+		<input type="submit" value="select" /> 
+		
+		<label for="location">Intersection </label>
+		<select name="location">
+		{% for locationName in locationNameList %}
+		    <option value= {{locationName}}> {{locationName}} </option> 
+		{% endfor %}
+		</select> 
+		
+		
+		
+		<label for="signalGroup">signalGroup</label>
+		<select name="signalGroup">
+		{% for signalGroup in sgNameList %}
+		    <option value = {{signalGroup}}> {{signalGroup}} </option>
+		{% endfor %}
+		</select>
+		
+		<p>sgNameList:{{sgNameList}}</p> 
+		
+		<label for="detector">detector</label>
+		<select name ="detector">
+		{% for detector in detecorList %}
+		    <option value = {{detector}}>{{detector}}</option>
+		{% endfor %}
+		</select>
+		
+		<label for="performance">Performance measures </label>
+		<select name ="performance">
+		<option value="greenDuration">greenDuration</option>
+		</select>
+		<input type="submit" value="select">
+		
+		
+		
+		
+		
+		{#select datatime #}
+		<p> <label> Start datetime </label>
+		<input type="datetime-local" name="starttime"> </p>
+		
+		<p><label> End datetime </label>
+		<input type="datetime-local" name="endtime"></p>
+		
+	    
     </form>
-	
-    {% load staticfiles %}
-    <img src="{% static "traffic/plot.png" %}">
+    
+
 
 </html>

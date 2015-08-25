@@ -5,9 +5,11 @@ from pylab import *
 import PIL
 import PIL.Image
 import StringIO
-from .models import TfRaw
-from temp import rowNumber
-from temp import get_green_time
+from .models import TfRaw,Controller,ControllerConfigDet,ControllerConfigSg
+from analysis import rowNumber
+from analysis import get_green_time, get_sg_config_in_one, get_det_config_in_one
+import time
+from .forms import ControlForm
 
 # Create your views here.
 def home(request):
@@ -27,15 +29,52 @@ def questions(request):
 
 def index(request):
     rows = rowNumber()
-    get_green_time("'TRE303'", "",  'A',"'2015-07-08 13:00:24+03'", "'2015-07-08 14:00:24+03'")    
+    selectedLocation =""
+    sgNameList = []
+    selectedSgName = ""
+   
+    get_green_time("'TRE303'", "",  'A',"'2015-07-08 13:00:24+03'", "'2015-07-08 14:00:24+03'") 
+    
+    
     try:
         rows = request.POST['choice']
     except (KeyError):
         rows = 2
+        
+    locationNameList = [] 
     trafficDataList = TfRaw.objects.order_by('row_id')[:rows]
-    context = {'trafficDataList': trafficDataList}
+    locationObjectList = Controller.objects.all() 
+    for location in locationObjectList:
+        locationNameList.append(location.cname)
+    try:
+        selectedLocation = request.POST['location']   
+    except(KeyError):
+        selectedLocation = "TRE303"
+
+    selectedSgName =request.POST['signalGroup']   
+    sgNameDict = get_sg_config_in_one("'"+selectedLocation+"'","")  
+    detectorList = get_det_config_in_one("'"+selectedLocation+"'", selectedSgName, "") 
+    
+    for index in sgNameDict:
+        sgNameList.append(sgNameDict[index])
+    
+    
+    context = {'trafficDataList': trafficDataList,
+               'locationNameList':locationNameList, 
+               'selectedLocation':selectedLocation ,
+               'sgNameList':sgNameList,
+               'detectorList': detectorList}
     #return HttpResponse(green_example, content_type="image/png")
+    
+ 
     return render(request, 'traffic/index.html', context)
+
+def data(request):
+    control_form = ControlForm(request.POST)
+    if control_form.is_valid():
+        
+        return render(request, 'data.html',{'control_form':control_form}) 
+        
 
 def plot(request):
     x = [1,2,3,4]
