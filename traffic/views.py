@@ -58,19 +58,18 @@ def index(request):
     try:
         selectedSgName =request.POST['signalGroup']
     except(KeyError):
-        selectedSgName = ""
-    sgNameDict = get_sg_config_in_one("'"+selectedLocation+"'","")  
-    detectorList = get_det_config_in_one("'"+selectedLocation+"'", selectedSgName, "") 
+        selectedSgName = sgNameDict.values()[0]
+        
+    sgNameList = sgNameDict.values()
+        
+    detectorDict = get_det_config_in_one("'"+selectedLocation+"'", selectedSgName, "") 
+    detectorList = detectorDict.values()    
     
-    for index in sgNameDict:
-        sgNameList.append(sgNameDict[index])
-    
-    
-    context = {'trafficDataList': trafficDataList,
+    context = {'trafficDataList':trafficDataList,
                'locationNameList':locationNameList, 
-               'selectedLocation':selectedLocation ,
-               'sgNameList':sgNameList,
-               'detectorList': detectorList}
+               'selectedLocation':selectedLocation,
+               'detectorList':detectorList,
+               'sgNameList':sgNameList}
     #return HttpResponse(green_example, content_type="image/png")
     
  

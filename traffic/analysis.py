@@ -107,16 +107,18 @@ def get_det_config_in_one(location_name,sg_name,conn_string):
     conn = connect_db(conn_string)
     location_id = get_location_id(location_name, conn_string)
     sg_dict = get_sg_config_in_one(location_name, conn_string)
-    for sg in sg_dict.values():
-        if sg == sg_name:
-            sg_id = sg_dict[sg]
+    
+    sg_id = ""
+    for sg_key in sg_dict.keys():
+        if sg_dict[sg_key] == sg_name:
+            sg_id = sg_key
             
     cursor = conn.cursor('cursor_unique_name', cursor_factory = psycopg2.extras.DictCursor)
-    cursor.execute("SELECT idx, sgidx,name FROM controller_config_det WHERE fk_cid =" + str(location_id) +"AND sgidx =" +str(sg_id))
+    cursor.execute("SELECT idx,name FROM controller_config_det WHERE fk_cid = '" + str(location_id) +"' AND sgidx ='" +str(sg_id)+"'")
     rows = cursor.fetchall()
-    detectors = []
+    detectors = {}
     for i in range(len(rows)):
-        detectors.append(rows[i])
+        detectors[rows[i][0]] = rows[i][1]
         
     disconnect_db(conn)
     return detectors
