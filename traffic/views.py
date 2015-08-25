@@ -69,7 +69,9 @@ def index(request):
                'locationNameList':locationNameList, 
                'selectedLocation':selectedLocation,
                'detectorList':detectorList,
-               'sgNameList':sgNameList}
+               'sgNameList':sgNameList,
+               'selectedLocation':selectedLocation,
+               'selectedSgName':selectedSgName}
     #return HttpResponse(green_example, content_type="image/png")
     
  

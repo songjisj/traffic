@@ -12,7 +12,15 @@
 	
 	
     <h1>New post</h1>
-    <form method="POST" action="{% url 'traffic:index'%}">{% csrf_token %}
+
+    <script>
+    function intersectionChanged() {
+	var x = document.getElementById("intersectionSelectionId").value;
+	document.getElementById("locationFormId").submit();
+    }
+    </script>    
+    
+    <form id="locationFormId" method="POST" action="{% url 'traffic:index'%}">{% csrf_token %}
 		<select name = "choice">
 		<option value="1">1 raw</option>
 		<option value="2">2 raw</option>
@@ -22,9 +30,13 @@
 		<input type="submit" value="select" /> 
 		
 		<label for="location">Intersection </label>
-		<select name="location">
+		<select id="intersectionSelectionId" name="location" onchange="intersectionChanged()">
 		{% for locationName in locationNameList %}
-		    <option value= {{locationName}}> {{locationName}} </option> 
+		    {% if locationName == selectedLocation %}
+			<option value= {{locationName}} selected="selected"> {{locationName}} </option> 
+		    {% else %}
+			<option value= {{locationName}}> {{locationName}} </option> 
+		    {% endif %}
 		{% endfor %}
 		</select> 
 		
