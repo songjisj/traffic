@@ -29,29 +29,36 @@ def questions(request):
 
 def index(request):
     rows = rowNumber()
-    selectedLocation =""
+    selectedLocation = ""
     sgNameList = []
     selectedSgName = ""
-   
-    get_green_time("'TRE303'", "",  'A',"'2015-07-08 13:00:24+03'", "'2015-07-08 14:00:24+03'") 
+    
+    #get_green_time("'TRE303'", "",  'A',"'2015-07-08 13:00:24+03'", "'2015-07-08 14:00:24+03'") 
     
     
     try:
         rows = request.POST['choice']
     except (KeyError):
         rows = 2
-        
+    
     locationNameList = [] 
     trafficDataList = TfRaw.objects.order_by('row_id')[:rows]
+    
     locationObjectList = Controller.objects.all() 
     for location in locationObjectList:
         locationNameList.append(location.cname)
+        
     try:
         selectedLocation = request.POST['location']   
     except(KeyError):
         selectedLocation = "TRE303"
-
-    selectedSgName =request.POST['signalGroup']   
+        
+    sgNameDict = get_sg_config_in_one("'"+selectedLocation+"'","")  
+    
+    try:
+        selectedSgName =request.POST['signalGroup']
+    except(KeyError):
+        selectedSgName = ""
     sgNameDict = get_sg_config_in_one("'"+selectedLocation+"'","")  
     detectorList = get_det_config_in_one("'"+selectedLocation+"'", selectedSgName, "") 
     
