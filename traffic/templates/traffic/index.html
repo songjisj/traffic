@@ -20,8 +20,33 @@
     }
     </script>    
     
+    
+    
+    {% load bootstrap3 %}
+    {% bootstrap_css %}
+    {% bootstrap_javascript %}
+    
+    {% block title %}django-bootstrap3{% endblock %}
+    
+    {% block content %}
+    
+    <form action="/url/to/submit/" method="post" class="form">
+    {% csrf_token %}
+    {% bootstrap_form form %}
+    {% buttons %}
+	<button type="submit" class="btn btn-primary">
+	    {% bootstrap_icon "star" %} Submit
+	</button>
+    {% endbuttons %}
+    </form>
+    {% endblock %}
+    
+        
+    <div class="row">
+  <div class="col-sm-4">
+    
     <form id="locationFormId" method="POST" action="{% url 'traffic:index'%}">{% csrf_token %}
-		<select name = "choice">
+		<select name = "choice" class="form-control">
 		<option value="1">1 raw</option>
 		<option value="2">2 raw</option>
 		<option value="3">3 raw</option>
@@ -30,7 +55,7 @@
 		<input type="submit" value="select" /> 
 		
 		<label for="location">Intersection </label>
-		<select id="intersectionSelectionId" name="location" onchange="intersectionChanged()">
+		<select id="intersectionSelectionId" name="location" onchange="intersectionChanged()" class="form-control">
 		{% for locationName in locationNameList %}
 		    {% if locationName == selectedLocation %}
 			<option value= {{locationName}} selected="selected"> {{locationName}} </option> 
@@ -43,21 +68,21 @@
 		
 		
 		<label for="signalGroup">signalGroup</label>
-		<select name="signalGroup">
+		<select name="signalGroup" class="form-control">
 		{% for signalGroup in sgNameList %}
 		    <option value = {{signalGroup}}> {{signalGroup}} </option>
 		{% endfor %}
 		</select>
 		
 		<label for="detector">detector</label>
-		<select name ="detector">
+		<select name ="detector" class="form-control">
 		{% for detector in detectorList %}
 		    <option value = {{detector}}>{{detector}}</option>
 		{% endfor %}
 		</select>
 		
 		<label for="performance">Performance measures </label>
-		<select name ="performance">
+		<select name ="performance" class="form-control">
 		<option value="greenDuration">greenDuration</option>
 		</select>
 		<input type="submit" value="select">
@@ -75,7 +100,8 @@
 		
 	    
     </form>
-    
-
+    </div>
+  <div class="col-sm-8">.col-sm-8</div>
+    </div>
 
 </html>

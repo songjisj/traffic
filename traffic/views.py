@@ -10,6 +10,7 @@ from analysis import rowNumber
 from analysis import get_green_time, get_sg_config_in_one, get_det_config_in_one
 import time
 from .forms import ControlForm
+from .forms import ContactForm
 
 # Create your views here.
 def home(request):
@@ -64,14 +65,15 @@ def index(request):
         
     detectorDict = get_det_config_in_one("'"+selectedLocation+"'", selectedSgName, "") 
     detectorList = detectorDict.values()    
-    
+    form = ContactForm(request.POST)
     context = {'trafficDataList':trafficDataList,
                'locationNameList':locationNameList, 
                'selectedLocation':selectedLocation,
                'detectorList':detectorList,
                'sgNameList':sgNameList,
                'selectedLocation':selectedLocation,
-               'selectedSgName':selectedSgName}
+               'selectedSgName':selectedSgName,
+               'form':form}
     #return HttpResponse(green_example, content_type="image/png")
     
  
