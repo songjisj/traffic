@@ -1,4 +1,26 @@
 <html>
+    
+    {% load bootstrap3 %}
+    {% bootstrap_css %}
+    {% bootstrap_javascript %}
+    
+    <script>
+	function intersectionChanged() {
+	    var x = document.getElementById("intersectionSelectionId").value;
+	    document.getElementById("locationFormId").submit();
+	}
+	</script>
+	<script>
+	function signalChanged() {
+	    var x = document.getElementById("signalGroupSelecteionId").value;
+	    document.getElementById("locationFormId").submit();
+	
+	}
+	
+	function alertEmptyList(){
+	    alert("")    
+	}
+    </script>
 
 {# Navigate bar and a header #}
 <nav id="myNavbar" class="navbar navbar-default navbar-inverse navbar-fixed-top" role="navigation">
@@ -30,75 +52,11 @@
     </div>
 </div>
 
-    <h1> Test </h1>
-    <p>Hi there!</p>
-	{% for trafficData in trafficDataList %}
-    <div class ="row">
-		<p>Time: {{ trafficData.tt }}</p>
-                <p>Location: {{ trafficData.fk_cid }}</p>
-	  	<p>GRINT: {{ trafficData.grint }}</p>
-		<p>row_id: {{ trafficData.row_id }}</p>
-    </div>
-	{% endfor %}
-    <p>It works!</p>
-	
-	
-    <h1>New post</h1>
-
-    <script>
-    function intersectionChanged() {
-	var x = document.getElementById("intersectionSelectionId").value;
-	document.getElementById("locationFormId").submit();
-    }
-    </script>    
-    
-    <script>
-    function signalChanged() {
-        var x = document.getElementById("signalGroupSelecteionId").value;
-	document.getElementById("locationFormId").submit();
-    
-    }
-    </script>
-    
-    <script>
-    function alertEmptyList(){
-        alert("")    
-    }
-    </script>
-    
-    
-    {% load bootstrap3 %}
-    {% bootstrap_css %}
-    {% bootstrap_javascript %}
-    
-    {% block title %}django-bootstrap3{% endblock %}
-    
-    {% block content %}
-    
-    <!--<form action="/url/to/submit/" method="post" class="form">-->
-    <!--{% csrf_token %}-->
-    <!--{% bootstrap_form form %}-->
-    <!--{% buttons %}-->
-	<!--<button type="submit" class="btn btn-primary">-->
-	    <!--{% bootstrap_icon "star" %} Submit-->
-	<!--</button>-->
-    <!--{% endbuttons %}-->
-    <!--</form>-->
-    <!--{% endblock %}-->
-    
-        
     <div class="row">
     <div class="col-sm-3 " >
      
     <form id="locationFormId" method="POST" action="{% url 'traffic:index'%}">{% csrf_token %}
-		<select name = "choice" class="form-control">
-		<option value="1">1 raw</option>
-		<option value="2">2 raw</option>
-		<option value="3">3 raw</option>
-		<option value="4">4 raw</option>
-		</select>
-		<input type="submit" value="select" /> 
-		
+				
 		{# Select intersection #}
 		<p>
 		<label for="location">Intersection </label>
@@ -117,30 +75,36 @@
 		{% if not sgNameList  %}
 		    <p> Sorry, there is no valid signalGroup configuration data in the selected intersection. Please choose other intersections. </p>
 		{% else %}
-		<p>
-		<label for="signalGroup">signalGroup</label>
-		<select id="signalGroupSelectionId" name="signalGroup" onchange="signalChanged()" class="form-control">
-
-		
-		    {% for signalGroup in sgNameList %}
-		        {% if signalGroup == selectedSgName %}
-		            <option value = {{signalGroup}} selected="selected">{{signalGroup}} </option>
-		        {% else %}
-		            <option value = {{signalGroup}}> {{signalGroup}} </option>
-		        {% endif %}
-		    {% endfor %}
+		    <p>
+		    <label for="signalGroup">signalGroup</label>
+		    
+		    <select id="signalGroupSelectionId" name="signalGroup" onchange="signalChanged()" class="form-control">
+			{% for signalGroup in sgNameList %}
+			    {% if signalGroup == selectedSgName %}
+				<option value = {{signalGroup}} selected="selected">{{signalGroup}} </option>
+			    {% else %}
+				<option value = {{signalGroup}}> {{signalGroup}} </option>
+			    {% endif %}
+			{% endfor %}
+		    </select>
 		{% endif %}
-		</select>
 		</p>
 		
-		<p>
-		<label for="detector">detector</label>
-		<select name ="detector" class="form-control">
-		{% for detector in detectorList %}
-		    <option value = {{detector}}>{{detector}}</option>
-		{% endfor %}
-		</select>
-		</p>
+		{# Selct detector #}
+		{% if sgNameList  %}
+		    <p>
+		    {% if not detectorList  %}
+			<p> Sorry, there is no valid detector configuration data in the selected signal group. Please choose other signal group. </p>
+		    {% else %}
+			<label for="detector">detector</label>
+			<select name ="detector" class="form-control">
+			{% for detector in detectorList %}
+			    <option value = {{detector}}>{{detector}}</option>
+			{% endfor %}
+			</select>
+		    {% endif %}
+		    </p>
+		{% endif %}
 		
 		<label for="performance">Performance measures </label>
 		<select name ="performance" class="form-control">

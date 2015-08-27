@@ -29,63 +29,54 @@ def questions(request):
     return HttpResponse(output)
 
 def index(request):
-    rows = rowNumber()
-    selectedLocation = ""
-    sgNameList = []
-    selectedSgName = ""
+    locationNameList = []
+    selectedLocation = ''
     
     #get_green_time("'TRE303'", "",  'A',"'2015-07-08 13:00:24+03'", "'2015-07-08 14:00:24+03'") 
     
-    
-    try:
-        rows = request.POST['choice']
-    except (KeyError):
-        rows = 2
-    
-    locationNameList = [] 
-    trafficDataList = TfRaw.objects.order_by('row_id')[:rows]
-    
+    #Select location
     locationObjectList = Controller.objects.all() 
     for location in locationObjectList:
         locationNameList.append(location.cname)
-    
-    #Select location    
+      
     try:
         selectedLocation = request.POST['location']   
     except(KeyError):
         selectedLocation = "TRE303"
         
-    sgNameDict = get_sg_config_in_one("'"+selectedLocation+"'","")  
-    
     #Select signalGroup
+    if selectedLocation:
+        sgNameDict = get_sg_config_in_one("'"+selectedLocation+"'","")  
+        sgNameList = sgNameDict.values()
+    
     try:
         selectedSgName =request.POST['signalGroup']
     except(KeyError):
-        selectedSgName = sgNameDict.values()[1]
-        
-    sgNameList = sgNameDict.values()
+        if sgNameList :
+            selectedSgName = sgNameList[0]
     
     #Select detector
-    detectorDict = get_det_config_in_one("'"+selectedLocation+"'", selectedSgName, "") 
-    detectorList = detectorDict.values() 
+    if selectedSgName and selectedLocation :
+        detectorDict = get_det_config_in_one("'"+selectedLocation+"'", selectedSgName, "") 
+        detectorList = detectorDict.values() 
     
-    try: selectedDetector = request.POST['detector']
+    try: 
+        selectedDetector = request.POST['detector']
     except(KeyError):
-        selectedDetector = detectorDict.values()[0]
+        if detectorList :
+            selectedDetector = detectorList[0]
         
-   
     form = ContactForm(request.POST)
-    context = {'trafficDataList':trafficDataList,
-               'locationNameList':locationNameList, 
-               'selectedLocation':selectedLocation,
-               'detectorList':detectorList,
+    
+    context = {'locationNameList':locationNameList, 
+               'selectedLocation':selectedLocation,               
                'sgNameList':sgNameList,
-               'selectedLocation':selectedLocation,
                'selectedSgName':selectedSgName,
+               'detectorList':detectorList,
+               'selectedDetector':selectedDetector,
                'form':form}
     #return HttpResponse(green_example, content_type="image/png")
-    
- 
+     
     return render(request, 'traffic/index.html', context)
 
 def data(request):
