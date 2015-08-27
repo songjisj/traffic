@@ -1,5 +1,20 @@
 <html>
-    
+
+    <head>
+	<meta charset="utf-8">
+	<link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
+	<script src="//code.jquery.com/jquery-1.10.2.js"></script>
+	<script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+	<link rel="stylesheet" href="/resources/demos/style.css">
+	<script>
+	$(function() {
+	  $( "#datepicker" ).datepicker({
+		dateFormat: "yy-mm-dd"
+	    });
+	});
+	</script>
+    </head>
+
     {% load bootstrap3 %}
     {% bootstrap_css %}
     {% bootstrap_javascript %}
@@ -19,113 +34,115 @@
 	}
     </script>
 
-{# Navigate bar and a header #}
-<nav id="myNavbar" class="navbar navbar-default navbar-inverse navbar-fixed-top" role="navigation">
-    <!-- Brand and toggle get grouped for better mobile display -->
-    <div class="container-fluid">
-	<div class="navbar-header">
-	    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbarCollapse">
-		<span class="sr-only">Toggle navigation</span>
-		<span class="icon-bar"></span>
-		<span class="icon-bar"></span>
-		<span class="icon-bar"></span>
-	    </button>
-	    <a class="navbar-brand" href="#">Imanalyst</a>
+    {# Navigate bar and a header #}
+    <nav id="myNavbar" class="navbar navbar-default navbar-inverse navbar-fixed-top" role="navigation">
+	<!-- Brand and toggle get grouped for better mobile display -->
+	<div class="container-fluid">
+	    <div class="navbar-header">
+		<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbarCollapse">
+		    <span class="sr-only">Toggle navigation</span>
+		    <span class="icon-bar"></span>
+		    <span class="icon-bar"></span>
+		    <span class="icon-bar"></span>
+		</button>
+		<a class="navbar-brand" href="#">Imanalyst</a>
+	    </div>
+	    <!-- Collect the nav links, forms, and other content for toggling -->
+	    <div class="collapse navbar-collapse" id="navbarCollapse">
+		<ul class="nav navbar-nav">
+		    <li class="active"><a href="http://www.tutorialrepublic.com" target="_blank">Instruction</a></li>
+		    <li><a href="http://www.tutorialrepublic.com/about-us.php" target="_blank">About</a></li>
+		    <li><a href="http://www.tutorialrepublic.com/contact-us.php" target="_blank">Contact</a></li>
+		</ul>
+	    </div>
 	</div>
-	<!-- Collect the nav links, forms, and other content for toggling -->
-	<div class="collapse navbar-collapse" id="navbarCollapse">
-	    <ul class="nav navbar-nav">
-		<li class="active"><a href="http://www.tutorialrepublic.com" target="_blank">Instruction</a></li>
-		<li><a href="http://www.tutorialrepublic.com/about-us.php" target="_blank">About</a></li>
-		<li><a href="http://www.tutorialrepublic.com/contact-us.php" target="_blank">Contact</a></li>
-	    </ul>
+    </nav>
+    
+    <div class="jumbotron">
+	<div class="container-fluid">
+	    <h1>Traffic Signal Analysis</h1>
 	</div>
     </div>
-</nav>
 
-<div class="jumbotron">
-    <div class="container-fluid">
-	<h1>Traffic Signal Analysis</h1>
-    </div>
-</div>
-
+    {# Menu #}
     <div class="row">
     <div class="col-sm-3 " >
      
     <form id="locationFormId" method="POST" action="{% url 'traffic:index'%}">{% csrf_token %}
-				
-		{# Select intersection #}
-		<p>
-		<label for="location">Intersection </label>
-		<select id="intersectionSelectionId" name="location" onchange="intersectionChanged()" class="form-control">
-		{% for locationName in locationNameList %}
-		    {% if locationName == selectedLocation %}
-			<option value= {{locationName}} selected="selected"> {{locationName}} </option> 
+    
+	<label for="performance">Performance measures </label>
+	<select name ="performance" class="form-control">
+	    <option value="greenDuration">greenDuration</option>
+	</select>
+			
+	{# Select intersection #}
+	<p>
+	<label for="location">Intersection </label>
+	<select id="intersectionSelectionId" name="location" onchange="intersectionChanged()" class="form-control">
+	{% for locationName in locationNameList %}
+	    {% if locationName == selectedLocation %}
+		<option value= {{locationName}} selected="selected"> {{locationName}} </option> 
+	    {% else %}
+		<option value= {{locationName}}> {{locationName}} </option> 
+	    {% endif %}
+	{% endfor %}
+	</select> 
+	</p>
+	
+	{# Selct signalGroup #}
+	{% if not sgNameList  %}
+	    <p> Sorry, there is no valid signalGroup configuration data in the selected intersection. Please choose other intersections. </p>
+	{% else %}
+	    <p>
+	    <label for="signalGroup">signalGroup</label>
+	    
+	    <select id="signalGroupSelectionId" name="signalGroup" onchange="signalChanged()" class="form-control">
+		{% for signalGroup in sgNameList %}
+		    {% if signalGroup == selectedSgName %}
+			<option value = {{signalGroup}} selected="selected">{{signalGroup}} </option>
 		    {% else %}
-			<option value= {{locationName}}> {{locationName}} </option> 
+			<option value = {{signalGroup}}> {{signalGroup}} </option>
 		    {% endif %}
 		{% endfor %}
-		</select> 
-		</p>
-		
-		{# Selct signalGroup #}
-		{% if not sgNameList  %}
-		    <p> Sorry, there is no valid signalGroup configuration data in the selected intersection. Please choose other intersections. </p>
-		{% else %}
-		    <p>
-		    <label for="signalGroup">signalGroup</label>
-		    
-		    <select id="signalGroupSelectionId" name="signalGroup" onchange="signalChanged()" class="form-control">
-			{% for signalGroup in sgNameList %}
-			    {% if signalGroup == selectedSgName %}
-				<option value = {{signalGroup}} selected="selected">{{signalGroup}} </option>
-			    {% else %}
-				<option value = {{signalGroup}}> {{signalGroup}} </option>
-			    {% endif %}
-			{% endfor %}
-		    </select>
-		{% endif %}
-		</p>
-		
-		{# Selct detector #}
-		{% if sgNameList  %}
-		    <p>
-		    {% if not detectorList  %}
-			<p> Sorry, there is no valid detector configuration data in the selected signal group. Please choose other signal group. </p>
-		    {% else %}
-			<label for="detector">detector</label>
-			<select name ="detector" class="form-control">
-			{% for detector in detectorList %}
-			    <option value = {{detector}}>{{detector}}</option>
-			{% endfor %}
-			</select>
-		    {% endif %}
-		    </p>
-		{% endif %}
-		
-		<label for="performance">Performance measures </label>
-		<select name ="performance" class="form-control">
-		<option value="greenDuration">greenDuration</option>
+	    </select>
+	{% endif %}
+	</p>
+	
+	{# Selct detector #}
+	{% if sgNameList  %}
+	    <p>
+	    {% if not detectorList  %}
+		<p> Sorry, there is no valid detector configuration data in the selected signal group. Please choose other signal group. </p>
+	    {% else %}
+		<label for="detector">detector</label>
+		<select name ="detector" class="form-control">
+		{% for detector in detectorList %}
+		    <option value = {{detector}}>{{detector}}</option>
+		{% endfor %}
 		</select>
-		<input type="submit" value="select">
-	        <button type="submit" class="btn btn-primary">
-	        {% bootstrap_icon "star" %} Submit
-                </button>
+	    {% endif %}
+	    </p>
+	{% endif %}
+	
+	{# submit button #}
+	<button type="submit" class="btn btn-primary">
+	{% bootstrap_icon "star" %} Submit
+	</button>
                 
-		
-		
-		
-		{#select datatime #}
-		<p> <label> Start datetime </label>
-		<input type="datetime-local" name="starttime"> </p>
-		
-		<p><label> End datetime </label>
-		<input type="datetime-local" name="endtime"></p>
-		
-	    
+	{#select datatime #}
+	<p> <label> Start datetime </label>
+	<input type="datetime-local" name="starttime"> </p>
+	
+	<p><label> End datetime </label>
+	<input type="datetime-local" name="endtime"></p>
+  
+	<p>Date: <input type="text" name="startdate" id="datepicker"></p>
+	
     </form>
     </div>
-  <div class="col-sm-8">.col-sm-8</div>
+    
+    {# Plot result #}
+    <div class="col-sm-8">.col-sm-8</div>
     </div>
 
 </html>
