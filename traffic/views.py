@@ -48,7 +48,8 @@ def index(request):
     locationObjectList = Controller.objects.all() 
     for location in locationObjectList:
         locationNameList.append(location.cname)
-        
+    
+    #Select location    
     try:
         selectedLocation = request.POST['location']   
     except(KeyError):
@@ -56,15 +57,23 @@ def index(request):
         
     sgNameDict = get_sg_config_in_one("'"+selectedLocation+"'","")  
     
+    #Select signalGroup
     try:
         selectedSgName =request.POST['signalGroup']
     except(KeyError):
-        selectedSgName = sgNameDict.values()[0]
+        selectedSgName = sgNameDict.values()[1]
         
     sgNameList = sgNameDict.values()
-        
+    
+    #Select detector
     detectorDict = get_det_config_in_one("'"+selectedLocation+"'", selectedSgName, "") 
-    detectorList = detectorDict.values()    
+    detectorList = detectorDict.values() 
+    
+    try: selectedDetector = request.POST['detector']
+    except(KeyError):
+        selectedDetector = detectorDict.values()[0]
+        
+   
     form = ContactForm(request.POST)
     context = {'trafficDataList':trafficDataList,
                'locationNameList':locationNameList, 

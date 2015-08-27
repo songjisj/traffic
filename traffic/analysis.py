@@ -98,7 +98,7 @@ def get_sg_config_in_one(location_name,conn_string):
     disconnect_db(conn)
     return signals
 
-#Function to get the configuration of detectors in the intersection whose name is provided 
+#Function to get the configuration of detectors in the intersection and the specified signalgroup whose name is provided 
 def get_det_config_in_one(location_name,sg_name,conn_string): 
     config = ConfigParser.RawConfigParser()
     config.read('config.cfg')
