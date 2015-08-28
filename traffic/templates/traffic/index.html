@@ -131,12 +131,17 @@
                 
 	{#select datatime #}
 	<p> <label> Start datetime </label>
-	<input type="datetime-local" name="starttime"> </p>
+	<input type="datetime-local" name="starttime" > </p>
+	
+	<p>HTML5 datetime-local format: {{startTimeString}}</p>	
+	<p>Converted format: {{ convertedTime }}</p>
 	
 	<p><label> End datetime </label>
 	<input type="datetime-local" name="endtime"></p>
   
 	<p>Date: <input type="text" name="startdate" id="datepicker"></p>
+	
+	
 	
     </form>
     </div>

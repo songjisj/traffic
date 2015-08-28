@@ -8,9 +8,13 @@ import StringIO
 from .models import TfRaw,Controller,ControllerConfigDet,ControllerConfigSg
 from analysis import rowNumber
 from analysis import get_green_time, get_sg_config_in_one, get_det_config_in_one
-import time
+
 from .forms import ControlForm
 from .forms import ContactForm
+import dateutil.parser
+from datetime import datetime
+#import iso8601
+
 
 # Create your views here.
 def home(request):
@@ -35,6 +39,7 @@ def index(request):
     selectedSgName = ""
     detectorList = []
     selectedDetector = ""
+    startTimeString =""
     
     try:
         startTime = request.POST['startdate']   
@@ -77,12 +82,19 @@ def index(request):
         
     form = ContactForm(request.POST)
     
+    startTimeString = request.POST['starttime'] 
+    convertedTime = datetime.strptime(startTimeString, '%Y-%m-%dT%H:%M')
+    #convertedTime = iso8601.parse_date(startTimeString)
+    
+    
     context = {'locationNameList':locationNameList, 
                'selectedLocation':selectedLocation,               
                'sgNameList':sgNameList,
                'selectedSgName':selectedSgName,
                'detectorList':detectorList,
                'selectedDetector':selectedDetector,
+               'startTimeString':startTimeString,
+               'convertedTime':convertedTime,
                'form':form}
     #return HttpResponse(green_example, content_type="image/png")
      
