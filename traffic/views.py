@@ -30,7 +30,16 @@ def questions(request):
 
 def index(request):
     locationNameList = []
-    selectedLocation = ''
+    selectedLocation = ""
+    sgNameList = []
+    selectedSgName = ""
+    detectorList = []
+    selectedDetector = ""
+    
+    try:
+        startTime = request.POST['startdate']   
+    except(KeyError):
+        startTime = "'2015-07-08 13:00:24+03'"   
     
     #get_green_time("'TRE303'", "",  'A',"'2015-07-08 13:00:24+03'", "'2015-07-08 14:00:24+03'") 
     
@@ -38,7 +47,7 @@ def index(request):
     locationObjectList = Controller.objects.all() 
     for location in locationObjectList:
         locationNameList.append(location.cname)
-      
+    
     try:
         selectedLocation = request.POST['location']   
     except(KeyError):
@@ -50,7 +59,7 @@ def index(request):
         sgNameList = sgNameDict.values()
     
     try:
-        selectedSgName =request.POST['signalGroup']
+        selectedSgName = request.POST['signalGroup']
     except(KeyError):
         if sgNameList :
             selectedSgName = sgNameList[0]
