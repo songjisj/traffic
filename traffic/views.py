@@ -45,9 +45,7 @@ def index(request):
         startTime = request.POST['startdate']   
     except(KeyError):
         startTime = "'2015-07-08 13:00:24+03'"   
-    
-    #get_green_time("'TRE303'", "",  'A',"'2015-07-08 13:00:24+03'", "'2015-07-08 14:00:24+03'") 
-    
+        
     #Select location
     locationObjectList = Controller.objects.all() 
     for location in locationObjectList:
@@ -81,11 +79,15 @@ def index(request):
             selectedDetector = detectorList[0]
         
     form = ContactForm(request.POST)
+        
+    startTimeString = request.POST.get('starttime',"")
+    endTimeString = request.POST.get('endtime',"")
+    timeZone = "+03"
     
-    startTimeString = request.POST['starttime'] 
-    convertedTime = datetime.strptime(startTimeString, '%Y-%m-%dT%H:%M')
-    #convertedTime = iso8601.parse_date(startTimeString)
-    
+    if startTimeString and endTimeString :
+        startTimeString = startTimeString + timeZone
+        endTimeString = endTimeString + timeZone 
+        get_green_time("'"+selectedLocation+"'", "",  selectedSgName,"'"+startTimeString+"'", "'"+endTimeString+"'")         
     
     context = {'locationNameList':locationNameList, 
                'selectedLocation':selectedLocation,               
@@ -94,7 +96,6 @@ def index(request):
                'detectorList':detectorList,
                'selectedDetector':selectedDetector,
                'startTimeString':startTimeString,
-               'convertedTime':convertedTime,
                'form':form}
     #return HttpResponse(green_example, content_type="image/png")
      
