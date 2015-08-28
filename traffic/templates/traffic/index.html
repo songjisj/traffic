@@ -63,9 +63,10 @@
 	    <h1>Traffic Signal Analysis</h1>
 	</div>
     </div>
-
+    
     {# Menu #}
     <div class="row">
+    <div class="col-sm-1 " ></div>
     <div class="col-sm-3 " >
      
     <form id="locationFormId" method="POST" action="{% url 'traffic:index'%}">{% csrf_token %}
@@ -123,28 +124,39 @@
 	    {% endif %}
 	    </p>
 	{% endif %}
+	                
+	{#select datatime #}
+	<br>
+	<p> <label> Start datetime </label>
+	{% if startTimeString %}
+	    <input type="datetime-local" name="starttime" value={{startTimeString}}> </p>
+	{% else %}
+	    <input type="datetime-local" name="starttime" value="2015-01-01T00:00:00"> </p>
+	{% endif %}
+	
+	<br>	
+	<p><label> End datetime </label>
+	{% if endTimeString %}
+	    <input type="datetime-local" name="endtime" value={{endTimeString}}> </p>
+	{% else %}
+	    <input type="datetime-local" name="endtime" value="2015-01-02T00:00:00"></p>
+	{% endif %}
+	
+  
+	<!--<p>Date: <input type="text" name="startdate" id="datepicker"></p>-->
+	
 	
 	{# submit button #}
+	<br>
 	<button type="submit" class="btn btn-primary">
 	{% bootstrap_icon "star" %} Submit
 	</button>
-                
-	{#select datatime #}
-	<p> <label> Start datetime </label>
-	<input type="datetime-local" name="starttime" value="2015-01-01T00:00:00"> </p>
-		
-	<p><label> End datetime </label>
-	<input type="datetime-local" name="endtime" value="2015-01-02T00:00:00"></p>
-  
-	<p>Date: <input type="text" name="startdate" id="datepicker"></p>
-	
-	
 	
     </form>
     </div>
     
     {# Plot result #}
-    <div class="col-sm-8">
+    <div class="col-sm-7">
 	{% load staticfiles %}
 	<img src="{% static "traffic/plot.png" %}">    
     

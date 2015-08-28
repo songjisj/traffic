@@ -85,9 +85,9 @@ def index(request):
     timeZone = "+03"
     
     if startTimeString and endTimeString :
-        startTimeString = startTimeString + timeZone
-        endTimeString = endTimeString + timeZone 
-        get_green_time("'"+selectedLocation+"'", "",  selectedSgName,"'"+startTimeString+"'", "'"+endTimeString+"'")         
+        startTimeStringTimeZone = startTimeString + timeZone
+        endTimeStringTimeZone = endTimeString + timeZone 
+        get_green_time("'"+selectedLocation+"'", "",  selectedSgName,"'"+startTimeStringTimeZone+"'", "'"+endTimeStringTimeZone+"'")         
     
     context = {'locationNameList':locationNameList, 
                'selectedLocation':selectedLocation,               
@@ -96,6 +96,8 @@ def index(request):
                'detectorList':detectorList,
                'selectedDetector':selectedDetector,
                'startTimeString':startTimeString,
+               'startTimeString':startTimeString,
+               'endTimeString':endTimeString,
                'form':form}
     #return HttpResponse(green_example, content_type="image/png")
      
