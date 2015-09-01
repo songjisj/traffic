@@ -4,8 +4,13 @@ import psycopg2.extras
 import datetime
 from operator import itemgetter
 from datetime import timedelta
+
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+
 from matplotlib import pylab
+
 from pylab import *
 import PIL
 import PIL.Image
@@ -157,6 +162,7 @@ def get_sg_status(location_name,conn_string,sg_name,time1,time2):
         sg_status.append([])
     
     for i in range(len(main_data)):
+        rowtime = main_data[i][0].strftime('%Y-%m-%d %H:%M:%S')
         sg_status[i].append(main_data[i][0])
         sg_status[i].append(main_data[i][1][sg_index])
     sg_status_sorted = sorted(sg_status, key = itemgetter(0))
@@ -175,7 +181,7 @@ def get_green_time(location_name, conn_string,sg_name,time1,time2):
     green_state_list = ["0","1","3","4","5","6","7","8",":"]
     start_green_time = None
     for s in sg_status:
-        if not green_on and s[1] in green_state_list:
+        if not green_on and s[1] in green_state_list: 
             start_green_time = s[0]
             green_on = True
         elif green_on and s[1] not in green_state_list:
@@ -185,6 +191,9 @@ def get_green_time(location_name, conn_string,sg_name,time1,time2):
             minimum_green_list.append(minimum_green)
             print minimum_green,start_green_time
     plt.plot(start_green_time_list, minimum_green_list)
+    plt.xlabel('Time')
+    plt.ylabel('Green duration(s)' )
+    plt.title('Signalgroup Green Duration: sg '+ sg_name+ ' in '+location_name)
     return getBufferImage()
 
 def getBufferImage():
