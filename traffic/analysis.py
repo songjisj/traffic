@@ -8,7 +8,7 @@ from datetime import timedelta
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-
+import matplotlib.dates as mdates
 from matplotlib import pylab
 
 from pylab import *
@@ -178,6 +178,7 @@ def get_green_time(location_name, conn_string,sg_name,time1,time2):
     green_on = False
     minimum_green_list = []
     start_green_time_list =[]
+    #state "0" represents "red/amber", that occurs before green state but drivers are allowed to go. Here we regards it as green, but actually it is not.
     green_state_list = ["0","1","3","4","5","6","7","8",":"]
     start_green_time = None
     for s in sg_status:
@@ -190,10 +191,26 @@ def get_green_time(location_name, conn_string,sg_name,time1,time2):
             start_green_time_list.append(start_green_time) 
             minimum_green_list.append(minimum_green)
             print minimum_green,start_green_time
-    plt.plot(start_green_time_list, minimum_green_list)
-    plt.xlabel('Time')
-    plt.ylabel('Green duration(s)' )
-    plt.title('Signalgroup Green Duration: sg '+ sg_name+ ' in '+location_name)
+    
+    fig =plt.figure()
+    #fig.add_subplot equivalent to fig.add_subplot(1,1,1), means subplot(nrows.,ncols, plot_number)
+    ax =fig.add_subplot(111)
+    ax.xaxis_date()
+    average_green_time = sum(minimum_green_list)/len(minimum_green_list)
+    
+    #x values are times of a day and using a Formatter to formate them.
+    #For avioding crowding the x axis with labels, using a Locator.
+    fmt = mdates.DateFormatter('%H:%M:%S')
+    ax.xaxis.set_major_formatter(fmt)
+   
+       
+    ax.bar(start_green_time_list, minimum_green_list,width=0.0001,color='g')
+    ax.axhline(y=10,xmin=0,xmax=100,linewidth=0.01,color="r",zorder=0)
+    
+
+    xlabel('Time')
+    ylabel('Green duration(s)' )
+    title('Signalgroup Green Duration: sg '+ sg_name+ ' in '+location_name)
     return getBufferImage()
 
 def getBufferImage():

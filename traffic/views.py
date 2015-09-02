@@ -82,7 +82,7 @@ def index(request):
         
     startTimeString = request.POST.get('starttime',"")
     endTimeString = request.POST.get('endtime',"")
-    timeZone = "+03"
+    timeZone = "+00"
     
     if startTimeString and endTimeString :
         startTimeStringTimeZone = startTimeString + timeZone
