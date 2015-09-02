@@ -17,6 +17,7 @@ import PIL.Image
 import StringIO
 from django.conf import settings
 import ConfigParser
+import csv
 
 GREEN = "GREEN"
 AMBER = "AMBER"
@@ -181,6 +182,10 @@ def get_green_time(location_name, conn_string,sg_name,time1,time2):
     #state "0" represents "red/amber", that occurs before green state but drivers are allowed to go. Here we regards it as green, but actually it is not.
     green_state_list = ["0","1","3","4","5","6","7","8",":"]
     start_green_time = None
+    
+    
+    f = open("traffic/static/traffic/result.csv","w") #create a csv file to save data in.
+    
     for s in sg_status:
         if not green_on and s[1] in green_state_list: 
             start_green_time = s[0]
@@ -190,11 +195,16 @@ def get_green_time(location_name, conn_string,sg_name,time1,time2):
             minimum_green = timedelta.total_seconds(s[0]-start_green_time)
             start_green_time_list.append(start_green_time) 
             minimum_green_list.append(minimum_green)
+            
+            f.write("{} {}\n".format(start_green_time,minimum_green)) 
             print minimum_green,start_green_time
+            
+    f.close() #close the file after saving.
+    
+    
     
     fig =plt.figure()
-    #fig.add_subplot equivalent to fig.add_subplot(1,1,1), means subplot(nrows.,ncols, plot_number)
-    ax =fig.add_subplot(111)
+    ax =fig.add_subplot(111) #fig.add_subplot equivalent to fig.add_subplot(1,1,1), means subplot(nrows.,ncols, plot_number)
     ax.xaxis_date()
     average_green_time = sum(minimum_green_list)/len(minimum_green_list)
     
@@ -211,6 +221,8 @@ def get_green_time(location_name, conn_string,sg_name,time1,time2):
     xlabel('Time')
     ylabel('Green duration(s)' )
     title('Signalgroup Green Duration: sg '+ sg_name+ ' in '+location_name)
+    
+    
     return getBufferImage()
 
 def getBufferImage():
@@ -220,6 +232,8 @@ def getBufferImage():
     pilImage = PIL.Image.fromstring("RGB", canvas.get_width_height(), canvas.tostring_rgb())
     pilImage.save("traffic/static/traffic/plot.png", "PNG")
     pylab.close();
+    
+
     
 def signalState(sgStateCode):   
     green_state_list = ["0","1","3","4","5","6","7","8",":"]

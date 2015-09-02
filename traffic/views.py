@@ -122,3 +122,18 @@ def plot(request):
     pilImage.save(buffer, "PNG")
     pylab.close()
     return HttpResponse(buffer.getvalue(), content_type="image/png")
+
+def download_data_file(request):
+    import os,tempfile,zipfile
+    from django.core.servers.basehttp import FileWrapper
+    from django.conf import settings
+    import mimetypes
+    
+    filename = "traffic/static/traffic/result.csv"
+    download_name = "result.csv"
+    wrapper = FileWrapper(open(filename))
+    content_type = mimetypes.guess_type(filename)[0]
+    response = Httpresponse(wrapper,content_type=content_type)
+    response['Content-length'] = os.path.getsize(filename)
+    response['Content-Disposition'] ="attachment;filename=%s"%download_name
+    return response 
