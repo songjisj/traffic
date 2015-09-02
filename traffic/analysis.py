@@ -18,6 +18,7 @@ import StringIO
 from django.conf import settings
 import ConfigParser
 import csv
+from pytz import timezone
 
 GREEN = "GREEN"
 AMBER = "AMBER"
@@ -210,7 +211,8 @@ def get_green_time(location_name, conn_string,sg_name,time1,time2):
     
     #x values are times of a day and using a Formatter to formate them.
     #For avioding crowding the x axis with labels, using a Locator.
-    fmt = mdates.DateFormatter('%H:%M:%S')
+    helsinkiTimezone = timezone('Europe/Helsinki')
+    fmt = mdates.DateFormatter('%H:%M:%S', tz=helsinkiTimezone)
     ax.xaxis.set_major_formatter(fmt)
    
        

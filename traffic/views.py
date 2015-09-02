@@ -13,6 +13,8 @@ from .forms import ControlForm
 from .forms import ContactForm
 import dateutil.parser
 from datetime import datetime
+from pytz import timezone
+import datetime
 #import iso8601
 
 
@@ -82,7 +84,9 @@ def index(request):
         
     startTimeString = request.POST.get('starttime',"")
     endTimeString = request.POST.get('endtime',"")
-    timeZone = "+00"
+    
+    helsinkiTimezone = timezone('Europe/Helsinki')
+    timeZone = datetime.datetime.now(helsinkiTimezone).strftime('%z')
     
     if startTimeString and endTimeString :
         startTimeStringTimeZone = startTimeString + timeZone
