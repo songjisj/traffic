@@ -6,15 +6,15 @@
 	<link href="/twitter-bootstrap/twitter-bootstrap-v2/docs/assets/css/bootstrap.css" rel="stylesheet"> 
 	<script src="//code.jquery.com/jquery-1.10.2.js"></script>
 	<script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>  
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
         <script src="/twitter-bootstrap/twitter-bootstrap-v2/js/bootstrap-tooltip.js"></script>  
         <script src="/twitter-bootstrap/twitter-bootstrap-v2/js/bootstrap-popover.js"></script>
 	<link rel="stylesheet" href="/resources/demos/style.css">
+	<link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+	<script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
 	<script>
-	$(function() {
-	  $( "#datepicker" ).datepicker({
-		dateFormat: "yy-mm-dd"
-	    });
+	$(document).ready(function(){
+	    $('[data-toggle="popover"]').popover();   
 	});
 	</script>
     </head>
@@ -148,19 +148,13 @@
 	{#select datatime #}
 	<br>
 	<p> <label> Start datetime </label>
-	{% if startTimeString %}
-	    <input type="datetime-local" name="starttime" value={{startTimeString}}> 
-	    
-            <a href="#" id="timezonetip"  data-toggle="popover" title="" data-content="Please use timezone Europe/Helsinki" >
-	    <i class='glyphicon glyphicon-info-sign'></i></a>    
-	    
-	    </p>
-	{% else %}
-	    <input type="datetime-local" name="starttime" value="2015-07-10T00:00:00"> </p>
-	{% endif %}
-        	
+	    {% if startTimeString %}
+		<input type="datetime-local" name="starttime" value={{startTimeString}}> 
+	    {% else %}
+		<input type="datetime-local" name="starttime" value="2015-07-10T00:00:00"> </p>
+	    {% endif %}
+	</p>	
 	
-	<br>	
 	<p><label> End datetime </label>
 	{% if endTimeString %}
 	    {% if endTimeString > startTimeString %}
@@ -177,7 +171,10 @@
 	    <input type="datetime-local" name="endtime" value="2015-07-10T01:00:00"></p>
 	{% endif %}
 	
-  
+	<p>
+	<a href="#" id="timezonetip"  data-toggle="popover" data-trigger="hover" title="" data-content="Please use timezone Europe/Helsinki" >
+	<i class='glyphicon glyphicon-info-sign'></i></a>   
+	</p>
 	<!--<p>Date: <input type="text" name="startdate" id="datepicker"></p>-->
 	
 	
