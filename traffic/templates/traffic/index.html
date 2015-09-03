@@ -3,8 +3,12 @@
     <head>
 	<meta charset="utf-8">
 	<link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
+	<link href="/twitter-bootstrap/twitter-bootstrap-v2/docs/assets/css/bootstrap.css" rel="stylesheet"> 
 	<script src="//code.jquery.com/jquery-1.10.2.js"></script>
 	<script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>  
+        <script src="/twitter-bootstrap/twitter-bootstrap-v2/js/bootstrap-tooltip.js"></script>  
+        <script src="/twitter-bootstrap/twitter-bootstrap-v2/js/bootstrap-popover.js"></script>
 	<link rel="stylesheet" href="/resources/demos/style.css">
 	<script>
 	$(function() {
@@ -18,6 +22,7 @@
     {% load bootstrap3 %}
     {% bootstrap_css %}
     {% bootstrap_javascript %}
+    {% bootstrap_icon %}
     
     <script>
 	function intersectionChanged() {
@@ -32,7 +37,20 @@
 	function alertEmptyList(){
 	    alert("")    
 	}
+    
+	
     </script>
+    <script>  
+        $(function ()  {
+	    $("#timezonetip").popover();  
+        });  
+    </script> 
+    <script>
+        $(document).ready(function(){
+            $('[data-toggle="popover"]').popover();   
+	});
+    </script>
+    
 
     {# Navigate bar and a header #}
     <nav id="myNavbar" class="navbar navbar-default navbar-inverse navbar-fixed-top" role="navigation">
@@ -71,9 +89,11 @@
      
     <form id="locationFormId" method="POST" action="{% url 'traffic:index'%}">{% csrf_token %}
     
-	<label for="performance">Performance measures </label>
+	<label for="performance">Performance measures </label> 
+	
 	<select name ="performance" class="form-control">
 	    <option value="greenDuration">greenDuration</option>
+	    <option value="Saturation flow rate">Saturation flow rate</option>
 	</select>
 			
 	{# Select intersection #}
@@ -129,17 +149,32 @@
 	<br>
 	<p> <label> Start datetime </label>
 	{% if startTimeString %}
-	    <input type="datetime-local" name="starttime" value={{startTimeString}}> </p>
+	    <input type="datetime-local" name="starttime" value={{startTimeString}}> 
+	    
+            <a href="#" id="timezonetip"  data-toggle="popover" title="" data-content="Please use timezone Europe/Helsinki" >
+	    <i class='glyphicon glyphicon-info-sign'></i></a>    
+	    
+	    </p>
 	{% else %}
-	    <input type="datetime-local" name="starttime" value="2015-01-01T00:00:00"> </p>
+	    <input type="datetime-local" name="starttime" value="2015-07-10T00:00:00"> </p>
 	{% endif %}
+        	
 	
 	<br>	
 	<p><label> End datetime </label>
 	{% if endTimeString %}
-	    <input type="datetime-local" name="endtime" value={{endTimeString}}> </p>
+	    {% if endTimeString > startTimeString %}
+	        <input type="datetime-local" name="endtime" value={{endTimeString}}> </p>
+	    {% else %}
+	        <input type="datetime-local" name="endtime" value="2015-07-10T01:00:00"></p>
+	        <div class="alert alert-danger" role="alert">
+                  <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+                  <span class="sr-only">Error:</span>
+                   Enter end time later then start time 
+                  </div>
+	    {% endif %}
 	{% else %}
-	    <input type="datetime-local" name="endtime" value="2015-01-02T00:00:00"></p>
+	    <input type="datetime-local" name="endtime" value="2015-07-10T01:00:00"></p>
 	{% endif %}
 	
   
