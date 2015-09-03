@@ -50,9 +50,9 @@
 	    <!-- Collect the nav links, forms, and other content for toggling -->
 	    <div class="collapse navbar-collapse" id="navbarCollapse">
 		<ul class="nav navbar-nav">
-		    <li class="active"><a href="http://www.tutorialrepublic.com" target="_blank">Instruction</a></li>
-		    <li><a href="http://www.tutorialrepublic.com/about-us.php" target="_blank">About</a></li>
-		    <li><a href="http://www.tutorialrepublic.com/contact-us.php" target="_blank">Contact</a></li>
+		    <!--<li class="active"><a href="http://www.tutorialrepublic.com" target="_blank">Instruction</a></li>-->
+		    <li><a href="http://www.peekfinland.fi/" target="_blank">About</a></li>
+		    <li><a href="http://imtech.com/EN/Contacts-Nordic.html" target="_blank">Contact</a></li>
 		</ul>
 	    </div>
 	</div>
@@ -156,9 +156,10 @@
     </div>
     
     {# Plot result #}
-    <div class="col-sm-7">
+    <div class="col-sm-4">
 	{% load staticfiles %}
 	<img src="{% static "traffic/plot.png" %}">    
+	<br></br>
 	Analysis result <a href="{% static "traffic/result.csv" %}">Download CSV File</a>   
     
     </div>
