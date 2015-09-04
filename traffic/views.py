@@ -52,6 +52,7 @@ def index(request):
     locationObjectList = Controller.objects.all() 
     for location in locationObjectList:
         locationNameList.append(location.cname)
+    locationNameList = sorted(locationNameList)
     
     try:
         selectedLocation = request.POST['location']   

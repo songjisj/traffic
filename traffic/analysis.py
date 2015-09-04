@@ -138,7 +138,7 @@ def get_main_data(location_name,conn_string, time1,time2):
     conn = connect_db(conn_string)
     location_id = get_location_id(location_name, conn_string)
     cursor = conn.cursor('cursor_unique_name', cursor_factory = psycopg2.extras.DictCursor)
-    cursor.execute("SELECT tt, grint, dint FROM tf_raw WHERE fk_cid = " + str(location_id) + "AND tt >=" + str(time1) + " AND tt < " + str(time2))
+    cursor.execute("SELECT tt, grint, dint,seq FROM tf_raw WHERE fk_cid = " + str(location_id) + "AND tt >=" + str(time1) + " AND tt < " + str(time2))
     rows =cursor.fetchall()
     main_data = []
     for i in range(len(rows)):
@@ -167,7 +167,8 @@ def get_sg_status(location_name,conn_string,sg_name,time1,time2):
         rowtime = main_data[i][0].strftime('%Y-%m-%d %H:%M:%S')
         sg_status[i].append(main_data[i][0])
         sg_status[i].append(main_data[i][1][sg_index])
-    sg_status_sorted = sorted(sg_status, key = itemgetter(0))
+        sg_status[i].append(main_data[i][3])
+    sg_status_sorted = sorted(sg_status, key = itemgetter(2,0))
     return sg_status_sorted
 
 def get_green_time(location_name, conn_string,sg_name,time1,time2):
