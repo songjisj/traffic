@@ -7,7 +7,7 @@ import PIL.Image
 import StringIO
 from .models import TfRaw,Controller,ControllerConfigDet,ControllerConfigSg
 from analysis import rowNumber
-from analysis import get_green_time, get_sg_config_in_one, get_det_config_in_one
+from analysis import get_green_time, get_sg_config_in_one, get_det_config_in_one_sg
 
 from .forms import ControlForm
 from .forms import ContactForm
@@ -72,7 +72,7 @@ def index(request):
     
     #Select detector
     if selectedSgName and selectedLocation :
-        detectorDict = get_det_config_in_one("'"+selectedLocation+"'", selectedSgName, "") 
+        detectorDict = get_det_config_in_one_sg("'"+selectedLocation+"'", selectedSgName, "") 
         detectorList = detectorDict.values() 
     
     try: 

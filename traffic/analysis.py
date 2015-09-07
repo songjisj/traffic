@@ -105,8 +105,29 @@ def get_sg_config_in_one(location_name,conn_string):
     disconnect_db(conn)
     return signals
 
+
+#Return a dictionary of all detectors in one intersection, the key is the local index of detector, the value is its name.
+def get_det_in_one_location(location_name,conn_string):
+    config = ConfigParser.RawConfigParser()
+    config.read('config.cfg')
+        
+    conn_string = config.get('Section1','conn_string')        
+    conn = connect_db(conn_string)    
+    location_id = get_location_id(location_name, conn_string)
+    cursor = conn.cursor('cursor_unique_name', cursor_factory = psycopg2.extras.DictCursor) 
+    cursor.execute("SELECT idx,name from controller_config_det WHERE fk_cid =" +str(location_id)) 
+    rows = cursor.fetchall()
+    detectors = {}
+    for i in range(len(rows)):
+        detecotrs[rows[i][0]] = rows[i][1]
+        
+    disconnect_db(conn)
+    return detectors 
+
+
 #Function to get the configuration of detectors in the intersection and the specified signalgroup whose name is provided 
-def get_det_config_in_one(location_name,sg_name,conn_string): 
+#Return a dictionary detectors, the keys are index of detectors and values are names of detectors.
+def get_det_config_in_one_sg(location_name,sg_name,conn_string): 
     config = ConfigParser.RawConfigParser()
     config.read('config.cfg')
         
@@ -149,27 +170,39 @@ def get_main_data(location_name,conn_string, time1,time2):
     return main_data 
 
 
-#This function is used to filter the status of single signalgroup with timestamp.
+#This function is used to filter the status of single signalgroup and signal detector with timestamp.
 #Parameters:
 #location_name, conn_string, sg_name, start time and end time.
-def get_sg_status(location_name,conn_string,sg_name,time1,time2): 
+def get_sg_det_status(location_name,conn_string,sg_name,det_name,time1,time2): 
+    
+    #look for the index of the input sg_name.
     sg_pairs = get_sg_config_in_one(location_name, conn_string)
     for idx, name in sg_pairs.items():
         if name == sg_name:
             sg_index = idx
-            break   
+            break  
+    #look for the index for the input detector.
+    det_pairs = get_det_config_in_one_sg(location_name, sg_name, conn_string)
+    for idx, name in det_pairs.items():
+        if name==det_name:  
+            det_index =idx 
+            break 
+             
+        
     main_data = get_main_data(location_name, conn_string, time1, time2)
     sg_status = []
     for i in range(len(main_data)):
         sg_status.append([])
-    
+        
+
     for i in range(len(main_data)):
         rowtime = main_data[i][0].strftime('%Y-%m-%d %H:%M:%S')
-        sg_status[i].append(main_data[i][0])
-        sg_status[i].append(main_data[i][1][sg_index])
-        sg_status[i].append(main_data[i][3])
-    sg_status_sorted = sorted(sg_status, key = itemgetter(2,0))
-    return sg_status_sorted
+        sg_status[i].append(main_data[i][0]) #time 
+        sg_status[i].append(main_data[i][3]) #seq number
+        sg_status[i].append(main_data[i][1][sg_index])  # sg_state 
+        sg_status[i].append(main_data[i][2][det_index])
+    sg_det_status_sorted = sorted(sg_status, key = itemgetter(1,0))
+    return sg_det_status_sorted 
 
 def get_green_time(location_name, conn_string,sg_name,time1,time2):
     #read configuration file
@@ -254,6 +287,94 @@ def signalState(sgStateCode):
     
     
 
+def get_sg_status(location_name,conn_string,sg_name,time1,time2): 
+    sg_pairs = get_sg_config_in_one(location_name, conn_string)
+    for idx, name in sg_pairs.items():
+        if name == sg_name:
+            sg_index = idx
+            break   
+    main_data = get_main_data(location_name, conn_string, time1, time2)
+    sg_status = []
+    for i in range(len(main_data)):
+        sg_status.append([])
+    
+    for i in range(len(main_data)):
+        rowtime = main_data[i][0].strftime('%Y-%m-%d %H:%M:%S')
+        sg_status[i].append(main_data[i][0])
+        sg_status[i].append(main_data[i][1][sg_index])
+        sg_status[i].append(main_data[i][3])
+    sg_status_sorted = sorted(sg_status, key = itemgetter(2,0))
+    return sg_status_sorted
 
 
+#Function get_saturation_flow_rate return a list of saturation flow rate and timestamp 
+#Saturation flow rate crossing a signalized stop line is define as the number of vechiles per hour that could cross the line if the signal remained green all of the time 
+#The time of passage of the third and last third vehicles over several cycles to determine this value in this function. 
+#The first few vehicles and the last vehicles are excluded because of starting up the queue or represent the arrival rate.   
+def get_saturation_flow_rate(location_name,conn_string,sg_name,det_name,time1,time2):
+    sg_det_status = get_sg_det_status(location_name,conn_string,sg_name,det_name,time1,time2) #sg_det_status[time,seq,grint,dint]
+     
+    green_on = False
+     
+    detector_occupied = False 
+     
+    detector_occupied_time = None
+     
+    count_vehicle = 0 
+     
+    detector_occupied_time_list_on_green = []
+     
+    successive_vehicle_end_index = -3
+     
+    successive_vehicle_start_index =3
+     
+    time_diff = 0
+     
+    start_green_time = None
+     
+    start_green_time_list = [] 
+     
+    saturation_flow_rate = 0 
+     
+    saturation_flow_rate_list = []
+     
+    green_state_list = ["0","1","3","4","5","6","7","8",":"]
+     
+    for s in sg_det_status:
+        if not green_on and s[2] in green_state_list:
+            green_on =True
+            start_green_time = s[0]
+            start_green_time_list.append(start_green_time)
+        elif green_on and s[2] in green_state_list:
+            if not detector_occupied and s[3]=="1":
+                detector_occupied_time = s[0]
+                detector_occupied = True
+                detector_occupied_time_list_on_green.append(detector_occupied_time) 
+                count_vehicle = count_vehicle+1
+                 
+            elif detector_occupied and s[3]=="0":
+                detector_occupied = False 
+        elif green_on and s[2] not in green_state_list:
+            green_on =False 
 
+            if len(detector_occupied_time_list_on_green) > 10: 
+                time_diff=(detector_occupied_time_list_on_green[successive_vehicle_end_index]-detector_occupied_time_list_on_green[successive_vehicle_start_index])/((len(detector_occupied_time_list_on_green))-4)  
+                saturation_flow_rate = 3600/time_diff.total_seconds()    
+                saturation_flow_rate_pair = [saturation_flow_rate,detector_occupied_time_list_on_green[1]]
+                saturation_flow_rate_list.append(saturation_flow_rate_pair) 
+                
+            detector_occupied_time_list_on_green = []
+            count_vehicle = 0 
+    print saturation_flow_rate_list 
+    
+    fig =plt.figure()
+    ax =fig.add_subplot(111) #fig.add_subplot equivalent to fig.add_subplot(1,1,1), means subplot(nrows.,ncols, plot_number)
+    ax.xaxis_date()
+    
+    
+    #x values are times of a day and using a Formatter to formate them.
+    #For avioding crowding the x axis with labels, using a Locator.
+    helsinkiTimezone = timezone('Europe/Helsinki')
+    fmt = mdates.DateFormatter('%H:%M:%S', tz=helsinkiTimezone)
+    ax.xaxis.set_major_formatter(fmt)
+    ax.bar(saturation_flow_rate_list[1], saturation_flow_rate_list[0],width=0.0001,color='blue')
