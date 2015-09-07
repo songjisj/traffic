@@ -339,6 +339,11 @@ def get_saturation_flow_rate(location_name,conn_string,sg_name,det_name,time1,ti
     saturation_flow_rate_list = []
      
     green_state_list = ["0","1","3","4","5","6","7","8",":"]
+    
+    config = ConfigParser.RawConfigParser()
+    config.read('config.cfg')
+    
+    conn_string = config.get('Section1','conn_string')      
      
     for s in sg_det_status:
         if not green_on and s[2] in green_state_list:
