@@ -363,7 +363,7 @@ def get_saturation_flow_rate(location_name,conn_string,sg_name,det_name,time1,ti
             green_on =False 
 
             if len(detector_occupied_time_list_on_green) > 10: 
-                time_diff=(detector_occupied_time_list_on_green[successive_vehicle_end_index]-detector_occupied_time_list_on_green[successive_vehicle_start_index])/((len(detector_occupied_time_list_on_green))-4)  
+                time_diff=(detector_occupied_time_list_on_green[successive_vehicle_end_index]-detector_occupied_time_list_on_green[successive_vehicle_start_index])/((len(detector_occupied_time_list_on_green))-6)  
                 saturation_flow_rate = 3600/time_diff.total_seconds()    
                 saturation_flow_rate_pair = [saturation_flow_rate,detector_occupied_time_list_on_green[1]]
                 saturation_flow_rate_list.append(saturation_flow_rate_pair) 
