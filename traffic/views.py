@@ -35,18 +35,26 @@ def questions(request):
     return HttpResponse(output)
 
 def index(request):
+    selectedPerformance = ""
     locationNameList = []
     selectedLocation = ""
-    sgNameList = []
+    sgNameList = [] 
     selectedSgName = ""
     detectorList = []
     selectedDetector = ""
     startTimeString =""
     
+    #Select performance 
+    try:
+        selectedPerformance = request.POST['performance']
+    except(KeyError):
+        selectedPerformance = "greenDuration" 
+    
+    
     try:
         startTime = request.POST['startdate']   
     except(KeyError):
-        startTime = "'2015-07-08 13:00:24+03'"   
+        startTime = "2015-07-08 13:00:24+03"   
         
     #Select location
     locationObjectList = Controller.objects.all() 
@@ -61,7 +69,7 @@ def index(request):
         
     #Select signalGroup
     if selectedLocation:
-        sgNameDict = get_sg_config_in_one("'"+selectedLocation+"'","")  
+        sgNameDict = get_sg_config_in_one(selectedLocation,"")  
         sgNameList = sgNameDict.values()
     
     try:
@@ -72,7 +80,7 @@ def index(request):
     
     #Select detector
     if selectedSgName and selectedLocation :
-        detectorDict = get_det_config_in_one_sg("'"+selectedLocation+"'", selectedSgName, "") 
+        detectorDict = get_det_config_in_one_sg(selectedLocation, selectedSgName, "") 
         detectorList = detectorDict.values() 
     
     try: 
@@ -92,9 +100,11 @@ def index(request):
     if startTimeString and endTimeString :
         startTimeStringTimeZone = startTimeString + timeZone
         endTimeStringTimeZone = endTimeString + timeZone 
-        get_green_time("'"+selectedLocation+"'", "",  selectedSgName,"'"+startTimeStringTimeZone+"'", "'"+endTimeStringTimeZone+"'")         
+        
+        get_green_time(selectedLocation, "",  selectedSgName,startTimeStringTimeZone, endTimeStringTimeZone)          
     
     context = {'locationNameList':locationNameList, 
+               'selectedPerformance':selectedPerformance,
                'selectedLocation':selectedLocation,               
                'sgNameList':sgNameList,
                'selectedSgName':selectedSgName,
