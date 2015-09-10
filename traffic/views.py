@@ -97,8 +97,11 @@ def index(request):
     helsinkiTimezone = timezone('Europe/Helsinki')
     timeZone = datetime.datetime.now(helsinkiTimezone).strftime('%z')
     
+    measuresList = ["capacity","greenDuration","queueLength"]
+    
     context = {'locationNameList':locationNameList, 
                'selectedPerformance':selectedPerformance,
+               'measuresList':measuresList,
                'selectedLocation':selectedLocation,               
                'sgNameList':sgNameList,
                'selectedSgName':selectedSgName,
@@ -109,7 +112,9 @@ def index(request):
                'endTimeString':endTimeString,
                'form':form}    
     
-    if startTimeString and endTimeString :
+    refreshType = request.POST.get('refreshType',"")
+    
+    if refreshType == "Plot" and startTimeString and endTimeString :
         startTimeStringTimeZone = startTimeString + timeZone
         endTimeStringTimeZone = endTimeString + timeZone 
         if selectedPerformance == "greenDuration":

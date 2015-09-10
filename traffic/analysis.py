@@ -200,7 +200,8 @@ def get_sg_status(location_name,conn_string,sg_name,time1,time2):
 #Parameters:
 #location_name, conn_string, sg_name, start time and end time.
 def get_sg_det_status(location_name,conn_string,sg_name,det_name,time1,time2): 
-    
+    sg_index = 0
+    det_index = 0
     #look for the index of the input sg_name.
     sg_pairs = get_sg_config_in_one(location_name, conn_string)
     for idx, name in sg_pairs.items():

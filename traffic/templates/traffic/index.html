@@ -26,11 +26,12 @@
     
     <script>
 	function intersectionChanged() {
-	    var x = document.getElementById("intersectionSelectionId").value;
+	    document.getElementById("refreshTypeId").value = "RefreshData";
 	    document.getElementById("locationFormId").submit();
 	}
 	
 	function signalChanged() {
+	    document.getElementById("refreshTypeId").value = "RefreshData";
 	    document.getElementById("locationFormId").submit();
 	}
 	
@@ -38,6 +39,10 @@
 	    alert("")    
 	}
     
+	function submitToPlot() {
+	    document.getElementById("refreshTypeId").value = "Plot";
+	    document.getElementById("locationFormId").submit();	
+	}
 	
     </script>
     <script>  
@@ -94,9 +99,13 @@
 	<label for="performance">Performance measures </label> 
 	
 	<select name ="performance" class="form-control">
-	    <option value="capacity">capacity</option>
-	    <option value="greenDuration">greenDuration</option>
-	    <option value="queueLength">queueLength</option>
+	    {% for measure in measuresList %}
+		{% if measure == selectedPerformance %}
+		    <option value= {{measure}} selected="selected"> {{measure}} </option> 
+		{% else %}
+		    <option value= {{measure}}> {{measure}} </option> 
+		{% endif %}
+	    {% endfor %}
 	</select>
 			
 	{# Select intersection #}
@@ -183,9 +192,11 @@
 	
 	{# submit button #}
 	<br>
-	<button type="submit" class="btn btn-primary">
+	<button onclick="submitToPlot()" class="btn btn-primary">
 	{% bootstrap_icon "star" %} Submit
 	</button>
+	
+	<input id="refreshTypeId" type="hidden" name="refreshType" value="">
 	
     </form>
     </div>
