@@ -88,12 +88,15 @@
     <div class="col-sm-3 " >
      
     <form id="locationFormId" method="POST" action="{% url 'traffic:index'%}">{% csrf_token %}
+        
+        {# Select performance #}
     
 	<label for="performance">Performance measures </label> 
 	
 	<select name ="performance" class="form-control">
+	    <option value="capacity">capacity</option>
 	    <option value="greenDuration">greenDuration</option>
-	    <option value="Saturation flow rate">Saturation flow rate</option>
+	    <option value="queueLength">queueLength</option>
 	</select>
 			
 	{# Select intersection #}
