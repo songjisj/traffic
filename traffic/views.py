@@ -7,7 +7,7 @@ import PIL.Image
 import StringIO
 from .models import TfRaw,Controller,ControllerConfigDet,ControllerConfigSg
 from analysis import rowNumber
-from analysis import get_green_time, get_sg_config_in_one, get_det_config_in_one_sg
+from analysis import get_green_time, get_sg_config_in_one, get_det_config_in_one_sg,get_capacity,get_queue_length
 
 from .forms import ControlForm
 from .forms import ContactForm
@@ -97,12 +97,6 @@ def index(request):
     helsinkiTimezone = timezone('Europe/Helsinki')
     timeZone = datetime.datetime.now(helsinkiTimezone).strftime('%z')
     
-    if startTimeString and endTimeString :
-        startTimeStringTimeZone = startTimeString + timeZone
-        endTimeStringTimeZone = endTimeString + timeZone 
-        
-        get_green_time(selectedLocation, "",  selectedSgName,startTimeStringTimeZone, endTimeStringTimeZone)          
-    
     context = {'locationNameList':locationNameList, 
                'selectedPerformance':selectedPerformance,
                'selectedLocation':selectedLocation,               
@@ -113,7 +107,19 @@ def index(request):
                'startTimeString':startTimeString,
                'startTimeString':startTimeString,
                'endTimeString':endTimeString,
-               'form':form}
+               'form':form}    
+    
+    if startTimeString and endTimeString :
+        startTimeStringTimeZone = startTimeString + timeZone
+        endTimeStringTimeZone = endTimeString + timeZone 
+        if selectedPerformance == "greenDuration":
+            get_green_time(selectedLocation, "",  selectedSgName,startTimeStringTimeZone, endTimeStringTimeZone)   
+        elif selectedPerformance =="capacity":
+            get_capacity(selectedLocation,"",selectedSgName,selectedDetector,startTimeStringTimeZone,endTimeStringTimeZone)
+        elif selectedPerformance == "queueLength":
+            get_queue_length(selectedLocation,"",selectedSgName,selectedDetector,startTimeStringTimeZone,endTimeStringTimeZone)
+    
+
     #return HttpResponse(green_example, content_type="image/png")
      
     return render(request, 'traffic/index.html', context)

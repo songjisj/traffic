@@ -20,6 +20,8 @@ import ConfigParser
 import csv
 from pytz import timezone
 
+from dateutil import parser
+
 GREEN = "GREEN"
 AMBER = "AMBER"
 RED = "RED"
@@ -313,7 +315,10 @@ def signalState(sgStateCode):
         return UNKNOWN
     
     
-
+def mean_in_list(list):
+    mean = 0 
+    mean = sum(list)/len(list)
+    return mean 
 
 
 #Function get_saturation_flow_rate return a list of saturation flow rate and timestamp 
@@ -392,14 +397,84 @@ def get_capacity(location_name,conn_string,sg_name,det_name,time1,time2):
             count_vehicle = 0 
     mean_saturation = mean_in_list(saturation_flow_rate_list)
     headway = mean_in_list(time_diff_list)
-    maximum_capacity = mean_saturation * sum_green_duration / (datetime.datetime.strptime(time2,"%Y-%m-%d %H:%M:%S") - datetime.datetime.strptime(time1,"%Y-%m-%d %H:%M:%S")).total_seconds()
+    maximum_capacity = mean_saturation * sum_green_duration / (parser.parse(time2) - parser.parse(time1)).total_seconds()
     print saturation_flow_rate_list
     print mean_saturation
     print headway 
     print round(maximum_capacity)  
     
+    #write csv file
     f = open("traffic/static/traffic/result.csv","w+") #create a csv file to save data in.
-    f.writelines(["headway", headway])
-    f.writelines(["saturation_flow_rate", mean_saturation])
-    f.writelines(["maximum_capacity", round(maximum_capacity)])
+    f.writelines(["headway", str(headway),'\n'])
+    f.writelines(["saturation_flow_rate", str(mean_saturation),'\n'])
+    f.writelines(["maximum_capacity", str(round(maximum_capacity)),'\n'])
     f.close 
+    
+    #plot 
+    
+    y = [mean_saturation,maximum_capacity]
+    x = range(len(y))
+    plt.bar(x,y,width=0.1,color = "blue")
+    
+    
+    
+    return getBufferImage()
+
+def get_queue_length(location_name,conn_string,sg_name,det_name,time1,time2): 
+    
+    config = ConfigParser.RawConfigParser()
+    config.read('config.cfg')
+        
+    conn_string = config.get('Section1','conn_string')          
+    
+    sg_det_status = get_sg_det_status(location_name,conn_string,sg_name,det_name,time1,time2) #sg_det_status[time,seq,grint,dint]
+    
+    green_on = True
+    
+    green_state_list = ["0","1","3","4","5","6","7","8",":"]
+    
+    discharge_queue_time = None
+    
+    detector_occupied = False
+    
+    count_vehicle_in_queue = 0 
+    
+    count_vehicle_in_queue_dict = {}
+    
+    f = open("traffic/static/traffic/result.csv","w+")
+    writer = csv.DictWriter(f, fieldnames = ["discharge_queue_time","number of vehicles"], delimiter = ';')
+    writer.writeheader()        
+    
+    for s in sg_det_status:
+        if not green_on and s[2] not in green_state_list:
+            if not detector_occupied and s[3] == '1':
+                detector_occupied = True
+                count_vehicle_in_queue = count_vehicle_in_queue +1 
+            elif detector_occupied and s[3] == '0':
+                detector_occupied = False
+        elif not green_on and s[2] in green_state_list:
+            green_on = True
+            discharge_queue_time = s[0]
+            count_vehicle_in_queue_dict[discharge_queue_time] = count_vehicle_in_queue
+            count_vehicle_in_queue = 0
+            f.write("{} {}\n".format(count_vehicle_in_queue_dict[discharge_queue_time],count_vehicle_in_queue))             
+            
+        elif green_on and s[2] not in green_state_list:
+            green_on =False 
+    f.close() 
+    
+    fig = plt.figure()
+    ax =fig.add_subplot(111)
+    ax.xaxis_date()
+    
+    helsinkiTimezone = timezone('Europe/Helsinki')
+    fmt = mdates.DateFormatter('%H:%M:%S', tz=helsinkiTimezone)
+    ax.xaxis.set_major_formatter(fmt)
+    
+    ax.bar(count_vehicle_in_queue_dict.keys(),count_vehicle_in_queue_dict.values(),width = 0.0001, color='purple')
+    xlabel('Times')
+    ylabel('Number of vehicles' )
+    title('Queue length: sg '+ sg_name+ ' in '+location_name + 'detected by' + det_name)    
+    
+    
+    return getBufferImage()
