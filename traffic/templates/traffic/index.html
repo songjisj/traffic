@@ -163,7 +163,7 @@
 	    {% if startTimeString %}
 		<input type="datetime-local" name="starttime" value={{startTimeString}}> 
 	    {% else %}
-		<input type="datetime-local" name="starttime" value="2015-07-10T00:00:00"> </p>
+		<input type="datetime-local" name="starttime" value="2015-07-10T18:00:00"> </p>
 	    {% endif %}
 	</p>	
 	
@@ -172,7 +172,7 @@
 	    {% if endTimeString > startTimeString %}
 	        <input type="datetime-local" name="endtime" value={{endTimeString}}> </p>
 	    {% else %}
-	        <input type="datetime-local" name="endtime" value="2015-07-10T01:00:00"></p>
+	        <input type="datetime-local" name="endtime" value="2015-07-10T19:00:00"></p>
 	        <div class="alert alert-danger" role="alert">
                   <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
                   <span class="sr-only">Error:</span>
@@ -180,7 +180,7 @@
                   </div>
 	    {% endif %}
 	{% else %}
-	    <input type="datetime-local" name="endtime" value="2015-07-10T01:00:00"></p>
+	    <input type="datetime-local" name="endtime" value="2015-07-10T19:00:00"></p>
 	{% endif %}
 	
 	<p>

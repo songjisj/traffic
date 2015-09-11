@@ -267,10 +267,10 @@ def get_green_time(location_name, conn_string,sg_name,time1,time2):
     f.close() #close the file after saving.
     
     
-    
     fig =plt.figure()
     ax =fig.add_subplot(111) #fig.add_subplot equivalent to fig.add_subplot(1,1,1), means subplot(nrows.,ncols, plot_number)
     ax.xaxis_date()
+    
     average_green_time = sum(minimum_green_list)/len(minimum_green_list)
     
     #x values are times of a day and using a Formatter to formate them.
@@ -280,7 +280,7 @@ def get_green_time(location_name, conn_string,sg_name,time1,time2):
     ax.xaxis.set_major_formatter(fmt)
    
        
-    ax.bar(start_green_time_list, minimum_green_list,width=0.0001,color='g')
+    ax.plot(start_green_time_list, minimum_green_list,'k',start_green_time_list, minimum_green_list,'go')
     ax.axhline(y=10,xmin=0,xmax=100,linewidth=0.01,color="r",zorder=0)
     
 
