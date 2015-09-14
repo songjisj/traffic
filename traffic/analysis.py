@@ -167,6 +167,7 @@ def get_main_data(location_name,conn_string, time1,time2):
     for i in range(len(rows)):
         rows[i][0].strftime("%Y-%m-%d %H:%M:%S")
         main_data.append(rows[i])
+    main_data = sorted(main_data,key=itemgetter(3,0))
     
     disconnect_db(conn)
     return main_data 
@@ -189,9 +190,9 @@ def get_sg_status(location_name,conn_string,sg_name,time1,time2):
     for i in range(len(main_data)):
         sg_status[i].append(main_data[i][0])
         sg_status[i].append(main_data[i][1][sg_index])
-        sg_status[i].append(main_data[i][3]) 
+        sg_status[i].append(main_data[i][3]) #seq number
         
-    sg_status_sorted = sorted(sg_status, key = itemgetter(0,2))
+    sg_status_sorted = sorted(sg_status, key = itemgetter(2,0))
     return sg_status_sorted
     
 
@@ -442,7 +443,12 @@ def get_queue_length(location_name,conn_string,sg_name,det_name,time1,time2):
     
     count_vehicle_in_queue_dict = {}
     
+    average_length_per_vehicle = 8 
+    
+    # "w+" means empty the file before starting writing.
     f = open("traffic/static/traffic/result.csv","w+")
+    
+    #Write header
     writer = csv.DictWriter(f, fieldnames = ["discharge_queue_time","number of vehicles"], delimiter = ';')
     writer.writeheader()        
     
@@ -468,14 +474,104 @@ def get_queue_length(location_name,conn_string,sg_name,det_name,time1,time2):
     ax =fig.add_subplot(111)
     ax.xaxis_date()
     
+    #The following segment codes is for formatting xaxis and show the correct time in Helsinki timezone.
     helsinkiTimezone = timezone('Europe/Helsinki')
     fmt = mdates.DateFormatter('%H:%M:%S', tz=helsinkiTimezone)
-    ax.xaxis.set_major_formatter(fmt)
+    ax.xaxis.set_major_formatter(fmt) 
     
+    #The segment codes is for marking dual units(dual axis) using matplotlib
     ax.bar(count_vehicle_in_queue_dict.keys(),count_vehicle_in_queue_dict.values(),width = 0.0001, color='purple')
     xlabel('Times')
-    ylabel('Number of vehicles' )
-    title('Queue length: sg '+ sg_name+ ' in '+location_name + 'detected by' + det_name)    
+    ylabel('Number of vehicles in queue' )
     
+    #Define limits of figures
+    ymin = 0
+    ymax = 20 
+    
+    #first plot
+    ax.set_ylim(ymin,ymax)
+    ax.yaxis.tick_left()
+    
+    #Second plot
+    ax2 =twinx()
+    
+    ax2.axes.get_xaxis().set_visible(False) # Tring to hide the x-axes of second plot but I don't know it did not work
+    ax2.get_xaxis().tick_bottom() 
+    
+    ay2 = twiny()  
+    
+    #Function 'yconv' convert the number of vehicles in queue to length of queue in metre 
+    def yconv(y):
+        return y * average_length_per_vehicle
+    
+    ymin2 = yconv(ymin)
+    ymax2 = yconv(ymax)
+    
+    ax2.set_ylabel('queue length (unit:meter)') 
+    
+    ay2.yaxis.tick_right()
+    ax2.set_ylim(ymin2,ymax2) 
+    
+    # The second parameter of title is for not overlapping title with yaxis on the top. Title has x and y arguments.
+    title('Queue length: sg '+ sg_name+ ' in '+location_name + 'detected by' + det_name, y =1.05)  
+    
+    
+    
+    return getBufferImage()
+
+def get_green_time_2(location_name, conn_string,time1,time2):
+    
+    green_on = False
+
+    #state "0" represents "red/amber", that occurs before green state but drivers are allowed to go. Here we regards it as green, but actually it is not.
+    green_state_list = ["0","1","3","4","5","6","7","8",":"]
+    start_green_time = None    
+    #read configuration file
+    config = ConfigParser.RawConfigParser()
+    config.read('config.cfg')
+    
+    conn_string = config.get('Section1','conn_string')  
+    
+    main_data = get_main_data(location_name, conn_string, time1, time2) #main_data[tt,grint,dint,seq] 
+    
+    sg_dict = get_sg_config_in_one(location_name, conn_string)
+    
+    
+    f = open("traffic/static/traffic/result.csv","w+") #create a csv file to save data in.
+    
+    writer = csv.DictWriter(f, fieldnames = ["sg_name","start_green_time","green_duration(seconds)"], delimiter = ';')
+    writer.writeheader()   
+    
+    fig =plt.figure()
+    ax =fig.add_subplot(111) #fig.add_subplot equivalent to fig.add_subplot(1,1,1), means subplot(nrows.,ncols, plot_number)
+    ax.xaxis_date()
+    
+    #x values are times of a day and using a Formatter to formate them.
+    #For avioding crowding the x axis with labels, using a Locator.
+    helsinkiTimezone = timezone('Europe/Helsinki')
+    fmt = mdates.DateFormatter('%H:%M:%S', tz=helsinkiTimezone)
+    ax.xaxis.set_major_formatter(fmt)    
+    xlabel('Time')
+    ylabel('Green duration(s)' )
+    title('Signalgroup Green Duration in '+location_name)    
+    
+    for sg_index in sg_dict.keys():
+        sg_name = sg_dict[sg_index] 
+        minimum_green_list = []
+        start_green_time_list =[]        
+        for r in main_data:
+            if not green_on and r[1][sg_index] in green_state_list:
+                start_green_time = r[0]
+                green_on = True
+            elif green_on and r[1][sg_index] not in green_state_list:
+                green_on = False 
+                minimum_green = timedelta.total_seconds(r[0]-start_green_time) 
+                start_green_time_list.append(start_green_time)
+                minimum_green_list.append(minimum_green)
+                
+                f.write("{} {} {}\n".format(sg_name,start_green_time,minimum_green)) 
+            ax.plot(start_green_time_list, minimum_green_list,label = sg_name) 
+            
+    f.close() 
     
     return getBufferImage()
