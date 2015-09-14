@@ -558,7 +558,8 @@ def get_green_time_2(location_name, conn_string,time1,time2):
     for sg_index in sg_dict.keys():
         sg_name = sg_dict[sg_index] 
         minimum_green_list = []
-        start_green_time_list =[]        
+        start_green_time_list =[]
+        green_on = False
         for r in main_data:
             if not green_on and r[1][sg_index] in green_state_list:
                 start_green_time = r[0]
@@ -570,7 +571,8 @@ def get_green_time_2(location_name, conn_string,time1,time2):
                 minimum_green_list.append(minimum_green)
                 
                 f.write("{} {} {}\n".format(sg_name,start_green_time,minimum_green)) 
-            ax.plot(start_green_time_list, minimum_green_list,label = sg_name) 
+        
+        ax.plot(start_green_time_list, minimum_green_list,label = sg_name) 
             
     f.close() 
     

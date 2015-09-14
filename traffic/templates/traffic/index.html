@@ -44,6 +44,36 @@
 	    document.getElementById("locationFormId").submit();	
 	}
 	
+	function performanceChanged() {
+	    //get html element (here is the select), by id, id is in element's <>
+	    var selectedPerformance = document.getElementById("performanceSelectionId").value;
+	    
+	    var detectorNotNeededArray = ["capacity","greenDuration"];
+	    var detectorHidden = (detectorNotNeededArray.indexOf(selectedPerformance) > -1);
+	    
+	    if (detectorHidden) {
+		//get detector label by its id and change delector style, by change display to none or block (means hide or show)
+		document.getElementById('detectorLabelId').style.display = "none";
+		document.getElementById('detectorSelectionId').style.display = "none";
+	    }
+	    else {
+		document.getElementById('detectorLabelId').style.display = "block";
+		document.getElementById('detectorSelectionId').style.display = "block";
+	    }
+	    
+	    var signalGroupNotNeededArray = ["greenDuration"];
+	    var signalGroupHidden = (signalGroupNotNeededArray.indexOf(selectedPerformance) > -1);
+	    
+	    if (signalGroupHidden) {
+		document.getElementById('signalGroupLabelId').style.display = "none";
+	       document.getElementById('signalGroupSelectionId').style.display = "none";
+	    }
+	    else { 
+		document.getElementById('signalGroupLabelId').style.display = "block";
+	       document.getElementById('signalGroupSelectionId').style.display = "block";
+	    }
+	    
+	}
     </script>
     <script>  
         $(function ()  {
@@ -56,7 +86,7 @@
 	});
     </script>
     
-
+    <body onload="performanceChanged()">
     {# Navigate bar and a header #}
     <nav id="myNavbar" class="navbar navbar-default navbar-inverse navbar-fixed-top" role="navigation">
 	<!-- Brand and toggle get grouped for better mobile display -->
@@ -98,7 +128,8 @@
     
 	<label for="performance">Performance measures </label> 
 	
-	<select name ="performance" class="form-control">
+	{# onchange means when select option is changed, we will call function performanceChanged() in javascript #}
+	<select id="performanceSelectionId" name ="performance" class="form-control" onchange="performanceChanged()">
 	    {% for measure in measuresList %}
 		{% if measure == selectedPerformance %}
 		    <option value= {{measure}} selected="selected"> {{measure}} </option> 
@@ -106,6 +137,7 @@
 		    <option value= {{measure}}> {{measure}} </option> 
 		{% endif %}
 	    {% endfor %}
+	    performanceChanged()
 	</select>
 			
 	{# Select intersection #}
@@ -127,7 +159,7 @@
 	    <p> Sorry, there is no valid signalGroup configuration data in the selected intersection. Please choose other intersections. </p>
 	{% else %}
 	    <p>
-	    <label for="signalGroup">signalGroup</label>
+	    <label id="signalGroupLabelId" for="signalGroup">signalGroup</label>
 	    
 	    <select id="signalGroupSelectionId" name="signalGroup" onchange="signalChanged()" class="form-control">
 		{% for signalGroup in sgNameList %}
@@ -148,8 +180,8 @@
 	    {% if not detectorList  %}
 		<p> Sorry, there is no valid detector configuration data in the selected signal group. Please choose other signal group. </p>
 	    {% else %}
-		<label for="detector">detector</label>
-		<select name ="detector" class="form-control">
+		<label id="detectorLabelId" for="detector">detector</label>
+		<select id="detectorSelectionId" name ="detector" class="form-control">
 		{% for detector in detectorList %}
 		    <option value = {{detector}}>{{detector}}</option>
 		{% endfor %}
@@ -213,5 +245,6 @@
     </div>
     
     </div>
-
+    
+    </body>
 </html>
