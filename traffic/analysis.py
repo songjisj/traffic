@@ -327,7 +327,6 @@ def mean_in_list(list):
 #Saturation flow rate crossing a signalized stop line is define as the number of vechiles per hour that could cross the line if the signal remained green all of the time 
 #The time of passage of the third and last third vehicles over several cycles to determine this value in this function. 
 #The first few vehicles and the last vehicles are excluded because of starting up the queue or represent the arrival rate.  
-
 def get_capacity(location_name,conn_string,sg_name,det_name,time1,time2):
     
     
@@ -348,9 +347,9 @@ def get_capacity(location_name,conn_string,sg_name,det_name,time1,time2):
      
     detector_occupied_time_list_on_green = []
      
-    successive_vehicle_end_index = 9
+    successive_vehicle_end_index = 6
      
-    successive_vehicle_start_index =3
+    successive_vehicle_start_index =2
      
     time_diff = 0
     
@@ -389,7 +388,7 @@ def get_capacity(location_name,conn_string,sg_name,det_name,time1,time2):
             sum_green_duration = timedelta.total_seconds(s[0]-start_green_time) + sum_green_duration 
 
             if len(detector_occupied_time_list_on_green) > 10: 
-                time_diff=(detector_occupied_time_list_on_green[successive_vehicle_end_index]-detector_occupied_time_list_on_green[successive_vehicle_start_index])/6  
+                time_diff=(detector_occupied_time_list_on_green[successive_vehicle_end_index]-detector_occupied_time_list_on_green[successive_vehicle_start_index])/4
                 saturation_flow_rate = 3600/time_diff.total_seconds()  
                 time_diff_list.append(time_diff.total_seconds())
                 saturation_flow_rate_pair = [saturation_flow_rate,detector_occupied_time_list_on_green[1]]
@@ -417,8 +416,6 @@ def get_capacity(location_name,conn_string,sg_name,det_name,time1,time2):
     y = [mean_saturation,maximum_capacity]
     x = range(len(y))
     plt.bar(x,y,width=0.1,color = "blue")
-    
-    
     
     return getBufferImage()
 
@@ -542,14 +539,14 @@ def get_green_time_2(location_name, conn_string,time1,time2):
     writer = csv.DictWriter(f, fieldnames = ["sg_name","start_green_time","green_duration(seconds)"], delimiter = ';')
     writer.writeheader()   
     
-    fig =plt.figure()
+    fig =plt.figure(figsize=(12,7.5),facecolor='#8FBC8F')  #figsize argument is for resizing the figure.
     ax =fig.add_subplot(111) #fig.add_subplot equivalent to fig.add_subplot(1,1,1), means subplot(nrows.,ncols, plot_number)
     ax.xaxis_date()
     
     #x values are times of a day and using a Formatter to formate them.
     #For avioding crowding the x axis with labels, using a Locator.
     helsinkiTimezone = timezone('Europe/Helsinki')
-    fmt = mdates.DateFormatter('%H:%M:%S', tz=helsinkiTimezone)
+    fmt = mdates.DateFormatter('%H:%M:%S', tz=helsinkiTimezone)  
     ax.xaxis.set_major_formatter(fmt)    
     xlabel('Time')
     ylabel('Green duration(s)' )
@@ -572,8 +569,103 @@ def get_green_time_2(location_name, conn_string,time1,time2):
                 
                 f.write("{} {} {}\n".format(sg_name,start_green_time,minimum_green)) 
         
-        ax.plot(start_green_time_list, minimum_green_list,label = sg_name) 
-            
+        ax.plot(start_green_time_list, minimum_green_list, marker='o', linestyle='-', label = "sg"+sg_name) 
+    ax.legend(bbox_to_anchor=(1, 1), loc=2, borderaxespad=0.)
     f.close() 
+    
+    return getBufferImage()
+
+
+#Saturation flow rate crossing a signalized stop line is define as the number of vechiles per hour that could cross the line if the signal remained green all of the time 
+#The time of passage of the third and last third vehicles over several cycles to determine this value in this function. 
+#The first few vehicles and the last vehicles are excluded because of starting up the queue or represent the arrival rate.  
+def get_capacity_2(location_name,conn_string,sg_name,time1,time2):
+    
+    config = ConfigParser.RawConfigParser()
+    config.read('config.cfg')
+    conn_string = config.get('Section1','conn_string')      
+    
+    main_data = get_main_data(location_name, conn_string, time1, time2)  #[tt,gint,dint,seq]
+    sg_pairs = get_sg_config_in_one(location_name, conn_string)
+    for idx, name in sg_pairs.items():
+        if name == sg_name:
+            sg_index = idx
+            break      
+    det_dict = get_det_config_in_one_sg(location_name, sg_name, conn_string)
+
+    green_state_list = ["0","1","3","4","5","6","7","8",":"]    
+    required_vehicle_number = 8
+    
+    one_hour_in_second = 3600
+    
+    mean_saturation_by_det_list = []
+    xlabel_list = []
+    
+    for det_index in det_dict.keys():
+        det_name = det_dict[det_index]
+
+        green_on = False
+        
+        detector_occupied = False 
+    
+        detector_occupied_time = None
+    
+        detector_occupied_time_list_on_green = []
+    
+        successive_vehicle_end_index = 7
+    
+        successive_vehicle_start_index =3
+    
+        time_diff = 0
+    
+        time_diff_list = []
+    
+        start_green_time = None
+    
+        start_green_time_list = [] 
+    
+        saturation_flow_rate = 0 
+    
+        saturation_flow_rate_list = []
+    
+        saturation_flow_rate_pair_list = []
+    
+        sum_green_duration = 0  
+        
+        for r in main_data:
+            if not green_on and r[1][sg_index] in green_state_list:
+                green_on = True
+                start_green_time = r[0]
+                start_green_time_list.append(start_green_time)
+            elif green_on and r[1][sg_index] in green_state_list:
+                if not detector_occupied and r[2][det_index] == '1':
+                    detector_occupied_time = r[0]
+                    detector_occupied = True
+                    detector_occupied_time_list_on_green.append(detector_occupied_time)
+                elif detector_occupied and r[2][det_index] =='0':
+                    detector_occupied = False 
+            elif green_on and r[1][sg_index] not in green_state_list:
+                green_on = False
+                #sum_green_duration = timedelta.total_seconds(r[0]-start_green_time) + sum_green_duration
+                if len(detector_occupied_time_list_on_green) > required_vehicle_number:
+                    time_diff = (detector_occupied_time_list_on_green[successive_vehicle_end_index] - detector_occupied_time_list_on_green[successive_vehicle_start_index])/(successive_vehicle_end_index - successive_vehicle_start_index)
+                    saturation_flow_rate = one_hour_in_second/time_diff.total_seconds()
+                    #saturation_flow_rate_pair =[saturation_flow_rate, detector_occupied_time_list_on_green[0]]
+                    #saturation_flow_rate_pair_list.append(saturation_flow_rate_pair)
+                    saturation_flow_rate_list.append(saturation_flow_rate)
+                detector_occupied_time_list_on_green = []
+            
+            
+        mean_saturation_by_det = mean_in_list(saturation_flow_rate_list)
+        mean_saturation_by_det_list.append(mean_saturation_by_det) 
+        xlabel_list.append(det_name)
+        
+    fig, ax = plt.subplots()
+    ind = np.arange(len(mean_saturation_by_det_list))
+    ax.bar(ind,mean_saturation_by_det_list,width=0.001,color = "r")
+    ax.set_xticklabels(xlabel_list)
+    ax.set_ylabel("Number of vehicles")
+    ax.set_title("Saturation flow rate in signalGroup "+sg_name  )
+    
     
     return getBufferImage()
