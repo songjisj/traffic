@@ -601,6 +601,11 @@ def get_capacity_2(location_name,conn_string,sg_name,time1,time2):
     mean_saturation_by_det_list = []
     xlabel_list = []
     
+    f = open("traffic/static/traffic/result.csv","w+") #create a csv file to save data in.
+    
+    writer = csv.DictWriter(f, fieldnames = ["det_name","saturation_flow_rate"], delimiter = ';')
+    writer.writeheader()    
+    
     for det_index in det_dict.keys():
         det_name = det_dict[det_index]
 
@@ -659,13 +664,14 @@ def get_capacity_2(location_name,conn_string,sg_name,time1,time2):
         mean_saturation_by_det = mean_in_list(saturation_flow_rate_list)
         mean_saturation_by_det_list.append(mean_saturation_by_det) 
         xlabel_list.append(det_name)
-        
+        f.write("{} {}\n".format(det_name, mean_saturation_by_det)) 
     fig, ax = plt.subplots()
-    ind = np.arange(len(mean_saturation_by_det_list))
+    ind = np.arange(len(xlabel_list))
     ax.bar(ind,mean_saturation_by_det_list,width=0.001,color = "r")
     ax.set_xticklabels(xlabel_list)
     ax.set_ylabel("Number of vehicles")
-    ax.set_title("Saturation flow rate in signalGroup "+sg_name  )
+    ax.set_title("Saturation flow rate in signalGroup "+sg_name  ) 
+    
     
     
     return getBufferImage()
