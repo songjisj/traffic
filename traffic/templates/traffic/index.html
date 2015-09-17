@@ -246,5 +246,12 @@
     
     </div>
     
+    <div class="row">
+	<div class="col-sm-8">
+	{% load staticfiles %}
+	<img src="{% static "traffic/"|add:selectedLocation|add:".png" %}">
+	</div>
+    </div>
+    
     </body>
 </html>
