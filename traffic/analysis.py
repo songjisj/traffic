@@ -21,6 +21,7 @@ import csv
 from pytz import timezone
 
 from dateutil import parser
+import shutil
 
 GREEN = "GREEN"
 AMBER = "AMBER"
@@ -587,6 +588,8 @@ def get_green_time_2(location_name, conn_string,time1,time2):
         ax.plot(start_green_time_list, minimum_green_list, marker='o', linestyle='-', label = "sg"+sg_name) 
     ax.legend(bbox_to_anchor=(1, 1), loc=2, borderaxespad=0.)
     f.close() 
+    
+    shutil.copyfile("traffic/static/traffic/result.csv", "traffic/static/traffic/result.txt")
     
     return getBufferImage()
 

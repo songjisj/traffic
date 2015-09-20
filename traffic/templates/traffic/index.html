@@ -243,32 +243,17 @@
 	Analysis result <a href="{% static "traffic/result.csv" %}">Download CSV File</a>   
     
     </div>
-    <div class="col-sm-4">
-        <h2> view data </h2>
-	<table class="table">
-	    {% for i in fileReader %}
-	        {% if lineNum == 0 %}
-		<tr>
-		    {% for col in i %}
-		        <th>col</th>
-		    {% endfor %}
-		<tr>
-		{% else %}
-		<tr>
-		    {% for col in i %}
-		        <td>col</td> 
-		    {% endfor %}
-		</tr>
-		
-		{% endif %}
-	    
-	
-	    {% endfor %}
-	
-	</table>
     </div>
     
+    <div class="row">
+    <div class="col-sm-3">
     </div>
+    <div class="col-sm-5">
+    {% load staticfiles %}
+    <iframe style = "width:600px;" src="{% static "traffic/result.txt" %}"></iframe> 
+    </div>
+    </div>
+    <br>
     
     <div class="row">
 	<div class="col-sm-8">
