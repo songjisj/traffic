@@ -120,7 +120,7 @@
     {# Menu #}
     <div class="row">
     <div class="col-sm-1 " ></div>
-    <div class="col-sm-3 " >
+    <div class="col-sm-2 " >
      
     <form id="locationFormId" method="POST" action="{% url 'traffic:index'%}">{% csrf_token %}
         
@@ -242,6 +242,30 @@
 	<br></br>
 	Analysis result <a href="{% static "traffic/result.csv" %}">Download CSV File</a>   
     
+    </div>
+    <div class="col-sm-4">
+        <h2> view data </h2>
+	<table class="table">
+	    {% for i in fileReader %}
+	        {% if lineNum == 0 %}
+		<tr>
+		    {% for col in i %}
+		        <th>col</th>
+		    {% endfor %}
+		<tr>
+		{% else %}
+		<tr>
+		    {% for col in i %}
+		        <td>col</td> 
+		    {% endfor %}
+		</tr>
+		
+		{% endif %}
+	    
+	
+	    {% endfor %}
+	
+	</table>
     </div>
     
     </div>

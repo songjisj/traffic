@@ -191,6 +191,7 @@ def get_sg_status(location_name,conn_string,sg_name,time1,time2):
         sg_status[i].append(main_data[i][0])
         sg_status[i].append(main_data[i][1][sg_index])
         sg_status[i].append(main_data[i][3]) #seq number
+        sg_status[i].append(main_data[i][2])
         
     sg_status_sorted = sorted(sg_status, key = itemgetter(2,0))
     return sg_status_sorted
@@ -236,16 +237,18 @@ def get_green_time(location_name, conn_string,sg_name,time1,time2):
     #read configuration file
     config = ConfigParser.RawConfigParser()
     config.read('config.cfg')
-    
     conn_string = config.get('Section1','conn_string')  
-    sg_status= get_sg_status(location_name, conn_string, sg_name, time1, time2)
+    sg_status= get_sg_status(location_name, conn_string, sg_name, time1, time2) #[time,grint,seq,dint] 
     green_on = False
     minimum_green_list = []
     start_green_time_list =[]
+    useless_green_list = []
     #state "0" represents "red/amber", that occurs before green state but drivers are allowed to go. Here we regards it as green, but actually it is not.
     green_state_list = ["0","1","3","4","5","6","7","8",":"]
     start_green_time = None
+    any_detectors_occupied = True 
     
+    green_end_time = None 
     
     f = open("traffic/static/traffic/result.csv","w+") #create a csv file to save data in.
     
@@ -253,26 +256,40 @@ def get_green_time(location_name, conn_string,sg_name,time1,time2):
     writer.writeheader()    
     
     for s in sg_status:
+        
+        # start to be green
         if not green_on and s[1] in green_state_list: 
-            start_green_time = s[0]
+            start_green_time = s[0] 
             green_on = True
+            
+        #During green 
+        elif green_on and s[1] in green_state_list:
+            
+            if int(s[3]) != 0 : #som detectors are occupied 
+                any_detectors_occupied = True 
+            elif  int(s[3] == 0):
+                if any_detectors_occupied:
+                    detector_unoccupied_lastest_time = s[0]
+                    any_detectors_occupied = False 
+                
+            
         elif green_on and s[1] not in green_state_list:
             green_on = False
-            minimum_green = timedelta.total_seconds(s[0]-start_green_time)
+            minimum_green = timedelta.total_seconds(detector_unoccupied_lastest_time-start_green_time)
             start_green_time_list.append(start_green_time) 
             minimum_green_list.append(minimum_green)
-            
-            f.write("{} {}\n".format(start_green_time,minimum_green)) 
+            useless_green = timedelta.total_seconds(s[0]-detector_unoccupied_lastest_time)
+            useless_green_list.append(useless_green)
+            f.write("{} {}\n".format(start_green_time,minimum_green,useless_green_list)) 
             print minimum_green,start_green_time
             
     f.close() #close the file after saving.
     
     
-    fig =plt.figure()
+    fig =plt.figure(figsize=(10,6),facecolor='#FF9966')  #figsize argument is for resizing the figure.
     ax =fig.add_subplot(111) #fig.add_subplot equivalent to fig.add_subplot(1,1,1), means subplot(nrows.,ncols, plot_number)
     ax.xaxis_date()
     
-    average_green_time = sum(minimum_green_list)/len(minimum_green_list)
     
     #x values are times of a day and using a Formatter to formate them.
     #For avioding crowding the x axis with labels, using a Locator.
@@ -280,15 +297,11 @@ def get_green_time(location_name, conn_string,sg_name,time1,time2):
     fmt = mdates.DateFormatter('%H:%M:%S', tz=helsinkiTimezone)
     ax.xaxis.set_major_formatter(fmt)
    
-       
     ax.plot(start_green_time_list, minimum_green_list,'k',start_green_time_list, minimum_green_list,'go')
-    ax.axhline(y=10,xmin=0,xmax=100,linewidth=0.01,color="r",zorder=0)
     
-
     xlabel('Time')
     ylabel('Green duration(s)' )
     title('Signalgroup Green Duration: sg '+ sg_name+ ' in '+location_name)
-    
     
     return getBufferImage()
 
@@ -461,14 +474,14 @@ def get_queue_length(location_name,conn_string,sg_name,det_name,time1,time2):
             discharge_queue_time = s[0]
             count_vehicle_in_queue_dict[discharge_queue_time] = count_vehicle_in_queue
             count_vehicle_in_queue = 0
-            f.write("{} {}\n".format(count_vehicle_in_queue_dict[discharge_queue_time],count_vehicle_in_queue))             
+            f.write("{} {}\n".format(discharge_queue_time,count_vehicle_in_queue))             
             
         elif green_on and s[2] not in green_state_list:
             green_on =False 
     f.close() 
     
-    fig = plt.figure()
-    ax =fig.add_subplot(111)
+    fig =plt.figure(figsize=(10,6),facecolor='#9999CC')  #figsize argument is for resizing the figure.
+    ax =fig.add_subplot(111) #fig.add_subplot equivalent to fig.add_subplot(1,1,1), means subplot(nrows.,ncols, plot_number)
     ax.xaxis_date()
     
     #The following segment codes is for formatting xaxis and show the correct time in Helsinki timezone.
@@ -539,9 +552,10 @@ def get_green_time_2(location_name, conn_string,time1,time2):
     writer = csv.DictWriter(f, fieldnames = ["sg_name","start_green_time","green_duration(seconds)"], delimiter = ';')
     writer.writeheader()   
     
-    fig =plt.figure(figsize=(12,7.5),facecolor='#8FBC8F')  #figsize argument is for resizing the figure.
+    fig =plt.figure(figsize=(10,6),facecolor='#8FBC8F')  #figsize argument is for resizing the figure.
     ax =fig.add_subplot(111) #fig.add_subplot equivalent to fig.add_subplot(1,1,1), means subplot(nrows.,ncols, plot_number)
     ax.xaxis_date()
+    plt.subplots_adjust(left=0.05, bottom=0.1, right=0.85, top=0.9, wspace=None, hspace=None)
     
     #x values are times of a day and using a Formatter to formate them.
     #For avioding crowding the x axis with labels, using a Locator.
@@ -675,3 +689,5 @@ def get_capacity_2(location_name,conn_string,sg_name,time1,time2):
     
     
     return getBufferImage()
+
+

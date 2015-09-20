@@ -15,6 +15,7 @@ import dateutil.parser
 from datetime import datetime
 from pytz import timezone
 import datetime
+import csv 
 #import iso8601
 
 
@@ -97,7 +98,11 @@ def index(request):
     helsinkiTimezone = timezone('Europe/Helsinki')
     timeZone = datetime.datetime.now(helsinkiTimezone).strftime('%z')
     
-    measuresList = ["capacity","greenDuration","queueLength"]
+    measuresList = ["capacity","greenDuration","queueLength","efficientGreen"]
+    
+    #display csv file 
+    fileReader = csv.reader("traffic/static/traffic/result.csv", delimiter=',')
+    lineNum = 0  #initialize linenumber
     
     context = {'locationNameList':locationNameList, 
                'selectedPerformance':selectedPerformance,
@@ -110,6 +115,8 @@ def index(request):
                'startTimeString':startTimeString,
                'startTimeString':startTimeString,
                'endTimeString':endTimeString,
+               'fileReader':fileReader,
+               'lineNum':lineNum,
                'form':form}    
     
     refreshType = request.POST.get('refreshType',"")
@@ -123,6 +130,8 @@ def index(request):
             get_capacity_2(selectedLocation,"",selectedSgName,startTimeStringTimeZone,endTimeStringTimeZone)
         elif selectedPerformance == "queueLength":
             get_queue_length(selectedLocation,"",selectedSgName,selectedDetector,startTimeStringTimeZone,endTimeStringTimeZone)
+        elif selectedPerformance == "efficientGreen":
+            get_green_time(selectedLocation, "", selectedSgName, startTimeStringTimeZone, endTimeStringTimeZone)
     
 
     #return HttpResponse(green_example, content_type="image/png")
@@ -163,3 +172,4 @@ def download_data_file(request):
     response['Content-length'] = os.path.getsize(filename)
     response['Content-Disposition'] ="attachment;filename=%s"%download_name
     return response 
+
