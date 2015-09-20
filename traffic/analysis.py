@@ -233,6 +233,7 @@ def get_sg_det_status(location_name,conn_string,sg_name,det_name,time1,time2):
     sg_det_status_sorted = sorted(sg_status, key = itemgetter(1,0))
     return sg_det_status_sorted 
 
+#active green
 def get_green_time(location_name, conn_string,sg_name,time1,time2):
     #read configuration file
     config = ConfigParser.RawConfigParser()
