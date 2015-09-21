@@ -302,7 +302,8 @@ def get_green_time(location_name, conn_string,sg_name,time1,time2):
    
     green_active = ax.bar(start_green_time_list, active_green_list,width,color='g')
     green_useless = ax.bar(start_green_time_list,useless_green_list,width,color='#CCFFFF',bottom = active_green_list)
-    ax.legend((green_active[0], green_useless[0]),("active green", "useless green"))
+    if green_active and green_useless:
+        ax.legend((green_active[0], green_useless[0]),("active green", "useless green"))
     
     xlabel('Time')
     ylabel('Green duration(s)' )
