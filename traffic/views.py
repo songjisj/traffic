@@ -98,7 +98,7 @@ def index(request):
     helsinkiTimezone = timezone('Europe/Helsinki')
     timeZone = datetime.datetime.now(helsinkiTimezone).strftime('%z')
     
-    measuresList = ["capacity","greenDuration","queueLength","efficientGreen"]
+    measuresList = ["capacity","greenDuration","queueLength","activeGreen"] 
     
     #display csv file 
     fileReader = csv.reader("traffic/static/traffic/result.csv", delimiter=',')
@@ -130,7 +130,7 @@ def index(request):
             get_capacity_2(selectedLocation,"",selectedSgName,startTimeStringTimeZone,endTimeStringTimeZone)
         elif selectedPerformance == "queueLength":
             get_queue_length(selectedLocation,"",selectedSgName,selectedDetector,startTimeStringTimeZone,endTimeStringTimeZone)
-        elif selectedPerformance == "efficientGreen":
+        elif selectedPerformance == "activeGreen":
             get_green_time(selectedLocation, "", selectedSgName, startTimeStringTimeZone, endTimeStringTimeZone)
     
 

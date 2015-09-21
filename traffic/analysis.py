@@ -242,19 +242,20 @@ def get_green_time(location_name, conn_string,sg_name,time1,time2):
     conn_string = config.get('Section1','conn_string')  
     sg_status= get_sg_status(location_name, conn_string, sg_name, time1, time2) #[time,grint,seq,dint] 
     green_on = False
-    minimum_green_list = []
+    active_green_list = []
     start_green_time_list =[]
     useless_green_list = []
     #state "0" represents "red/amber", that occurs before green state but drivers are allowed to go. Here we regards it as green, but actually it is not.
     green_state_list = ["0","1","3","4","5","6","7","8",":"]
     start_green_time = None
-    any_detectors_occupied = True 
+    width = 0.0005
+   
     
     green_end_time = None 
     
     f = open("traffic/static/traffic/result.csv","w+") #create a csv file to save data in.
     
-    writer = csv.DictWriter(f, fieldnames = ["start_green_time","green_duration(seconds)"], delimiter = ';')
+    writer = csv.DictWriter(f, fieldnames = ["start_green_time","active_green_duration(seconds),useless_green_duration(seconds)"], delimiter = ';')
     writer.writeheader()    
     
     for s in sg_status:
@@ -263,34 +264,34 @@ def get_green_time(location_name, conn_string,sg_name,time1,time2):
         if not green_on and s[1] in green_state_list: 
             start_green_time = s[0] 
             green_on = True
-            
+            any_detectors_occupied = True 
+            detector_unoccupied_lastest_time = s[0]
         #During green 
         elif green_on and s[1] in green_state_list:
             
             if int(s[3]) != 0 : #som detectors are occupied 
                 any_detectors_occupied = True 
-            elif  int(s[3] == 0):
-                if any_detectors_occupied:
-                    detector_unoccupied_lastest_time = s[0]
-                    any_detectors_occupied = False 
+            elif  int(s[3]) == 0:
+                detector_unoccupied_lastest_time = s[0]
+                any_detectors_occupied = False 
                 
             
         elif green_on and s[1] not in green_state_list:
             green_on = False
-            minimum_green = timedelta.total_seconds(detector_unoccupied_lastest_time-start_green_time)
+            active_green = timedelta.total_seconds(detector_unoccupied_lastest_time-start_green_time)
             start_green_time_list.append(start_green_time) 
-            minimum_green_list.append(minimum_green)
+            active_green_list.append(active_green)
             useless_green = timedelta.total_seconds(s[0]-detector_unoccupied_lastest_time)
             useless_green_list.append(useless_green)
-            f.write("{} {}\n".format(start_green_time,minimum_green,useless_green_list)) 
-            print minimum_green,start_green_time
+            f.write("{} {} {}\n".format(start_green_time,active_green,useless_green)) 
+            print active_green,start_green_time
             
     f.close() #close the file after saving.
+    shutil.copyfile("traffic/static/traffic/result.csv", "traffic/static/traffic/result.txt")
     
-    
-    fig =plt.figure(figsize=(10,6),facecolor='#FF9966')  #figsize argument is for resizing the figure.
+    fig =plt.figure(figsize=(10,6),facecolor='#FFE6E6')  #figsize argument is for resizing the figure.
     ax =fig.add_subplot(111) #fig.add_subplot equivalent to fig.add_subplot(1,1,1), means subplot(nrows.,ncols, plot_number)
-    ax.xaxis_date()
+    ax.xaxis_date() 
     
     
     #x values are times of a day and using a Formatter to formate them.
@@ -299,7 +300,9 @@ def get_green_time(location_name, conn_string,sg_name,time1,time2):
     fmt = mdates.DateFormatter('%H:%M:%S', tz=helsinkiTimezone)
     ax.xaxis.set_major_formatter(fmt)
    
-    ax.plot(start_green_time_list, minimum_green_list,'k',start_green_time_list, minimum_green_list,'go')
+    green_active = ax.bar(start_green_time_list, active_green_list,width,color='g')
+    green_useless = ax.bar(start_green_time_list,useless_green_list,width,color='#CCFFFF',bottom = active_green_list)
+    ax.legend((green_active[0], green_useless[0]),("active green", "useless green"))
     
     xlabel('Time')
     ylabel('Green duration(s)' )
@@ -461,10 +464,11 @@ def get_queue_length(location_name,conn_string,sg_name,det_name,time1,time2):
     f = open("traffic/static/traffic/result.csv","w+")
     
     #Write header
-    writer = csv.DictWriter(f, fieldnames = ["discharge_queue_time","number of vehicles"], delimiter = ';')
+    writer = csv.DictWriter(f, fieldnames = ["discharge_queue_time","number of vehicles","The length of queue(meters)"], delimiter = ';')
     writer.writeheader()        
     
     for s in sg_det_status:
+        
         if not green_on and s[2] not in green_state_list:
             if not detector_occupied and s[3] == '1':
                 detector_occupied = True
@@ -475,14 +479,15 @@ def get_queue_length(location_name,conn_string,sg_name,det_name,time1,time2):
             green_on = True
             discharge_queue_time = s[0]
             count_vehicle_in_queue_dict[discharge_queue_time] = count_vehicle_in_queue
-            count_vehicle_in_queue = 0
-            f.write("{} {}\n".format(discharge_queue_time,count_vehicle_in_queue))             
-            
+            queue_length = count_vehicle_in_queue * average_length_per_vehicle
+            f.write("{} {} {}\n".format(discharge_queue_time,count_vehicle_in_queue,queue_length))             
+            count_vehicle_in_queue = 0 
         elif green_on and s[2] not in green_state_list:
             green_on =False 
     f.close() 
+    shutil.copyfile("traffic/static/traffic/result.csv", "traffic/static/traffic/result.txt")
     
-    fig =plt.figure(figsize=(10,6),facecolor='#9999CC')  #figsize argument is for resizing the figure.
+    fig =plt.figure(figsize=(10,6),facecolor='#669999')  #figsize argument is for resizing the figure.
     ax =fig.add_subplot(111) #fig.add_subplot equivalent to fig.add_subplot(1,1,1), means subplot(nrows.,ncols, plot_number)
     ax.xaxis_date()
     
@@ -492,13 +497,13 @@ def get_queue_length(location_name,conn_string,sg_name,det_name,time1,time2):
     ax.xaxis.set_major_formatter(fmt) 
     
     #The segment codes is for marking dual units(dual axis) using matplotlib
-    ax.bar(count_vehicle_in_queue_dict.keys(),count_vehicle_in_queue_dict.values(),width = 0.0001, color='purple')
+    ax.bar(count_vehicle_in_queue_dict.keys(),count_vehicle_in_queue_dict.values(),width = 0.0005, color='purple')
     xlabel('Times')
     ylabel('Number of vehicles in queue' )
     
     #Define limits of figures
     ymin = 0
-    ymax = 20 
+    ymax = 15 
     
     #first plot
     ax.set_ylim(ymin,ymax)
