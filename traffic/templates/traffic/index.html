@@ -10,6 +10,7 @@
         <!--<script src="/twitter-bootstrap/twitter-bootstrap-v2/js/bootstrap-tooltip.js"></script>  -->
         <!--<script src="/twitter-bootstrap/twitter-bootstrap-v2/js/bootstrap-popover.js"></script>-->
 	<!--<link rel="stylesheet" href="/resources/demos/style.css">-->
+	
 	<link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
 	<script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
 	<script>
@@ -48,7 +49,7 @@
 	    //get html element (here is the select), by id, id is in element's <>
 	    var selectedPerformance = document.getElementById("performanceSelectionId").value;
 	    
-	    var detectorNotNeededArray = ["capacity","greenDuration"];
+	    var detectorNotNeededArray = ["capacity","greenDuration","activeGreen"];
 	    var detectorHidden = (detectorNotNeededArray.indexOf(selectedPerformance) > -1);
 	    
 	    if (detectorHidden) {
@@ -65,12 +66,24 @@
 	    var signalGroupHidden = (signalGroupNotNeededArray.indexOf(selectedPerformance) > -1);
 	    
 	    if (signalGroupHidden) {
-		document.getElementById('signalGroupLabelId').style.display = "none";
-	       document.getElementById('signalGroupSelectionId').style.display = "none";
+	        document.getElementById('signalGroupLabelId').style.display = "none";
+	        document.getElementById('signalGroupSelectionId').style.display = "none";
 	    }
 	    else { 
 		document.getElementById('signalGroupLabelId').style.display = "block";
-	       document.getElementById('signalGroupSelectionId').style.display = "block";
+	        document.getElementById('signalGroupSelectionId').style.display = "block";
+	    }
+	    
+	    var timeIntervalNotNeededArray = ["greenDuration","activeGreen","queueLength"];
+	    var timeIntervalHidden = (timeIntervalNotNeededArray.indexOf(selectedPerformance) > -1);
+	    
+	    if(timeIntervalHidden) {
+	        document.getElementById('timeIntervalLabelId').style.display = "none" ;
+		document.getElementById('timeIntervalSelectionId').style.display = "none";
+	    }
+	    else{
+	        document.getElementById('timeIntervalLabelId').style.display = "block";
+		document.getElementById('timeIntervalSelectionId').style.display = "block";
 	    }
 	    
 	}
@@ -183,13 +196,29 @@
 		<label id="detectorLabelId" for="detector">detector</label>
 		<select id="detectorSelectionId" name ="detector" class="form-control">
 		{% for detector in detectorList %}
-		    <option value = {{detector}}>{{detector}}</option>
+		    {% if detector == selectedDetector %}
+		        <option value ={{detector}} selected="selected">{{detector}}</option>
+		    {% else %}
+		        <option value = {{detector}}>{{detector}}</option>
+		    {% endif %}
 		{% endfor %}
 		</select>
 	    {% endif %}
 	    </p>
 	{% endif %}
 	
+	{# Select timeInterval #}
+	<label id = "timeIntervalLabelId" for="timeInterval"> timeInterval </label>
+	<select id="timeIntervalSelectionId" for="timeInterval" class="form-control" >
+	{% for timeInterval in timeIntervalList%}
+	    {% if timeInterval = selectedTimeInterval %}
+	        <option value = {{timeInterval}} selected="selected">{{timeInterval}}</option>
+	    {% else %}
+	        <option value = {{timeInterval}}> {{timeInterval}} </option>
+	    {% endif %}
+	{% endfor %}
+	
+	</select>
 	                
 	{#select datatime #}
 	<br>

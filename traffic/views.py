@@ -7,7 +7,7 @@ import PIL.Image
 import StringIO
 from .models import TfRaw,Controller,ControllerConfigDet,ControllerConfigSg
 from analysis import rowNumber
-from analysis import get_green_time, get_sg_config_in_one, get_det_config_in_one_sg,get_capacity,get_queue_length,get_green_time_2,get_capacity_2
+from analysis import get_green_time, get_sg_config_in_one, get_det_config_in_one_sg,get_capacity,get_queue_length,get_green_time_2,get_capacity_2,get_maxCapacity
 
 from .forms import ControlForm
 from .forms import ContactForm
@@ -44,7 +44,7 @@ def index(request):
     detectorList = []
     selectedDetector = ""
     startTimeString =""
-    
+    timeIntervalList =["5m","10m","20m","30m","60m"] 
     #Select performance 
     try:
         selectedPerformance = request.POST['performance']
@@ -89,7 +89,13 @@ def index(request):
     except(KeyError):
         if detectorList :
             selectedDetector = detectorList[0]
-        
+            
+    try:
+        selectedTimeInterval = request.POST['timeInterval']
+    except(KeyError):
+        if timeIntervalList:
+            selectedTimeInterval = timeIntervalList[0]
+ 
     form = ContactForm(request.POST)
         
     startTimeString = request.POST.get('starttime',"")
@@ -98,7 +104,8 @@ def index(request):
     helsinkiTimezone = timezone('Europe/Helsinki')
     timeZone = datetime.datetime.now(helsinkiTimezone).strftime('%z')
     
-    measuresList = ["capacity","greenDuration","queueLength","activeGreen"] 
+    measuresList = ["capacity","greenDuration","queueLength","activeGreen","maximumCapacity"] 
+    
     
     #display csv file 
     fileReader = csv.reader("traffic/static/traffic/result.csv", delimiter=',')
@@ -107,6 +114,8 @@ def index(request):
     context = {'locationNameList':locationNameList, 
                'selectedPerformance':selectedPerformance,
                'measuresList':measuresList,
+               'timeIntervalList':timeIntervalList,
+               'selectedTimeInterval':selectedTimeInterval,
                'selectedLocation':selectedLocation,               
                'sgNameList':sgNameList,
                'selectedSgName':selectedSgName,
@@ -132,6 +141,8 @@ def index(request):
             get_queue_length(selectedLocation,"",selectedSgName,selectedDetector,startTimeStringTimeZone,endTimeStringTimeZone)
         elif selectedPerformance == "activeGreen":
             get_green_time(selectedLocation, "", selectedSgName, startTimeStringTimeZone, endTimeStringTimeZone)
+        elif selectedPerformance =="maximumCapacity":
+            get_maxCapacity(selectedLocation,selectedSgName,selectedDetector,"",selectedTimeInterval,startTimeStringTimeZone,endTimeStringTimeZone)
     
 
     #return HttpResponse(green_example, content_type="image/png")

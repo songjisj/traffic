@@ -255,7 +255,7 @@ def get_green_time(location_name, conn_string,sg_name,time1,time2):
     
     f = open("traffic/static/traffic/result.csv","w+") #create a csv file to save data in.
     
-    writer = csv.DictWriter(f, fieldnames = ["start_green_time","active_green_duration(seconds),useless_green_duration(seconds)"], delimiter = ';')
+    writer = csv.DictWriter(f, fieldnames = ["start_green_time","active_green_duration(seconds)","useless_green_duration(seconds)"], delimiter = ';')
     writer.writeheader()    
     
     for s in sg_status:
@@ -289,7 +289,7 @@ def get_green_time(location_name, conn_string,sg_name,time1,time2):
     f.close() #close the file after saving.
     shutil.copyfile("traffic/static/traffic/result.csv", "traffic/static/traffic/result.txt")
     
-    fig =plt.figure(figsize=(10,6),facecolor='#FFE6E6')  #figsize argument is for resizing the figure.
+    fig =plt.figure(figsize=(10,6),facecolor='#CCFF66')  #figsize argument is for resizing the figure.
     ax =fig.add_subplot(111) #fig.add_subplot equivalent to fig.add_subplot(1,1,1), means subplot(nrows.,ncols, plot_number)
     ax.xaxis_date() 
     
@@ -700,4 +700,75 @@ def get_capacity_2(location_name,conn_string,sg_name,time1,time2):
     
     return getBufferImage()
 
+
+def get_maxCapacity(location_name,sg_name,det_name,conn_string,time_interval,time1,time2):
+    
+    from pytimeparse.timeparse import timeparse
+    import datetime 
+    
+    time_interval_in_seconds = datetime.timedelta(seconds=timeparse(time_interval))
+    
+    config = ConfigParser.RawConfigParser()
+    config.read('config.cfg')
+    conn_string = config.get('Section1','conn_string')     
+    default_saturation_flow_rate = 1500 
+    sg_status= get_sg_status(location_name, conn_string, sg_name, time1, time2) #[time,grint,seq,dint] 
+    green_on = False
+    sum_green_list = []
+    start_time_list = []
+    max_capacity_list =[]
+    #state "0" represents "red/amber", that occurs before green state but drivers are allowed to go. Here we regards it as green, but actually it is not.
+    green_state_list = ["0","1","3","4","5","6","7","8",":"]
+    start_green_time = None
+    width = 0.0005 
+    green_end_time = None 
+    sum_green = 0 
+    start_time = sg_status[0][0] # start time of each time interval 
+    
+    
+    f = open("traffic/static/traffic/result.csv","w+") #create a csv file to save data in.
+    
+    writer = csv.DictWriter(f, fieldnames = ["start_time","max_capacity","green in total(seconds)"], delimiter = ';')
+    writer.writeheader()   
+    
+    # the sum of green time in a time interval 
+    for s in sg_status:
+        if not green_on and s[1] in green_state_list:
+            start_green_time = s[0]
+            green_on = True
+        elif green_on and s[1] not in green_state_list:
+            green_on = False 
+            green_duration = (s[0]-start_green_time).total_seconds()
+            sum_green = sum_green + green_duration
+        elif s[0] >= start_time + time_interval_in_seconds:
+            start_time_list.append(start_time)
+            max_capacity = default_saturation_flow_rate*(sum_green/3600)
+            max_capacity_list.append(max_capacity)
+            f.write("{} {} {}\n".format(start_time,max_capacity,sum_green))
+            start_time = start_time + time_interval_in_seconds
+            sum_green = 0 
+    f.close()
+    shutil.copyfile("traffic/static/traffic/result.csv", "traffic/static/traffic/result.txt")  
+    
+    fig =plt.figure(figsize=(10,6),facecolor='#FFFF99')  #figsize argument is for resizing the figure.
+    ax =fig.add_subplot(111) #fig.add_subplot equivalent to fig.add_subplot(1,1,1), means subplot(nrows.,ncols, plot_number)
+    ax.xaxis_date() 
+    
+    
+    #x values are times of a day and using a Formatter to formate them.
+    #For avioding crowding the x axis with labels, using a Locator.
+    helsinkiTimezone = timezone('Europe/Helsinki')
+    fmt = mdates.DateFormatter('%H:%M:%S', tz=helsinkiTimezone)
+    ax.xaxis.set_major_formatter(fmt)
+   
+    ax.plot(start_time_list,max_capacity_list,marker='o',linestyle='--',color='g')
+
+    
+    xlabel('Time')
+    ylabel('maximum capacity(unit:number of vehicles)' )
+    title('Maximum capacity for sg '+ sg_name+ 'via '+ det_name +' in '+location_name)
+    
+    return getBufferImage()    
+    
+    
 
