@@ -209,7 +209,7 @@
 	
 	{# Select timeInterval #}
 	<label id = "timeIntervalLabelId" for="timeInterval"> timeInterval </label>
-	<select id="timeIntervalSelectionId" for="timeInterval" class="form-control" >
+	<select id="timeIntervalSelectionId" name="timeInterval" class="form-control" >
 	{% for timeInterval in timeIntervalList%}
 	    {% if timeInterval = selectedTimeInterval %}
 	        <option value = {{timeInterval}} selected="selected">{{timeInterval}}</option>

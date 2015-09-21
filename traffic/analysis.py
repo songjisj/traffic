@@ -711,7 +711,7 @@ def get_maxCapacity(location_name,sg_name,det_name,conn_string,time_interval,tim
     config = ConfigParser.RawConfigParser()
     config.read('config.cfg')
     conn_string = config.get('Section1','conn_string')     
-    default_saturation_flow_rate = 1500 
+    
     sg_status= get_sg_status(location_name, conn_string, sg_name, time1, time2) #[time,grint,seq,dint] 
     green_on = False
     sum_green_list = []
@@ -741,12 +741,14 @@ def get_maxCapacity(location_name,sg_name,det_name,conn_string,time_interval,tim
             green_duration = (s[0]-start_green_time).total_seconds()
             sum_green = sum_green + green_duration
         elif s[0] >= start_time + time_interval_in_seconds:
-            start_time_list.append(start_time)
-            max_capacity = default_saturation_flow_rate*(sum_green/3600)
-            max_capacity_list.append(max_capacity)
+            max_capacity = addCapacityInList(start_time_list, start_time, sum_green, 
+                             max_capacity_list)
             f.write("{} {} {}\n".format(start_time,max_capacity,sum_green))
             start_time = start_time + time_interval_in_seconds
             sum_green = 0 
+            
+    addCapacityInList(start_time_list, start_time, sum_green, 
+                     max_capacity_list)
     f.close()
     shutil.copyfile("traffic/static/traffic/result.csv", "traffic/static/traffic/result.txt")  
     
@@ -768,7 +770,13 @@ def get_maxCapacity(location_name,sg_name,det_name,conn_string,time_interval,tim
     ylabel('maximum capacity(unit:number of vehicles)' )
     title('Maximum capacity for sg '+ sg_name+ 'via '+ det_name +' in '+location_name)
     
-    return getBufferImage()    
+    getBufferImage()    
     
     
 
+def addCapacityInList(start_time_list, start_time, sum_green, max_capacity_list):
+    default_saturation_flow_rate = 1500 
+    start_time_list.append(start_time)
+    max_capacity = default_saturation_flow_rate*(sum_green/3600)
+    max_capacity_list.append(max_capacity)  
+    return max_capacity
