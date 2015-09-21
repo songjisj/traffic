@@ -562,7 +562,7 @@ def get_green_time_2(location_name, conn_string,time1,time2):
     fig =plt.figure(figsize=(10,6),facecolor='#8FBC8F')  #figsize argument is for resizing the figure.
     ax =fig.add_subplot(111) #fig.add_subplot equivalent to fig.add_subplot(1,1,1), means subplot(nrows.,ncols, plot_number)
     ax.xaxis_date()
-    plt.subplots_adjust(left=0.05, bottom=0.1, right=0.85, top=0.9, wspace=None, hspace=None)
+    plt.subplots_adjust(left=0.07, bottom=0.1, right=0.85, top=0.9, wspace=None, hspace=None)
     
     #x values are times of a day and using a Formatter to formate them.
     #For avioding crowding the x axis with labels, using a Locator.

@@ -120,7 +120,7 @@
     {# Menu #}
     <div class="row">
     <div class="col-sm-1 " ></div>
-    <div class="col-sm-2 " >
+    <div class="col-sm-3 " >
      
     <form id="locationFormId" method="POST" action="{% url 'traffic:index'%}">{% csrf_token %}
         
@@ -236,7 +236,7 @@
     </div>
     
     {# Plot result #}
-    <div class="col-sm-5">
+    <div class="col-sm-6">
 	{% load staticfiles %}
 	<img src="{% static "traffic/plot.png" %}">    
 	<br></br>
@@ -246,7 +246,7 @@
     </div>
     
     <div class="row">
-    <div class="col-sm-3">
+    <div class="col-sm-4">
     </div>
     <div class="col-sm-5">
     {% load staticfiles %}
