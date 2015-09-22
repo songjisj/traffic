@@ -796,7 +796,7 @@ def convert_time_interval_str_to_timedelta(time_interval):
     time_interval_in_seconds = datetime.timedelta(seconds=timeparse(time_interval))  #timeparse('3m') = 180 , convert 3 minutes to 180 second,type is int.
     return time_interval_in_seconds
 
-def get_arrival_on_green(location_name,conn_string, sg_name,det_name,time_interval,time1,time2):
+def get_arrival_on_green(location_name,conn_string, sg_name,det_name,time_interval,time1,time2,performance):
 
     interval = convert_time_interval_str_to_timedelta(time_interval)
     
@@ -812,40 +812,43 @@ def get_arrival_on_green(location_name,conn_string, sg_name,det_name,time_interv
     number_vehicles_in_red = 0
     start_time = sg_det_status[0][0] 
     arrival_on_green_percent_format_list = []
+    number_vehicle_in_sum_list = []
     start_time_list = []
     green_state_list = ["0","1","3","4","5","6","7","8",":"]
     
     f = open("traffic/static/traffic/result.csv","w+") #create a csv file to save data in.
-    writer = csv.DictWriter(f, fieldnames = ["start_time","vehicles arrived during green","vehicles in total","arrival on green"], delimiter = ';')
+    writer = csv.DictWriter(f, fieldnames = ["start_time","vehicles arrived during green","vehicles in total","arrival on green(%)"], delimiter = ';')
     writer.writeheader()     
     
     for s in sg_det_status:
-        if not green_on and s[2] in green_state_list:
-            green_on = True 
-        elif green_on and s[2] in green_state_list:
-            if not detector_occupied and s[3] =='1':
-                detector_occupied = True
-                number_vehicles_in_green = number_vehicles_in_green + 1 
-            elif detector_occupied and s[3] =='0':
-                detector_occupied = False
+        if s[0] < start_time + interval:
+            if not green_on and s[2] in green_state_list:
+                green_on = True 
+            elif green_on and s[2] in green_state_list:
+                if not detector_occupied and s[3] =='1':
+                    detector_occupied = True
+                    number_vehicles_in_green = number_vehicles_in_green + 1 
+                elif detector_occupied and s[3] =='0':
+                    detector_occupied = False
                 
-        elif green_on and s[2] not in green_state_list:
-            green_on = False 
-        elif not green_on and s[2] not in green_state_list:
-            if not detector_occupied and s[3] == '1':
-                detector_occupied = True
-                number_vehicles_in_red = number_vehicles_in_red + 1 
-            elif detector_occupied and s[3] == '0':
-                detector_occupied = False
+            elif green_on and s[2] not in green_state_list:
+                green_on = False 
+            elif not green_on and s[2] not in green_state_list:
+                if not detector_occupied and s[3] == '1':
+                    detector_occupied = True
+                    number_vehicles_in_red = number_vehicles_in_red + 1 
+                elif detector_occupied and s[3] == '0':
+                    detector_occupied = False
                
-        elif s[0] >= start_time + interval:
+        else:
             number_vehicle_in_sum = number_vehicles_in_green + number_vehicles_in_red
 
-            if Ture:
-                arrival_on_green = number_vehicles_in_green/number_vehicle_in_sum
+            if number_vehicle_in_sum > 0:
+                arrival_on_green = (float(number_vehicles_in_green)/(number_vehicle_in_sum))*100
                 #arrival_on_green_percent_format = "{:.0%}".format(arrival_on_green)
                 arrival_on_green_percent_format_list.append(arrival_on_green)
                 start_time_list.append(start_time)
+                number_vehicle_in_sum_list.append(number_vehicles_in_green)
                 f.write("{} {} {} {}\n".format(start_time,number_vehicles_in_green, number_vehicle_in_sum,arrival_on_green))
             number_vehicles_in_green = 0
             number_vehicles_in_red = 0 
@@ -864,16 +867,19 @@ def get_arrival_on_green(location_name,conn_string, sg_name,det_name,time_interv
     helsinkiTimezone = timezone('Europe/Helsinki')
     fmt = mdates.DateFormatter('%H:%M:%S', tz=helsinkiTimezone)
     ax.xaxis.set_major_formatter(fmt)
-   
-    ax.bar(start_time_list,arrival_on_green_percent_format_list,width = 0.01,color='y')
-
     
-    xlabel('Time')
-    ylabel('arrival on green (unit:number of vehicles)' )
-    title('percentage of vehicle arrived on green for sg '+ sg_name+ ' via '+ det_name +' in '+location_name)
-    
-    getBufferImage()     
-    
+    if performance =="arrivalOnGreen":
+        ax.bar(start_time_list,arrival_on_green_percent_format_list,width = 0.001,color='#99CCCC')
+        xlabel('Time')
+        ylabel('percentage of arrival on green (%)' )
+        title('percentage of vehicle arrived on green for sg '+ sg_name+ ' via '+ det_name +' in '+location_name)
+        getBufferImage()     
+    elif performance =="volume":
+        ax.bar(start_time_list,number_vehicle_in_sum_list,width = 0.003,color='#CC6666')
+        xlabel('Time')
+        ylabel('Volumn(number of vehicles)' )
+        title('Traffic volumn for sg '+ sg_name+ ' via '+ det_name +' in '+location_name)
+        getBufferImage() 
             
             
             
