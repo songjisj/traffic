@@ -27,7 +27,7 @@ GREEN = "GREEN"
 AMBER = "AMBER"
 RED = "RED"
 UNKNOWN = "UNKNOWN"
-
+green_state_list = ["0","1","3","4","5","6","7","8",":"] 
 
 
 def rowNumber():
@@ -178,21 +178,29 @@ def get_main_data(location_name,conn_string, time1,time2):
 #Parameters:
 #location_name, conn_string, sg_name, start time and end time.
 def get_sg_status(location_name,conn_string,sg_name,time1,time2): 
+    
     sg_pairs = get_sg_config_in_one(location_name, conn_string)
     for idx, name in sg_pairs.items():
         if name == sg_name:
             sg_index = idx
             break   
-    main_data = get_main_data(location_name, conn_string, time1, time2)
+    main_data = get_main_data(location_name, conn_string, time1, time2) 
+    det_dict_in_the_sg = get_det_config_in_one_sg(location_name, sg_name, 
+                                                 conn_string)
+    det_index_list = det_dict_in_the_sg.keys()
     sg_status = []
     for i in range(len(main_data)):
         sg_status.append([])
+    
     
     for i in range(len(main_data)):
         sg_status[i].append(main_data[i][0])
         sg_status[i].append(main_data[i][1][sg_index])
         sg_status[i].append(main_data[i][3]) #seq number
-        sg_status[i].append(main_data[i][2])
+        det_substring = ""
+        for det_index in det_index_list:
+            det_substring = det_substring + main_data[i][2][det_index]
+        sg_status[i].append(det_substring) # dint for detectors associated with the selected sg_name
         
     sg_status_sorted = sorted(sg_status, key = itemgetter(2,0))
     return sg_status_sorted
@@ -246,7 +254,7 @@ def get_green_time(location_name, conn_string,sg_name,time1,time2):
     start_green_time_list =[]
     useless_green_list = []
     #state "0" represents "red/amber", that occurs before green state but drivers are allowed to go. Here we regards it as green, but actually it is not.
-    green_state_list = ["0","1","3","4","5","6","7","8",":"]
+    
     start_green_time = None
     width = 0.0005
    
@@ -271,7 +279,7 @@ def get_green_time(location_name, conn_string,sg_name,time1,time2):
             
             if int(s[3]) != 0 : #som detectors are occupied 
                 any_detectors_occupied = True 
-            elif  int(s[3]) == 0:
+            elif  int(s[3]) == 0 and any_detectors_occupied:  # record the start that detectors become occupied to unoccupied.
                 detector_unoccupied_lastest_time = s[0]
                 any_detectors_occupied = False 
                 
@@ -281,7 +289,7 @@ def get_green_time(location_name, conn_string,sg_name,time1,time2):
             active_green = timedelta.total_seconds(detector_unoccupied_lastest_time-start_green_time)
             start_green_time_list.append(start_green_time) 
             active_green_list.append(active_green)
-            useless_green = timedelta.total_seconds(s[0]-detector_unoccupied_lastest_time)
+            useless_green = timedelta.total_seconds(s[0]-detector_unoccupied_lastest_time) 
             useless_green_list.append(useless_green)
             f.write("{} {} {}\n".format(start_green_time,active_green,useless_green)) 
             print active_green,start_green_time
@@ -763,7 +771,7 @@ def get_maxCapacity(location_name,sg_name,det_name,conn_string,time_interval,tim
     fmt = mdates.DateFormatter('%H:%M:%S', tz=helsinkiTimezone)
     ax.xaxis.set_major_formatter(fmt)
    
-    ax.plot(start_time_list,max_capacity_list,marker='o',linestyle='--',color='g')
+    ax.plot(start_time_list,max_capacity_list,marker='D',linestyle='--',color='g')
 
     
     xlabel('Time')
@@ -780,3 +788,96 @@ def addCapacityInList(start_time_list, start_time, sum_green, max_capacity_list)
     max_capacity = default_saturation_flow_rate*(sum_green/3600)
     max_capacity_list.append(max_capacity)  
     return max_capacity
+
+def convert_time_interval_str_to_timedelta(time_interval):
+    from pytimeparse.timeparse import timeparse
+    import datetime 
+    
+    time_interval_in_seconds = datetime.timedelta(seconds=timeparse(time_interval))  #timeparse('3m') = 180 , convert 3 minutes to 180 second,type is int.
+    return time_interval_in_seconds
+
+def get_arrival_on_green(location_name,conn_string, sg_name,det_name,time_interval,time1,time2):
+
+    interval = convert_time_interval_str_to_timedelta(time_interval)
+    
+    config = ConfigParser.RawConfigParser()
+    config.read('config.cfg')
+    conn_string = config.get('Section1','conn_string')
+    
+    sg_det_status = get_sg_det_status(location_name, conn_string, sg_name, det_name, time1, time2) #[time,seq,sg_stauts, det_status]
+    
+    green_on = False 
+    detector_occupied = False
+    number_vehicles_in_green = 0 
+    number_vehicles_in_red = 0
+    start_time = sg_det_status[0][0] 
+    arrival_on_green_percent_format_list = []
+    start_time_list = []
+    green_state_list = ["0","1","3","4","5","6","7","8",":"]
+    
+    f = open("traffic/static/traffic/result.csv","w+") #create a csv file to save data in.
+    writer = csv.DictWriter(f, fieldnames = ["start_time","vehicles arrived during green","vehicles in total","arrival on green"], delimiter = ';')
+    writer.writeheader()     
+    
+    for s in sg_det_status:
+        if not green_on and s[2] in green_state_list:
+            green_on = True 
+        elif green_on and s[2] in green_state_list:
+            if not detector_occupied and s[3] =='1':
+                detector_occupied = True
+                number_vehicles_in_green = number_vehicles_in_green + 1 
+            elif detector_occupied and s[3] =='0':
+                detector_occupied = False
+                
+        elif green_on and s[2] not in green_state_list:
+            green_on = False 
+        elif not green_on and s[2] not in green_state_list:
+            if not detector_occupied and s[3] == '1':
+                detector_occupied = True
+                number_vehicles_in_red = number_vehicles_in_red + 1 
+            elif detector_occupied and s[3] == '0':
+                detector_occupied = False
+               
+        elif s[0] >= start_time + interval:
+            number_vehicle_in_sum = number_vehicles_in_green + number_vehicles_in_red
+
+            if Ture:
+                arrival_on_green = number_vehicles_in_green/number_vehicle_in_sum
+                #arrival_on_green_percent_format = "{:.0%}".format(arrival_on_green)
+                arrival_on_green_percent_format_list.append(arrival_on_green)
+                start_time_list.append(start_time)
+                f.write("{} {} {} {}\n".format(start_time,number_vehicles_in_green, number_vehicle_in_sum,arrival_on_green))
+            number_vehicles_in_green = 0
+            number_vehicles_in_red = 0 
+            start_time= start_time + interval            
+
+    f.close()   
+    shutil.copyfile("traffic/static/traffic/result.csv", "traffic/static/traffic/result.txt")  
+    
+    fig =plt.figure(figsize=(10,6),facecolor='#99CCFF')  #figsize argument is for resizing the figure.
+    ax =fig.add_subplot(111) #fig.add_subplot equivalent to fig.add_subplot(1,1,1), means subplot(nrows.,ncols, plot_number)
+    ax.xaxis_date() 
+    
+    
+    #x values are times of a day and using a Formatter to formate them.
+    #For avioding crowding the x axis with labels, using a Locator.
+    helsinkiTimezone = timezone('Europe/Helsinki')
+    fmt = mdates.DateFormatter('%H:%M:%S', tz=helsinkiTimezone)
+    ax.xaxis.set_major_formatter(fmt)
+   
+    ax.bar(start_time_list,arrival_on_green_percent_format_list,width = 0.01,color='y')
+
+    
+    xlabel('Time')
+    ylabel('arrival on green (unit:number of vehicles)' )
+    title('percentage of vehicle arrived on green for sg '+ sg_name+ ' via '+ det_name +' in '+location_name)
+    
+    getBufferImage()     
+    
+            
+            
+            
+                
+                
+            
+            

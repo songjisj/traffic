@@ -7,7 +7,7 @@ import PIL.Image
 import StringIO
 from .models import TfRaw,Controller,ControllerConfigDet,ControllerConfigSg
 from analysis import rowNumber
-from analysis import get_green_time, get_sg_config_in_one, get_det_config_in_one_sg,get_capacity,get_queue_length,get_green_time_2,get_capacity_2,get_maxCapacity
+from analysis import get_green_time, get_sg_config_in_one, get_det_config_in_one_sg,get_capacity,get_queue_length,get_green_time_2,get_capacity_2,get_maxCapacity,get_arrival_on_green
 
 from .forms import ControlForm
 from .forms import ContactForm
@@ -104,7 +104,7 @@ def index(request):
     helsinkiTimezone = timezone('Europe/Helsinki')
     timeZone = datetime.datetime.now(helsinkiTimezone).strftime('%z')
     
-    measuresList = ["capacity","greenDuration","queueLength","activeGreen","maximumCapacity"] 
+    measuresList = ["capacity","greenDuration","queueLength","activeGreen","maximumCapacity","arrivalOnGreen"] 
     
     
     #display csv file 
@@ -143,6 +143,8 @@ def index(request):
             get_green_time(selectedLocation, "", selectedSgName, startTimeStringTimeZone, endTimeStringTimeZone)
         elif selectedPerformance =="maximumCapacity":
             get_maxCapacity(selectedLocation,selectedSgName,selectedDetector,"",selectedTimeInterval,startTimeStringTimeZone,endTimeStringTimeZone)
+        elif selectedPerformance =="arrivalOnGreen":
+            get_arrival_on_green(selectedLocation,"",selectedSgName,selectedDetector,selectedTimeInterval,startTimeStringTimeZone,endTimeStringTimeZone)
     
 
     #return HttpResponse(green_example, content_type="image/png")
