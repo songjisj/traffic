@@ -172,6 +172,10 @@ def plot(request):
     pilImage.save(buffer, "PNG")
     pylab.close()
     return HttpResponse(buffer.getvalue(), content_type="image/png")
+def measuresinfo(request):
+    
+    return render(request,'traffic/measuresinfo.html',"")
+    
 
 def download_data_file(request):
     import os,tempfile,zipfile

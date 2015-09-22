@@ -140,6 +140,9 @@
         {# Select performance #}
     
 	<label for="performance">Performance measures </label> 
+	<a href="{% url 'traffic:measuresinfo' %}"> 
+	<i class='glyphicon glyphicon-info-sign'></i>
+	</a>   
 	
 	{# onchange means when select option is changed, we will call function performanceChanged() in javascript #}
 	<select id="performanceSelectionId" name ="performance" class="form-control" onchange="performanceChanged()">
@@ -248,7 +251,8 @@
 	
 	<p>
 	<a href="#" id="timezonetip"  data-toggle="popover" data-trigger="hover" title="" data-content="Please use timezone Europe/Helsinki" >
-	<i class='glyphicon glyphicon-info-sign'></i></a>   
+	<i class='glyphicon glyphicon-info-sign'></i>
+	</a>   
 	</p>
 	<!--<p>Date: <input type="text" name="startdate" id="datepicker"></p>-->
 	
