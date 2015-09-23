@@ -175,7 +175,15 @@ def plot(request):
 def measuresinfo(request):
     
     return render(request,'traffic/measuresinfo.html',"")
-    
+
+def maps(request):
+    selectedLocation = ""
+    try:
+        selectedLocation = somevalue #I have no idea 
+    except(KeyError):
+        selectedLocation = "TRE303" 
+    context = {'selectedLocation':selectedLocation}
+    return render(request, 'traffic/maps.html', context)
 
 def download_data_file(request):
     import os,tempfile,zipfile

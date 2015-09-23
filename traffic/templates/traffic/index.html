@@ -170,6 +170,12 @@
 	</select> 
 	</p>
 	
+        <p> 
+	<a href="{% url 'traffic:maps' %}">  
+	<button type="button" class="btn btn-info">map</button>
+	</a>
+	</p>
+	
 	{# Selct signalGroup #}
 	{% if not sgNameList  %}
 	    <p> Sorry, there is no valid signalGroup configuration data in the selected intersection. Please choose other intersections. </p>
@@ -281,6 +287,8 @@
     <div class="row">
     <div class="col-sm-4">
     </div>
+    
+    {# show csv file of result #}
     <div class="col-sm-5">
     {% load staticfiles %}
     <iframe style = "width:600px;" src="{% static "traffic/result.txt" %}"></iframe> 
@@ -288,6 +296,7 @@
     </div>
     <br>
     
+    {# display the map of the intersection #}
     <div class="row">
 	<div class="col-sm-8">
 	{% load staticfiles %}

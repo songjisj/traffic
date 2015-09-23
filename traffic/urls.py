@@ -7,6 +7,7 @@ urlpatterns = patterns('',
 	url(r'^questions/$', views.questions, name='questions'),
 	url(r'^index/$', views.index, name='index'),
         url(r'^measuresinfo',views.measuresinfo,name='measuresinfo'),
+        url(r'^maps',views.maps,name='maps'),
         url(r'^data/$', views.data, name='data'),   
         url(r'^../static/traffic/result.csv',views.download_data_file),
 )
