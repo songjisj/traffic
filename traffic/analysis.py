@@ -1,25 +1,20 @@
-
-
+from process import get_config_string,getBufferImage,connect_db,disconnect_db,rowNumber,get_location_id,get_sg_config_in_one,get_det_config_in_one_sg,get_det_in_one_location,get_sg_det_status,get_sg_status,get_main_data,mean_in_list,convert_time_interval_str_to_timedelta,addCapacityInList,create_plot_define_format
 import psycopg2.extras 
 import datetime
 from operator import itemgetter
 from datetime import timedelta
-
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from matplotlib import pylab
-
 from pylab import *
 import PIL
 import PIL.Image
 import StringIO
 from django.conf import settings
-import ConfigParser
 import csv
 from pytz import timezone
-
 from dateutil import parser
 import shutil
 
@@ -30,224 +25,10 @@ UNKNOWN = "UNKNOWN"
 green_state_list = ["0","1","3","4","5","6","7","8",":"] 
 
 
-def rowNumber():
-    
-    #read configuration file
-    config = ConfigParser.RawConfigParser()
-    config.read('config.cfg')
-    
-    conn_string = config.get('Section1','conn_string') 
-    conn = psycopg2.connect(conn_string)
-    cursor = conn.cursor('cursor_unique_name', cursor_factory = psycopg2.extras.DictCursor)
-    query = "SELECT fk_cid from controller_config_det"
-    cursor.execute(query)
-    rows = cursor.fetchall()     
-    conn.close()
-    return len(rows) % 2 + 1
-
-
-#Function to connect to postgresql 
-def connect_db(conn_string):
-    conn = psycopg2.connect(conn_string)
-    return conn
-    
-#Function to disconnect to database       
-def disconnect_db(conn):
-    
-    conn.close() 
-   
-def fetch_data(conn_string,query): 
-    conn = connect_db(conn_string)
-    #conn.cursor will return a cursor object, you can use the cursor to perfor queries
-    cursor = conn.cursor('cursor_unique_name', cursor_factory = psycopg2.extras.DictCursor)
-    cursor.execute(query)
-    rows = cursor.fetchall() 
-    disconnect_db(conn)
-    return rows 
-
-# fetch configuration data and save in dictionary
-# parameter dict_key :select values of a column as the key of dictionary
-def config(conn_string,query,dict_key):
-    rows = fetch_data(conn_string, query)
-    dict_data = {}
-    for i in range(len(rows)):
-        dict_data[rows[i][dict_key]] = rows[i]
-    
-    
-    return dict_data
-
-# write a function: the location name of intersection is the only parameter  
-# return all the signals and detectors related to it. 
-def get_location_id(location_name,conn_string):
-    conn = connect_db(conn_string)
-    cursor = conn.cursor() 
-    cursor.execute("SELECT cid FROM controller WHERE cname = '" + location_name +"'") 
-    location_id = cursor.fetchone()[0] 
-    
-    
-    disconnect_db(conn) 
-    
-    return location_id
-    #get_signalgroup = cursor.execute
-
-#Function to get a dictionary that all signals' indexes are keys and names are values when input location_name   
-def get_sg_config_in_one(location_name,conn_string):
-    config = ConfigParser.RawConfigParser()
-    config.read('config.cfg')
-    
-    conn_string = config.get('Section1','conn_string')     
-    conn = connect_db(conn_string)
-    location_id = get_location_id(location_name, conn_string)
-    cursor = conn.cursor('cursor_unique_name', cursor_factory = psycopg2.extras.DictCursor) 
-    cursor.execute("SELECT idx,name from controller_config_sg WHERE fk_cid = '" +str(location_id) +"'") 
-    rows = cursor.fetchall()
-    signals = {}
-    for i in range(len(rows)):
-        signals[rows[i][0]] = rows[i][1]
-        
-    disconnect_db(conn)
-    return signals
-
-
-#Return a dictionary of all detectors in one intersection, the key is the local index of detector, the value is its name.
-def get_det_in_one_location(location_name,conn_string):
-    config = ConfigParser.RawConfigParser()
-    config.read('config.cfg')
-        
-    conn_string = config.get('Section1','conn_string')        
-    conn = connect_db(conn_string)    
-    location_id = get_location_id(location_name, conn_string)
-    cursor = conn.cursor('cursor_unique_name', cursor_factory = psycopg2.extras.DictCursor) 
-    cursor.execute("SELECT idx,name from controller_config_det WHERE fk_cid = '" +str(location_id) +"'") 
-    rows = cursor.fetchall()
-    detectors = {}
-    for i in range(len(rows)):
-        detecotrs[rows[i][0]] = rows[i][1]
-        
-    disconnect_db(conn)
-    return detectors 
-
-
-#Function to get the configuration of detectors in the intersection and the specified signalgroup whose name is provided 
-#Return a dictionary detectors, the keys are index of detectors and values are names of detectors.
-def get_det_config_in_one_sg(location_name,sg_name,conn_string): 
-    config = ConfigParser.RawConfigParser()
-    config.read('config.cfg')
-        
-    conn_string = config.get('Section1','conn_string')        
-    conn = connect_db(conn_string)
-    location_id = get_location_id(location_name, conn_string)
-    sg_dict = get_sg_config_in_one(location_name, conn_string)
-    
-    sg_id = -1
-    for sg_key in sg_dict.keys():
-        if sg_dict[sg_key] == sg_name:
-            sg_id = sg_key
-            
-    cursor = conn.cursor('cursor_unique_name', cursor_factory = psycopg2.extras.DictCursor)
-    rows = []
-    if sg_id > -1 :
-        cursor.execute("SELECT idx,name FROM controller_config_det WHERE fk_cid = '" + str(location_id) +"' AND sgidx ='" +str(sg_id)+"'")
-        rows = cursor.fetchall()
-    detectors = {}
-    for i in range(len(rows)):
-        detectors[rows[i][0]] = rows[i][1]
-        
-    disconnect_db(conn)
-    return detectors
-
-#Function get_main_data returns raw data whose columns are timestamp, grint, dint
-#Parameters: location_name, conn_string, the selected start time and end time.
-def get_main_data(location_name,conn_string, time1,time2):
-    conn = connect_db(conn_string)
-    location_id = get_location_id(location_name, conn_string)
-    cursor = conn.cursor('cursor_unique_name', cursor_factory = psycopg2.extras.DictCursor)
-    cursor.execute("SELECT tt, grint, dint,seq FROM tf_raw WHERE fk_cid = '" + str(location_id) + "' AND tt >= '" + str(time1) + "' AND tt < '" + str(time2)+"'")
-    rows =cursor.fetchall()
-    main_data = []
-    for i in range(len(rows)):
-        rows[i][0].strftime("%Y-%m-%d %H:%M:%S")
-        main_data.append(rows[i])
-    main_data = sorted(main_data,key=itemgetter(3,0))
-    
-    disconnect_db(conn)
-    return main_data 
-
-
-#This function is used to filter the status of single signalgroup with timestamp.
-#Parameters:
-#location_name, conn_string, sg_name, start time and end time.
-def get_sg_status(location_name,conn_string,sg_name,time1,time2): 
-    
-    sg_pairs = get_sg_config_in_one(location_name, conn_string)
-    for idx, name in sg_pairs.items():
-        if name == sg_name:
-            sg_index = idx
-            break   
-    main_data = get_main_data(location_name, conn_string, time1, time2) 
-    det_dict_in_the_sg = get_det_config_in_one_sg(location_name, sg_name, 
-                                                 conn_string)
-    det_index_list = det_dict_in_the_sg.keys()
-    sg_status = []
-    for i in range(len(main_data)):
-        sg_status.append([])
-    
-    
-    for i in range(len(main_data)):
-        sg_status[i].append(main_data[i][0])
-        sg_status[i].append(main_data[i][1][sg_index])
-        sg_status[i].append(main_data[i][3]) #seq number
-        det_substring = ""
-        for det_index in det_index_list:
-            det_substring = det_substring + main_data[i][2][det_index]
-        sg_status[i].append(det_substring) # dint for detectors associated with the selected sg_name
-        
-    sg_status_sorted = sorted(sg_status, key = itemgetter(2,0))
-    return sg_status_sorted
-    
-
-
-#This function is used to filter the status of single signalgroup and signal detector with timestamp.
-#Parameters:
-#location_name, conn_string, sg_name, start time and end time.
-def get_sg_det_status(location_name,conn_string,sg_name,det_name,time1,time2): 
-    sg_index = 0
-    det_index = 0
-    #look for the index of the input sg_name.
-    sg_pairs = get_sg_config_in_one(location_name, conn_string)
-    for idx, name in sg_pairs.items():
-        if name == sg_name:
-            sg_index = idx
-            break  
-    #look for the index for the input detector.
-    det_pairs = get_det_config_in_one_sg(location_name, sg_name, conn_string)
-    for idx, name in det_pairs.items():
-        if name==det_name:  
-            det_index =idx 
-            break 
-             
-        
-    main_data = get_main_data(location_name, conn_string, time1, time2)
-    sg_status = []
-    for i in range(len(main_data)):
-        sg_status.append([])
-        
-
-    for i in range(len(main_data)):
-        rowtime = main_data[i][0].strftime('%Y-%m-%d %H:%M:%S')
-        sg_status[i].append(main_data[i][0]) #time 
-        sg_status[i].append(main_data[i][3]) #seq number
-        sg_status[i].append(main_data[i][1][sg_index])  # sg_state 
-        sg_status[i].append(main_data[i][2][det_index])
-    sg_det_status_sorted = sorted(sg_status, key = itemgetter(1,0))
-    return sg_det_status_sorted 
-
 #active green
 def get_green_time(location_name, conn_string,sg_name,time1,time2):
     #read configuration file
-    config = ConfigParser.RawConfigParser()
-    config.read('config.cfg')
-    conn_string = config.get('Section1','conn_string')  
+    conn_string = get_config_string('config.cfg','Section1','conn_string') 
     sg_status= get_sg_status(location_name, conn_string, sg_name, time1, time2) #[time,grint,seq,dint] 
     green_on = False
     active_green_list = []
@@ -257,7 +38,6 @@ def get_green_time(location_name, conn_string,sg_name,time1,time2):
     
     start_green_time = None
     width = 0.0005
-   
     
     green_end_time = None 
     
@@ -297,16 +77,7 @@ def get_green_time(location_name, conn_string,sg_name,time1,time2):
     f.close() #close the file after saving.
     shutil.copyfile("traffic/static/traffic/result.csv", "traffic/static/traffic/result.txt")
     
-    fig =plt.figure(figsize=(10,6),facecolor='#CCFF66')  #figsize argument is for resizing the figure.
-    ax =fig.add_subplot(111) #fig.add_subplot equivalent to fig.add_subplot(1,1,1), means subplot(nrows.,ncols, plot_number)
-    ax.xaxis_date() 
     
-    
-    #x values are times of a day and using a Formatter to formate them.
-    #For avioding crowding the x axis with labels, using a Locator.
-    helsinkiTimezone = timezone('Europe/Helsinki')
-    fmt = mdates.DateFormatter('%H:%M:%S', tz=helsinkiTimezone)
-    ax.xaxis.set_major_formatter(fmt)
    
     green_active = ax.bar(start_green_time_list, active_green_list,width,color='g')
     green_useless = ax.bar(start_green_time_list,useless_green_list,width,color='#CCFFFF',bottom = active_green_list)
@@ -317,37 +88,8 @@ def get_green_time(location_name, conn_string,sg_name,time1,time2):
     ylabel('Green duration(s)' )
     title('Signalgroup Green Duration: sg '+ sg_name+ ' in '+location_name)
     
-    return getBufferImage()
+    return getBufferImage()    
 
-def getBufferImage():
-    buffer = StringIO.StringIO()
-    canvas = pylab.get_current_fig_manager().canvas
-    canvas.draw()
-    pilImage = PIL.Image.fromstring("RGB", canvas.get_width_height(), canvas.tostring_rgb())
-    pilImage.save("traffic/static/traffic/plot.png", "PNG")
-    pylab.close();
-    
-
-    
-def signalState(sgStateCode):   
-    green_state_list = ["0","1","3","4","5","6","7","8",":"]
-    amber_state_list=[";","<","=",">","I"]
-    red_state_list=["9","?","@","A","B","C","D","E","F","G","H","J"]
-    Unknown_state ="."
-    if sgStateCode in green_state_list:
-        return GREEN
-    elif sgStateCode in amber_state_list:
-        return AMBER
-    elif sgStateCode in red_state_list:
-        return RED
-    else:
-        return UNKNOWN
-    
-    
-def mean_in_list(list):
-    mean = 0 
-    mean = sum(list)/len(list)
-    return mean 
 
 
 #Function get_saturation_flow_rate return a list of saturation flow rate and timestamp 
@@ -355,12 +97,7 @@ def mean_in_list(list):
 #The time of passage of the third and last third vehicles over several cycles to determine this value in this function. 
 #The first few vehicles and the last vehicles are excluded because of starting up the queue or represent the arrival rate.  
 def get_capacity(location_name,conn_string,sg_name,det_name,time1,time2):
-    
-    
-    config = ConfigParser.RawConfigParser()
-    config.read('config.cfg')
-    
-    conn_string = config.get('Section1','conn_string')      
+    conn_string = get_config_string('config.cfg','Section1','conn_string')    
     
     sg_det_status = get_sg_det_status(location_name,conn_string,sg_name,det_name,time1,time2) #sg_det_status[time,seq,grint,dint]
      
@@ -393,8 +130,6 @@ def get_capacity(location_name,conn_string,sg_name,det_name,time1,time2):
     saturation_flow_rate_pair_list = []
     
     sum_green_duration = 0 
-     
-    green_state_list = ["0","1","3","4","5","6","7","8",":"]
      
     for s in sg_det_status:
         if not green_on and s[2] in green_state_list:
@@ -448,16 +183,12 @@ def get_capacity(location_name,conn_string,sg_name,det_name,time1,time2):
 
 def get_queue_length(location_name,conn_string,sg_name,det_name,time1,time2): 
     
-    config = ConfigParser.RawConfigParser()
-    config.read('config.cfg')
-        
-    conn_string = config.get('Section1','conn_string')          
+    conn_string = get_config_string('config.cfg','Section1','conn_string')     
     
     sg_det_status = get_sg_det_status(location_name,conn_string,sg_name,det_name,time1,time2) #sg_det_status[time,seq,grint,dint]
     
     green_on = True
     
-    green_state_list = ["0","1","3","4","5","6","7","8",":"]
     
     discharge_queue_time = None
     
@@ -549,14 +280,8 @@ def get_green_time_2(location_name, conn_string,time1,time2):
     
     green_on = False
 
-    #state "0" represents "red/amber", that occurs before green state but drivers are allowed to go. Here we regards it as green, but actually it is not.
-    green_state_list = ["0","1","3","4","5","6","7","8",":"]
     start_green_time = None    
-    #read configuration file
-    config = ConfigParser.RawConfigParser()
-    config.read('config.cfg')
-    
-    conn_string = config.get('Section1','conn_string')  
+    conn_string = get_config_string('config.cfg','Section1','conn_string') 
     
     main_data = get_main_data(location_name, conn_string, time1, time2) #main_data[tt,grint,dint,seq] 
     
@@ -612,11 +337,7 @@ def get_green_time_2(location_name, conn_string,time1,time2):
 #The time of passage of the third and last third vehicles over several cycles to determine this value in this function. 
 #The first few vehicles and the last vehicles are excluded because of starting up the queue or represent the arrival rate.  
 def get_capacity_2(location_name,conn_string,sg_name,time1,time2):
-    
-    config = ConfigParser.RawConfigParser()
-    config.read('config.cfg')
-    conn_string = config.get('Section1','conn_string')      
-    
+    conn_string = get_config_string('config.cfg','Section1','conn_string') 
     main_data = get_main_data(location_name, conn_string, time1, time2)  #[tt,gint,dint,seq]
     sg_pairs = get_sg_config_in_one(location_name, conn_string)
     for idx, name in sg_pairs.items():
@@ -625,7 +346,7 @@ def get_capacity_2(location_name,conn_string,sg_name,time1,time2):
             break      
     det_dict = get_det_config_in_one_sg(location_name, sg_name, conn_string)
 
-    green_state_list = ["0","1","3","4","5","6","7","8",":"]    
+
     required_vehicle_number = 8
     
     one_hour_in_second = 3600
@@ -715,18 +436,13 @@ def get_maxCapacity(location_name,sg_name,det_name,conn_string,time_interval,tim
     import datetime 
     
     time_interval_in_seconds = datetime.timedelta(seconds=timeparse(time_interval))
-    
-    config = ConfigParser.RawConfigParser()
-    config.read('config.cfg')
-    conn_string = config.get('Section1','conn_string')     
+    conn_string = get_config_string('config.cfg','Section1','conn_string') 
     
     sg_status= get_sg_status(location_name, conn_string, sg_name, time1, time2) #[time,grint,seq,dint] 
     green_on = False
     sum_green_list = []
     start_time_list = []
     max_capacity_list =[]
-    #state "0" represents "red/amber", that occurs before green state but drivers are allowed to go. Here we regards it as green, but actually it is not.
-    green_state_list = ["0","1","3","4","5","6","7","8",":"]
     start_green_time = None
     width = 0.0005 
     green_end_time = None 
@@ -757,6 +473,7 @@ def get_maxCapacity(location_name,sg_name,det_name,conn_string,time_interval,tim
             
     addCapacityInList(start_time_list, start_time, sum_green, 
                      max_capacity_list)
+    f.write("{} {} {}\n".format(start_time_list[-1],max_capacity_list[-1],sum_green))
     f.close()
     shutil.copyfile("traffic/static/traffic/result.csv", "traffic/static/traffic/result.txt")  
     
@@ -782,28 +499,11 @@ def get_maxCapacity(location_name,sg_name,det_name,conn_string,time_interval,tim
     
     
 
-def addCapacityInList(start_time_list, start_time, sum_green, max_capacity_list):
-    default_saturation_flow_rate = 1500 
-    start_time_list.append(start_time)
-    max_capacity = default_saturation_flow_rate*(sum_green/3600)
-    max_capacity_list.append(max_capacity)  
-    return max_capacity
-
-def convert_time_interval_str_to_timedelta(time_interval):
-    from pytimeparse.timeparse import timeparse
-    import datetime 
-    
-    time_interval_in_seconds = datetime.timedelta(seconds=timeparse(time_interval))  #timeparse('3m') = 180 , convert 3 minutes to 180 second,type is int.
-    return time_interval_in_seconds
 
 def get_arrival_on_green(location_name,conn_string, sg_name,det_name,time_interval,time1,time2,performance):
 
     interval = convert_time_interval_str_to_timedelta(time_interval)
-    
-    config = ConfigParser.RawConfigParser()
-    config.read('config.cfg')
-    conn_string = config.get('Section1','conn_string')
-    
+    conn_string = get_config_string('config.cfg','Section1','conn_string') 
     sg_det_status = get_sg_det_status(location_name, conn_string, sg_name, det_name, time1, time2) #[time,seq,sg_stauts, det_status]
     
     green_on = False 
@@ -814,7 +514,7 @@ def get_arrival_on_green(location_name,conn_string, sg_name,det_name,time_interv
     arrival_on_green_percent_format_list = []
     number_vehicle_in_sum_list = []
     start_time_list = []
-    green_state_list = ["0","1","3","4","5","6","7","8",":"]
+
     
     f = open("traffic/static/traffic/result.csv","w+") #create a csv file to save data in.
     writer = csv.DictWriter(f, fieldnames = ["start_time","vehicles arrived during green","vehicles in total","arrival on green(%)"], delimiter = ';')
@@ -852,7 +552,13 @@ def get_arrival_on_green(location_name,conn_string, sg_name,det_name,time_interv
                 f.write("{} {} {} {}\n".format(start_time,number_vehicles_in_green, number_vehicle_in_sum,arrival_on_green))
             number_vehicles_in_green = 0
             number_vehicles_in_red = 0 
-            start_time= start_time + interval            
+            start_time= start_time + interval   
+    start_time_list.append(start_time)
+    number_vehicle_in_sum = number_vehicles_in_green + number_vehicles_in_red
+    arrival_on_green =(float(number_vehicles_in_green)/(number_vehicle_in_sum))*100
+    arrival_on_green_percent_format_list.append(arrival_on_green)
+    number_vehicle_in_sum_list.append(number_vehicle_in_sum)
+    f.write("{} {} {} {}\n".format(start_time,number_vehicles_in_green, number_vehicle_in_sum,arrival_on_green))
 
     f.close()   
     shutil.copyfile("traffic/static/traffic/result.csv", "traffic/static/traffic/result.txt")  
@@ -860,13 +566,12 @@ def get_arrival_on_green(location_name,conn_string, sg_name,det_name,time_interv
     fig =plt.figure(figsize=(10,6),facecolor='#99CCFF')  #figsize argument is for resizing the figure.
     ax =fig.add_subplot(111) #fig.add_subplot equivalent to fig.add_subplot(1,1,1), means subplot(nrows.,ncols, plot_number)
     ax.xaxis_date() 
-    
-    
     #x values are times of a day and using a Formatter to formate them.
     #For avioding crowding the x axis with labels, using a Locator.
     helsinkiTimezone = timezone('Europe/Helsinki')
     fmt = mdates.DateFormatter('%H:%M:%S', tz=helsinkiTimezone)
     ax.xaxis.set_major_formatter(fmt)
+
     
     if performance =="arrivalOnGreen":
         ax.bar(start_time_list,arrival_on_green_percent_format_list,width = 0.001,color='#99CCCC')
