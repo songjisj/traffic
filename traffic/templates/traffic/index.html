@@ -87,6 +87,13 @@
 	    }
 	    
 	}
+	
+	function showLocationMap() {
+	    var selectedLocationForMap = document.getElementById("intersectionSelectionId").value;
+	    document.getElementById('selectedLocatioForMapId').value = selectedLocationForMap;
+	    document.getElementById("showMapFormId").submit();	
+	}
+	
     </script>
     <script>  
         $(function ()  {
@@ -134,6 +141,10 @@
     <div class="row">
     <div class="col-sm-1 " ></div>
     <div class="col-sm-3 " >
+    
+    <form id="showMapFormId" method="POST" type="hidden" action="{% url 'traffic:maps' %}" target="_blank">{% csrf_token %}
+	<input id="selectedLocatioForMapId" type="hidden" name="selectedLocatioForMap" value="">
+    </form>
      
     <form id="locationFormId" method="POST" action="{% url 'traffic:index'%}">{% csrf_token %}
         
@@ -170,10 +181,8 @@
 	</select> 
 	</p>
 	
-        <p> 
-	<a href="{% url 'traffic:maps' %}">  
-	<button type="button" class="btn btn-info">map</button>
-	</a>
+        <p>  
+	<button type="button" class="btn btn-info" onclick="showLocationMap()">map</button>
 	</p>
 	
 	{# Selct signalGroup #}

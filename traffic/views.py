@@ -180,11 +180,7 @@ def measuresinfo(request):
     return render(request,'traffic/measuresinfo.html',"")
 
 def maps(request):
-    selectedLocation = ""
-    try:
-        selectedLocation = somevalue #I have no idea 
-    except(KeyError):
-        selectedLocation = "TRE303" 
+    selectedLocation = request.POST.get('selectedLocatioForMap',"TRE303")
     context = {'selectedLocation':selectedLocation}
     return render(request, 'traffic/maps.html', context)
 

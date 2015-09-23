@@ -560,7 +560,7 @@ def get_arrival_on_green(location_name,conn_string, sg_name,det_name,time_interv
                 arrival_on_green_percent_format_list.append(arrival_on_green)
                 start_time_list.append(start_time)
                 
-                number_vehicle_in_sum_list.append(number_vehicles_in_green)
+                number_vehicle_in_sum_list.append(number_vehicle_in_sum)
                 f.write("{} {} {} {}\n".format(start_time,number_vehicles_in_green, number_vehicle_in_sum,arrival_on_green))
             number_vehicles_in_green = 0
             number_vehicles_in_red = 0 
