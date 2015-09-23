@@ -77,7 +77,7 @@ def get_green_time(location_name, conn_string,sg_name,time1,time2):
     f.close() #close the file after saving.
     shutil.copyfile("traffic/static/traffic/result.csv", "traffic/static/traffic/result.txt")
     
-    fig =plt.figure(figsize=(10,6),facecolor='#99CC99')  #figsize argument is for resizing the figure.
+    fig =plt.figure(figsize=(10,6),facecolor='#FFFFCC')  #figsize argument is for resizing the figure.
     ax =fig.add_subplot(111) #fig.add_subplot equivalent to fig.add_subplot(1,1,1), means subplot(nrows.,ncols, plot_number)
     ax.xaxis_date() 
     
@@ -523,6 +523,7 @@ def get_arrival_on_green(location_name,conn_string, sg_name,det_name,time_interv
     arrival_on_green_percent_format_list = []
     number_vehicle_in_sum_list = []
     start_time_list = []
+    number_vehicles_in_green_list = []
 
     
     f = open("traffic/static/traffic/result.csv","w+") #create a csv file to save data in.
@@ -551,12 +552,14 @@ def get_arrival_on_green(location_name,conn_string, sg_name,det_name,time_interv
                
         else:
             number_vehicle_in_sum = number_vehicles_in_green + number_vehicles_in_red
-
+            
             if number_vehicle_in_sum > 0:
+                number_vehicles_in_green_list.append(number_vehicles_in_green)
                 arrival_on_green = (float(number_vehicles_in_green)/(number_vehicle_in_sum))*100
                 #arrival_on_green_percent_format = "{:.0%}".format(arrival_on_green)
                 arrival_on_green_percent_format_list.append(arrival_on_green)
                 start_time_list.append(start_time)
+                
                 number_vehicle_in_sum_list.append(number_vehicles_in_green)
                 f.write("{} {} {} {}\n".format(start_time,number_vehicles_in_green, number_vehicle_in_sum,arrival_on_green))
             number_vehicles_in_green = 0
@@ -566,36 +569,45 @@ def get_arrival_on_green(location_name,conn_string, sg_name,det_name,time_interv
     number_vehicle_in_sum = number_vehicles_in_green + number_vehicles_in_red
     arrival_on_green =(float(number_vehicles_in_green)/(number_vehicle_in_sum))*100
     arrival_on_green_percent_format_list.append(arrival_on_green)
+    number_vehicles_in_green_list.append(number_vehicles_in_green)
     number_vehicle_in_sum_list.append(number_vehicle_in_sum)
     f.write("{} {} {} {}\n".format(start_time,number_vehicles_in_green, number_vehicle_in_sum,arrival_on_green))
 
     f.close()   
     shutil.copyfile("traffic/static/traffic/result.csv", "traffic/static/traffic/result.txt")  
     
-    fig =plt.figure(figsize=(10,6),facecolor='#99CCFF')  #figsize argument is for resizing the figure.
-    ax =fig.add_subplot(111) #fig.add_subplot equivalent to fig.add_subplot(1,1,1), means subplot(nrows.,ncols, plot_number)
-    ax.xaxis_date() 
-    #x values are times of a day and using a Formatter to formate them.
-    #For avioding crowding the x axis with labels, using a Locator.
-    helsinkiTimezone = timezone('Europe/Helsinki')
-    fmt = mdates.DateFormatter('%H:%M:%S', tz=helsinkiTimezone)
-    ax.xaxis.set_major_formatter(fmt)
-
-    
-    if performance =="arrivalOnGreen":
-        ax.bar(start_time_list,arrival_on_green_percent_format_list,width = 0.001,color='#99CCCC')
-        xlabel('Time')
-        ylabel('percentage of arrival on green (%)' )
-        title('percentage of vehicle arrived on green for sg '+ sg_name+ ' via '+ det_name +' in '+location_name)
-        getBufferImage()     
-    elif performance =="volume":
-        ax.bar(start_time_list,number_vehicle_in_sum_list,width = 0.003,color='#CC6666')
-        xlabel('Time')
-        ylabel('Volumn(number of vehicles)' )
-        title('Traffic volumn for sg '+ sg_name+ ' via '+ det_name +' in '+location_name)
-        getBufferImage() 
-            
-            
+    if performance =="arrivalOnGreenPercent" or performance == "volume":
+        fig =plt.figure(figsize=(10,6),facecolor='#99CCFF')  #figsize argument is for resizing the figure.
+        ax =fig.add_subplot(111) #fig.add_subplot equivalent to fig.add_subplot(1,1,1), means subplot(nrows.,ncols, plot_number)
+        ax.xaxis_date() 
+        #x values are times of a day and using a Formatter to formate them.
+        #For avioding crowding the x axis with labels, using a Locator.
+        helsinkiTimezone = timezone('Europe/Helsinki')
+        fmt = mdates.DateFormatter('%H:%M:%S', tz=helsinkiTimezone)
+        ax.xaxis.set_major_formatter(fmt) 
+        if performance =="arrivalOnGreenPercent":
+            ax.bar(start_time_list,arrival_on_green_percent_format_list,width = 0.001,color='#99CCCC')
+            xlabel('Time')
+            ylabel('percentage of arrival on green (%)' )
+            title('percentage of vehicle arrived on green for sg '+ sg_name+ ' via '+ det_name +' in '+location_name)
+            getBufferImage()   
+             
+        else :
+            ax.bar(start_time_list,number_vehicle_in_sum_list,width = 0.003,color='#CC6666')
+            xlabel('Time')
+            ylabel('Volumn(number of vehicles)' )
+            title('Traffic volumn for sg '+ sg_name+ ' via '+ det_name +' in '+location_name)
+            getBufferImage()   
+    elif performance =="arrivalOnGreenRatio":
+        fig =plt.figure(figsize=(10,6),facecolor='#99CCFF')  #figsize argument is for resizing the figure.
+        plt.scatter(number_vehicle_in_sum_list,number_vehicles_in_green_list)
+        xlabel('The amount of all the vehicles')
+        ylabel('Vehicles arrived on green')
+        title("ratio of sum of vehicles and vehicles arrived on grern")
+        getBufferImage()   
+        
+      
+       
             
                 
                 

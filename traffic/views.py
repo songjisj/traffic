@@ -104,7 +104,7 @@ def index(request):
     helsinkiTimezone = timezone('Europe/Helsinki')
     timeZone = datetime.datetime.now(helsinkiTimezone).strftime('%z')
     
-    measuresList = ["capacity","greenDuration","queueLength","activeGreen","maximumCapacity","arrivalOnGreen","volume"] 
+    measuresList = ["capacity","greenDuration","queueLength","activeGreen","maximumCapacity","arrivalOnGreenPercent","volume","arrivalOnGreenRatio"] 
     
     
     #display csv file 
@@ -143,10 +143,13 @@ def index(request):
             get_green_time(selectedLocation, "", selectedSgName, startTimeStringTimeZone, endTimeStringTimeZone)
         elif selectedPerformance =="maximumCapacity":
             get_maxCapacity(selectedLocation,selectedSgName,selectedDetector,"",selectedTimeInterval,startTimeStringTimeZone,endTimeStringTimeZone)
-        elif selectedPerformance =="arrivalOnGreen":
+        elif selectedPerformance =="arrivalOnGreenPercent":
             get_arrival_on_green(selectedLocation,"",selectedSgName,selectedDetector,selectedTimeInterval,startTimeStringTimeZone,endTimeStringTimeZone,selectedPerformance)
         elif selectedPerformance =="volume":
             get_arrival_on_green(selectedLocation,"",selectedSgName,selectedDetector,selectedTimeInterval,startTimeStringTimeZone,endTimeStringTimeZone,selectedPerformance)
+        elif selectedPerformance =="arrivalOnGreenRatio":
+            get_arrival_on_green(selectedLocation,"",selectedSgName,selectedDetector,selectedTimeInterval,startTimeStringTimeZone,endTimeStringTimeZone,selectedPerformance)        
+    
     
 
     #return HttpResponse(green_example, content_type="image/png")
