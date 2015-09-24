@@ -111,6 +111,30 @@ def index(request):
     fileReader = csv.reader("traffic/static/traffic/result.csv", delimiter=',')
     lineNum = 0  #initialize linenumber
     
+    
+    
+    refreshType = request.POST.get('refreshType',"")
+    image = ""
+    if refreshType == "Plot" and startTimeString and endTimeString :
+        startTimeStringTimeZone = startTimeString + timeZone
+        endTimeStringTimeZone = endTimeString + timeZone 
+        if selectedPerformance == "greenDuration":
+            image = get_green_time_2(selectedLocation, "",startTimeStringTimeZone, endTimeStringTimeZone)   
+        elif selectedPerformance =="saturationFlowRate":
+            image = get_saturation_flow_rate(selectedLocation,"",selectedSgName,startTimeStringTimeZone,endTimeStringTimeZone)
+        elif selectedPerformance == "queueLength":
+            image = get_queue_length(selectedLocation,"",selectedSgName,selectedDetector,startTimeStringTimeZone,endTimeStringTimeZone)
+        elif selectedPerformance == "activeGreen":
+            image = get_green_time(selectedLocation, "", selectedSgName, startTimeStringTimeZone, endTimeStringTimeZone)
+        elif selectedPerformance =="maximumCapacity":
+            image = get_maxCapacity(selectedLocation,selectedSgName,selectedDetector,"",selectedTimeInterval,startTimeStringTimeZone,endTimeStringTimeZone)
+        elif selectedPerformance =="arrivalOnGreenPercent":
+            image = get_arrival_on_green(selectedLocation,"",selectedSgName,selectedDetector,selectedTimeInterval,startTimeStringTimeZone,endTimeStringTimeZone,selectedPerformance)
+        elif selectedPerformance =="volume":
+            image = get_arrival_on_green(selectedLocation,"",selectedSgName,selectedDetector,selectedTimeInterval,startTimeStringTimeZone,endTimeStringTimeZone,selectedPerformance)
+        elif selectedPerformance =="arrivalOnGreenRatio":
+            image = get_arrival_on_green(selectedLocation,"",selectedSgName,selectedDetector,selectedTimeInterval,startTimeStringTimeZone,endTimeStringTimeZone,selectedPerformance)        
+    
     context = {'locationNameList':locationNameList, 
                'selectedPerformance':selectedPerformance,
                'measuresList':measuresList,
@@ -126,32 +150,8 @@ def index(request):
                'endTimeString':endTimeString,
                'fileReader':fileReader,
                'lineNum':lineNum,
-               'form':form}    
-    
-    refreshType = request.POST.get('refreshType',"")
-    
-    if refreshType == "Plot" and startTimeString and endTimeString :
-        startTimeStringTimeZone = startTimeString + timeZone
-        endTimeStringTimeZone = endTimeString + timeZone 
-        if selectedPerformance == "greenDuration":
-            get_green_time_2(selectedLocation, "",startTimeStringTimeZone, endTimeStringTimeZone)   
-        elif selectedPerformance =="saturationFlowRate":
-            get_saturation_flow_rate(selectedLocation,"",selectedSgName,startTimeStringTimeZone,endTimeStringTimeZone)
-        elif selectedPerformance == "queueLength":
-            get_queue_length(selectedLocation,"",selectedSgName,selectedDetector,startTimeStringTimeZone,endTimeStringTimeZone)
-        elif selectedPerformance == "activeGreen":
-            get_green_time(selectedLocation, "", selectedSgName, startTimeStringTimeZone, endTimeStringTimeZone)
-        elif selectedPerformance =="maximumCapacity":
-            get_maxCapacity(selectedLocation,selectedSgName,selectedDetector,"",selectedTimeInterval,startTimeStringTimeZone,endTimeStringTimeZone)
-        elif selectedPerformance =="arrivalOnGreenPercent":
-            get_arrival_on_green(selectedLocation,"",selectedSgName,selectedDetector,selectedTimeInterval,startTimeStringTimeZone,endTimeStringTimeZone,selectedPerformance)
-        elif selectedPerformance =="volume":
-            get_arrival_on_green(selectedLocation,"",selectedSgName,selectedDetector,selectedTimeInterval,startTimeStringTimeZone,endTimeStringTimeZone,selectedPerformance)
-        elif selectedPerformance =="arrivalOnGreenRatio":
-            get_arrival_on_green(selectedLocation,"",selectedSgName,selectedDetector,selectedTimeInterval,startTimeStringTimeZone,endTimeStringTimeZone,selectedPerformance)        
-    
-    
-
+               'form':form,
+               'image':image}    
     #return HttpResponse(green_example, content_type="image/png")
      
     return render(request, 'traffic/index.html', context)

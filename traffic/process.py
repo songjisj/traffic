@@ -13,7 +13,7 @@ from operator import itemgetter
 import datetime
 from operator import itemgetter
 from datetime import timedelta
-
+import base64
 
 def create_plot_define_format(backgroud_color):
     fig =plt.figure(figsize=(10,6),facecolor=backgroud_color)  #figsize argument is for resizing the figure.
@@ -34,13 +34,23 @@ def get_config_string(config_file,section_number,content):
     conn_string = config.get('Section1','conn_string') 
     return conn_string
 
-def getBufferImage():
-    buffer = StringIO.StringIO()
-    canvas = pylab.get_current_fig_manager().canvas
-    canvas.draw()
-    pilImage = PIL.Image.fromstring("RGB", canvas.get_width_height(), canvas.tostring_rgb())
-    pilImage.save("traffic/static/traffic/plot.png", "PNG")
-    pylab.close();
+def getBufferImage(fig):
+    #save image to base64 code string
+    imgdata = StringIO.StringIO()
+    fig.savefig(imgdata, format='png')
+    imgdata.seek(0)
+    image = base64.b64encode(imgdata.buf)   
+    
+    #save image to file
+    
+    #canvas = pylab.get_current_fig_manager().canvas
+    #canvas.draw()
+    #pilImage = PIL.Image.fromstring("RGB", canvas.get_width_height(), canvas.tostring_rgb())
+    #pilImage.save("traffic/static/traffic/plot.png", "PNG")
+    
+    
+    pylab.close()
+    return image
     
 
 #Function to connect to postgresql 

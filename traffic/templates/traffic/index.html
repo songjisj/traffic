@@ -286,10 +286,10 @@
     {# Plot result #}
     <div class="col-sm-6">
 	{% load staticfiles %}
-	<img src="{% static "traffic/plot.png" %}">    
+	<img src="data:image/png;base64,{{ image }}">    
 	<br></br>
 	Analysis result <a href="{% static "traffic/result.csv" %}">Download CSV File</a>   
-    
+
     </div>
     </div>
     

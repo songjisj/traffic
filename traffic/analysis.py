@@ -100,7 +100,7 @@ def get_green_time(location_name, conn_string,sg_name,time1,time2):
     ylabel('Green duration(s)' )
     title('Signalgroup Green Duration: sg '+ sg_name+ ' in '+location_name)
     
-    return getBufferImage()    
+    return getBufferImage(fig)    
 
 
 
@@ -191,7 +191,7 @@ def get_capacity(location_name,conn_string,sg_name,det_name,time1,time2):
     x = range(len(y))
     plt.bar(x,y,width=0.1,color = "blue")
     
-    return getBufferImage()
+    return getBufferImage(plt.gcf())
 
 def get_queue_length(location_name,conn_string,sg_name,det_name,time1,time2): 
     
@@ -286,7 +286,7 @@ def get_queue_length(location_name,conn_string,sg_name,det_name,time1,time2):
     
     
     
-    return getBufferImage()
+    return getBufferImage(fig)
 
 def get_green_time_2(location_name, conn_string,time1,time2):
     
@@ -342,7 +342,7 @@ def get_green_time_2(location_name, conn_string,time1,time2):
     
     shutil.copyfile("traffic/static/traffic/result.csv", "traffic/static/traffic/result.txt")
     
-    return getBufferImage()
+    return getBufferImage(fig)
 
 
 #Saturation flow rate crossing a signalized stop line is define as the number of vechiles per hour that could cross the line if the signal remained green all of the time 
@@ -440,7 +440,7 @@ def get_saturation_flow_rate(location_name,conn_string,sg_name,time1,time2):
     xlabel("name of each detector")
     title("Saturation flow rate by detectors in signalGroup "+sg_name +" in "+ location_name) 
     
-    return getBufferImage()
+    return getBufferImage(plt.gcf())
 
 
 def get_maxCapacity(location_name,sg_name,det_name,conn_string,time_interval,time1,time2):
@@ -508,7 +508,7 @@ def get_maxCapacity(location_name,sg_name,det_name,conn_string,time_interval,tim
     ylabel('maximum capacity(unit:number of vehicles)' )
     title('Maximum capacity for sg '+ sg_name+ 'via '+ det_name +' in '+location_name)
     
-    getBufferImage()    
+    return getBufferImage(fig)    
     
     
 
@@ -596,14 +596,14 @@ def get_arrival_on_green(location_name,conn_string, sg_name,det_name,time_interv
             xlabel('Time')
             ylabel('percentage of arrival on green (%)' )
             title('percentage of vehicle arrived on green for sg '+ sg_name+ ' via '+ det_name +' in '+location_name)
-            getBufferImage()   
+            return getBufferImage(fig)   
              
         else :
             ax.bar(start_time_list,number_vehicle_in_sum_list,width = 0.003,color='#CC6666')
             xlabel('Time')
             ylabel('Volumn(number of vehicles)' )
             title('Traffic volumn for sg '+ sg_name+ ' via '+ det_name +' in '+location_name)
-            getBufferImage()   
+            return getBufferImage(fig) 
     elif performance =="arrivalOnGreenRatio":
         fig =plt.figure(figsize=(10,6),facecolor='#99CCFF')  #figsize argument is for resizing the figure.
         
@@ -632,7 +632,7 @@ def get_arrival_on_green(location_name,conn_string, sg_name,det_name,time_interv
         
         ylabel('Vehicles arrived on green')
         title("Ratio of vehicles arrived intersection " + location_name + " on green in signalGroup " + sg_name +" via detector " + det_name )
-        getBufferImage()   
+        return getBufferImage(fig)  
         
       
        
