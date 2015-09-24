@@ -17,6 +17,9 @@ import csv
 from pytz import timezone
 from dateutil import parser
 import shutil
+import numpy as np 
+from scipy.optimize import curve_fit
+from scipy.integrate import odeint
 
 GREEN = "GREEN"
 AMBER = "AMBER"
@@ -345,7 +348,7 @@ def get_green_time_2(location_name, conn_string,time1,time2):
 #Saturation flow rate crossing a signalized stop line is define as the number of vechiles per hour that could cross the line if the signal remained green all of the time 
 #The time of passage of the third and last third vehicles over several cycles to determine this value in this function. 
 #The first few vehicles and the last vehicles are excluded because of starting up the queue or represent the arrival rate.  
-def get_capacity_2(location_name,conn_string,sg_name,time1,time2):
+def get_saturation_flow_rate(location_name,conn_string,sg_name,time1,time2):
     conn_string = get_config_string('config.cfg','Section1','conn_string') 
     main_data = get_main_data(location_name, conn_string, time1, time2)  #[tt,gint,dint,seq]
     sg_pairs = get_sg_config_in_one(location_name, conn_string)
@@ -422,19 +425,20 @@ def get_capacity_2(location_name,conn_string,sg_name,time1,time2):
                     saturation_flow_rate_list.append(saturation_flow_rate)
                 detector_occupied_time_list_on_green = []
             
-            
+         
         mean_saturation_by_det = mean_in_list(saturation_flow_rate_list)
         mean_saturation_by_det_list.append(mean_saturation_by_det) 
         xlabel_list.append(det_name)
         f.write("{} {}\n".format(det_name, mean_saturation_by_det)) 
-    fig, ax = plt.subplots()
-    ind = np.arange(len(xlabel_list))
-    ax.bar(ind,mean_saturation_by_det_list,width=0.001,color = "r")
-    ax.set_xticklabels(xlabel_list)
-    ax.set_ylabel("Number of vehicles")
-    ax.set_title("Saturation flow rate in signalGroup "+sg_name  ) 
+    f.close()
+    shutil.copyfile("traffic/static/traffic/result.csv", "traffic/static/traffic/result.txt")  
     
     
+    plt.bar(range(len(mean_saturation_by_det_list)),mean_saturation_by_det_list,width=0.009,color = "r", align='center')
+    plt.xticks(range(len(mean_saturation_by_det_list)),xlabel_list)
+    ylabel("Number of vehicles")
+    xlabel("name of each detector")
+    title("Saturation flow rate by detectors in signalGroup "+sg_name +" in "+ location_name) 
     
     return getBufferImage()
 
@@ -565,13 +569,15 @@ def get_arrival_on_green(location_name,conn_string, sg_name,det_name,time_interv
             number_vehicles_in_green = 0
             number_vehicles_in_red = 0 
             start_time= start_time + interval   
-    start_time_list.append(start_time)
+    
     number_vehicle_in_sum = number_vehicles_in_green + number_vehicles_in_red
-    arrival_on_green =(float(number_vehicles_in_green)/(number_vehicle_in_sum))*100
-    arrival_on_green_percent_format_list.append(arrival_on_green)
-    number_vehicles_in_green_list.append(number_vehicles_in_green)
-    number_vehicle_in_sum_list.append(number_vehicle_in_sum)
-    f.write("{} {} {} {}\n".format(start_time,number_vehicles_in_green, number_vehicle_in_sum,arrival_on_green))
+    if number_vehicle_in_sum > 0:
+        start_time_list.append(start_time)
+        arrival_on_green =(float(number_vehicles_in_green)/(number_vehicle_in_sum))*100
+        arrival_on_green_percent_format_list.append(arrival_on_green)
+        number_vehicles_in_green_list.append(number_vehicles_in_green)
+        number_vehicle_in_sum_list.append(number_vehicle_in_sum)
+        f.write("{} {} {} {}\n".format(start_time,number_vehicles_in_green, number_vehicle_in_sum,arrival_on_green))
 
     f.close()   
     shutil.copyfile("traffic/static/traffic/result.csv", "traffic/static/traffic/result.txt")  
@@ -600,10 +606,32 @@ def get_arrival_on_green(location_name,conn_string, sg_name,det_name,time_interv
             getBufferImage()   
     elif performance =="arrivalOnGreenRatio":
         fig =plt.figure(figsize=(10,6),facecolor='#99CCFF')  #figsize argument is for resizing the figure.
+        
         plt.scatter(number_vehicle_in_sum_list,number_vehicles_in_green_list)
-        xlabel('The amount of all the vehicles')
+        
+        
+        fit = np.polyfit(number_vehicle_in_sum_list,number_vehicles_in_green_list,1)
+        fit_fn = np.poly1d(fit)
+        plt.plot(number_vehicle_in_sum_list,number_vehicles_in_green_list,'yo',number_vehicle_in_sum_list,fit_fn(number_vehicle_in_sum_list),'--k')
+        
+        #def fitfunc(t, k):
+            #'Function that returns Ca computed from an ODE for a k'
+            #def myode(Ca, t):
+                #return -k * Ca
+        
+            #Green0 = number_vehicles_in_green_list[0]
+            #Greensol = odeint(myode, Green0, t)
+            #return Greensol[:,0]  
+        
+        #k_fit, kcov = curve_fit(fitfunc, number_vehicle_in_sum_list, number_vehicles_in_green_list, p0=1.3)
+        
+        #tfit = np.linspace(0,1);
+        #fit = fitfunc(tfit, k_fit) 
+        #plt.plot(number_vehicle_in_sum_list, number_vehicles_in_green_list, 'ro', label='data')
+        #plt.plot(tfit, fit, 'b-', label='fit')        
+        
         ylabel('Vehicles arrived on green')
-        title("ratio of sum of vehicles and vehicles arrived on grern")
+        title("Ratio of vehicles arrived intersection " + location_name + " on green in signalGroup " + sg_name +" via detector " + det_name )
         getBufferImage()   
         
       

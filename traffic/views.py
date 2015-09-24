@@ -7,7 +7,7 @@ import PIL.Image
 import StringIO
 from .models import TfRaw,Controller,ControllerConfigDet,ControllerConfigSg
 from analysis import rowNumber
-from analysis import get_green_time, get_sg_config_in_one, get_det_config_in_one_sg,get_capacity,get_queue_length,get_green_time_2,get_capacity_2,get_maxCapacity,get_arrival_on_green
+from analysis import get_green_time, get_sg_config_in_one, get_det_config_in_one_sg,get_capacity,get_queue_length,get_green_time_2,get_saturation_flow_rate,get_maxCapacity,get_arrival_on_green
 
 from .forms import ControlForm
 from .forms import ContactForm
@@ -104,7 +104,7 @@ def index(request):
     helsinkiTimezone = timezone('Europe/Helsinki')
     timeZone = datetime.datetime.now(helsinkiTimezone).strftime('%z')
     
-    measuresList = ["capacity","greenDuration","queueLength","activeGreen","maximumCapacity","arrivalOnGreenPercent","volume","arrivalOnGreenRatio"] 
+    measuresList = ["saturationFlowRate","greenDuration","queueLength","activeGreen","maximumCapacity","arrivalOnGreenPercent","volume","arrivalOnGreenRatio"] 
     
     
     #display csv file 
@@ -135,8 +135,8 @@ def index(request):
         endTimeStringTimeZone = endTimeString + timeZone 
         if selectedPerformance == "greenDuration":
             get_green_time_2(selectedLocation, "",startTimeStringTimeZone, endTimeStringTimeZone)   
-        elif selectedPerformance =="capacity":
-            get_capacity_2(selectedLocation,"",selectedSgName,startTimeStringTimeZone,endTimeStringTimeZone)
+        elif selectedPerformance =="saturationFlowRate":
+            get_saturation_flow_rate(selectedLocation,"",selectedSgName,startTimeStringTimeZone,endTimeStringTimeZone)
         elif selectedPerformance == "queueLength":
             get_queue_length(selectedLocation,"",selectedSgName,selectedDetector,startTimeStringTimeZone,endTimeStringTimeZone)
         elif selectedPerformance == "activeGreen":
