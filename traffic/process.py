@@ -7,13 +7,14 @@ from matplotlib import pylab
 from pylab import *
 import PIL
 import PIL.Image
+from io import BytesIO
 import psycopg2.extras 
 from operator import itemgetter
 import datetime
 from operator import itemgetter
 from datetime import timedelta
 import base64
-import StringIO
+
 
 def create_plot_define_format(backgroud_color):
     fig =plt.figure(figsize=(10,6),facecolor=backgroud_color)  #figsize argument is for resizing the figure.
@@ -37,32 +38,16 @@ def get_config_string(config_file,section_number,content):
 
 def getBufferImage(fig):
     #save image to base64 code string
-    imgdata = StringIO.StringIO()
+    imgdata = BytesIO()
     fig.savefig(imgdata, format='png')
     imgdata.seek(0)
-    image = base64.b64encode(imgdata.buf)   
-    
-    #save image to file
-    
-    #canvas = pylab.get_current_fig_manager().canvas
-    #canvas.draw()
-    #pilImage = PIL.Image.fromstring("RGB", canvas.get_width_height(), canvas.tostring_rgb())
-    #pilImage.save("traffic/static/traffic/plot.png", "PNG")
-    
-    
+
+    image = base64.encodebytes(imgdata.getvalue())
+
+    #TODO: We should return here a HttpResponse or change the method and utilize http://www.dajaxproject.com/ or other similar
+
     pylab.close()
     return image
-
-def getBufferImageStatic():
-    canvas = pylab.get_current_fig_manager().canvas
-    canvas.draw()
-    pilImage = PIL.Image.frombuffer('RGBA', canvas.get_width_height(), canvas.buffer_rgba(), 'raw', 'RGBA', 0, 1)
-
-    #TODO: We should return here a HttpResponse or change it and utilize http://www.dajaxproject.com/ or other similar
-    pilImage.save("traffic/static/traffic/plot.png", "PNG")
-    pilImage.close()
-    pylab.close()
-
     
 
 #Function to connect to postgresql 
