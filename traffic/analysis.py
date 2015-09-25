@@ -1,4 +1,5 @@
-from process import get_config_string,getBufferImage,connect_db,disconnect_db,rowNumber,get_location_id,get_sg_config_in_one,get_det_config_in_one_sg,get_det_in_one_location,get_sg_det_status,get_sg_status,get_main_data,mean_in_list,convert_time_interval_str_to_timedelta,addCapacityInList,create_plot_define_format
+#TODO: This should be refactored and either split by functionality or import * from (and then hide package private members)
+from .process import *
 import psycopg2.extras 
 import datetime
 from operator import itemgetter
@@ -9,9 +10,6 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from matplotlib import pylab
 from pylab import *
-import PIL
-import PIL.Image
-import StringIO
 from django.conf import settings
 import csv
 from pytz import timezone
@@ -32,16 +30,15 @@ green_state_list = ["0","1","3","4","5","6","7","8",":"]
 def get_green_time(location_name, conn_string,sg_name,time1,time2):
     #read configuration file
     conn_string = get_config_string('config.cfg','Section1','conn_string') 
+    
     sg_status= get_sg_status(location_name, conn_string, sg_name, time1, time2) #[time,grint,seq,dint] 
+    
     green_on = False
     active_green_list = []
     start_green_time_list =[]
     useless_green_list = []
-    #state "0" represents "red/amber", that occurs before green state but drivers are allowed to go. Here we regards it as green, but actually it is not.
-    
     start_green_time = None
     width = 0.0005
-    
     green_end_time = None 
     
     f = open("traffic/static/traffic/result.csv","w+") #create a csv file to save data in.
@@ -64,8 +61,7 @@ def get_green_time(location_name, conn_string,sg_name,time1,time2):
                 any_detectors_occupied = True 
             elif  int(s[3]) == 0 and any_detectors_occupied:  # record the start that detectors become occupied to unoccupied.
                 detector_unoccupied_lastest_time = s[0]
-                any_detectors_occupied = False 
-                
+                any_detectors_occupied = False      
             
         elif green_on and s[1] not in green_state_list:
             green_on = False
@@ -83,7 +79,6 @@ def get_green_time(location_name, conn_string,sg_name,time1,time2):
     fig =plt.figure(figsize=(10,6),facecolor='#FFFFCC')  #figsize argument is for resizing the figure.
     ax =fig.add_subplot(111) #fig.add_subplot equivalent to fig.add_subplot(1,1,1), means subplot(nrows.,ncols, plot_number)
     ax.xaxis_date() 
-    
     
     #x values are times of a day and using a Formatter to formate them.
     #For avioding crowding the x axis with labels, using a Locator.
@@ -103,11 +98,6 @@ def get_green_time(location_name, conn_string,sg_name,time1,time2):
     return getBufferImage(fig)    
 
 
-
-#Function get_saturation_flow_rate return a list of saturation flow rate and timestamp 
-#Saturation flow rate crossing a signalized stop line is define as the number of vechiles per hour that could cross the line if the signal remained green all of the time 
-#The time of passage of the third and last third vehicles over several cycles to determine this value in this function. 
-#The first few vehicles and the last vehicles are excluded because of starting up the queue or represent the arrival rate.  
 def get_capacity(location_name,conn_string,sg_name,det_name,time1,time2):
     conn_string = get_config_string('config.cfg','Section1','conn_string')    
     
@@ -609,7 +599,7 @@ def get_arrival_on_green(location_name,conn_string, sg_name,det_name,time_interv
         
         plt.scatter(number_vehicle_in_sum_list,number_vehicles_in_green_list)
         
-        
+        #Linear regression
         fit = np.polyfit(number_vehicle_in_sum_list,number_vehicles_in_green_list,1)
         fit_fn = np.poly1d(fit)
         plt.plot(number_vehicle_in_sum_list,number_vehicles_in_green_list,'yo',number_vehicle_in_sum_list,fit_fn(number_vehicle_in_sum_list),'--k')

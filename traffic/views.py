@@ -1,22 +1,17 @@
 from django.shortcuts import render
 from django.http import HttpResponse
-from matplotlib import pylab
-from pylab import *
-import PIL
-import PIL.Image
-import StringIO
 from .models import TfRaw,Controller,ControllerConfigDet,ControllerConfigSg
-from analysis import rowNumber
-from analysis import get_green_time, get_sg_config_in_one, get_det_config_in_one_sg,get_capacity,get_queue_length,get_green_time_2,get_saturation_flow_rate,get_maxCapacity,get_arrival_on_green
+
+from traffic.analysis import rowNumber
+from traffic.analysis import get_green_time, get_sg_config_in_one, get_det_config_in_one_sg,get_capacity,get_queue_length,get_green_time_2,get_saturation_flow_rate,get_maxCapacity,get_arrival_on_green
+
 
 from .forms import ControlForm
 from .forms import ContactForm
 import dateutil.parser
-from datetime import datetime
 from pytz import timezone
 import datetime
-import csv 
-#import iso8601
+import csv
 
 
 # Create your views here.
@@ -161,20 +156,7 @@ def data(request):
     if control_form.is_valid():
         
         return render(request, 'data.html',{'control_form':control_form}) 
-        
 
-def plot(request):
-    x = [1,2,3,4]
-    y = [20, 21, 20.5, 20.8]
-    plt.plot(x, y)
-
-    buffer = StringIO.StringIO()
-    canvas = pylab.get_current_fig_manager().canvas
-    canvas.draw()
-    pilImage = PIL.Image.fromstring("RGB", canvas.get_width_height(), canvas.tostring_rgb())
-    pilImage.save(buffer, "PNG")
-    pylab.close()
-    return HttpResponse(buffer.getvalue(), content_type="image/png")
 def measuresinfo(request):
     
     return render(request,'traffic/measuresinfo.html',"")
