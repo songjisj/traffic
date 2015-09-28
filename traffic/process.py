@@ -1,4 +1,4 @@
-import ConfigParser
+import configparser
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -29,7 +29,7 @@ def create_plot_define_format(backgroud_color):
     
 
 def get_config_string(config_file,section_number,content):
-    config = ConfigParser.RawConfigParser()
+    config = configparser.RawConfigParser()
     config.read('config.cfg')
     
     conn_string = config.get('Section1','conn_string') 
@@ -115,7 +115,7 @@ def get_det_config_in_one_sg(location_name,sg_name,conn_string):
     sg_dict = get_sg_config_in_one(location_name, conn_string)
     
     sg_id = -1
-    for sg_key in sg_dict.keys():
+    for sg_key in list(sg_dict.keys()):
         if sg_dict[sg_key] == sg_name:
             sg_id = sg_key
             
@@ -155,14 +155,14 @@ def get_main_data(location_name,conn_string, time1,time2):
 def get_sg_status(location_name,conn_string,sg_name,time1,time2): 
     
     sg_pairs = get_sg_config_in_one(location_name, conn_string)
-    for idx, name in sg_pairs.items():
+    for idx, name in list(sg_pairs.items()):
         if name == sg_name:
             sg_index = idx
             break   
     main_data = get_main_data(location_name, conn_string, time1, time2) 
     det_dict_in_the_sg = get_det_config_in_one_sg(location_name, sg_name, 
                                                  conn_string)
-    det_index_list = det_dict_in_the_sg.keys()
+    det_index_list = list(det_dict_in_the_sg.keys())
     sg_status = []
     for i in range(len(main_data)):
         sg_status.append([])
@@ -190,13 +190,13 @@ def get_sg_det_status(location_name,conn_string,sg_name,det_name,time1,time2):
     det_index = 0
     #look for the index of the input sg_name.
     sg_pairs = get_sg_config_in_one(location_name, conn_string)
-    for idx, name in sg_pairs.items():
+    for idx, name in list(sg_pairs.items()):
         if name == sg_name:
             sg_index = idx
             break  
     #look for the index for the input detector.
     det_pairs = get_det_config_in_one_sg(location_name, sg_name, conn_string)
-    for idx, name in det_pairs.items():
+    for idx, name in list(det_pairs.items()):
         if name==det_name:  
             det_index =idx 
             break 
@@ -258,7 +258,7 @@ def addCapacityInList(start_time_list, start_time, sum_green, max_capacity_list)
 def rowNumber():
     
     #read configuration file
-    config = ConfigParser.RawConfigParser()
+    config = configparser.RawConfigParser()
     config.read('config.cfg')
     
     conn_string = config.get('Section1','conn_string') 

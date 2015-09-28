@@ -16,8 +16,8 @@ from pytz import timezone
 from dateutil import parser
 import shutil
 import numpy as np 
-from scipy.optimize import curve_fit
-from scipy.integrate import odeint
+#from scipy.optimize import curve_fit
+#from scipy.integrate import odeint
 
 GREEN = "GREEN"
 AMBER = "AMBER"
@@ -71,7 +71,7 @@ def get_green_time(location_name, conn_string,sg_name,time1,time2):
             useless_green = timedelta.total_seconds(s[0]-detector_unoccupied_lastest_time) 
             useless_green_list.append(useless_green)
             f.write("{} {} {}\n".format(start_green_time,active_green,useless_green)) 
-            print active_green,start_green_time
+           
             
     f.close() #close the file after saving.
     shutil.copyfile("traffic/static/traffic/result.csv", "traffic/static/traffic/result.txt")
@@ -163,10 +163,7 @@ def get_capacity(location_name,conn_string,sg_name,det_name,time1,time2):
     mean_saturation = mean_in_list(saturation_flow_rate_list)
     headway = mean_in_list(time_diff_list)
     maximum_capacity = mean_saturation * sum_green_duration / (parser.parse(time2) - parser.parse(time1)).total_seconds()
-    print saturation_flow_rate_list
-    print mean_saturation
-    print headway 
-    print round(maximum_capacity)  
+
     
     #write csv file
     f = open("traffic/static/traffic/result.csv","w+") #create a csv file to save data in.
@@ -178,7 +175,7 @@ def get_capacity(location_name,conn_string,sg_name,det_name,time1,time2):
     #plot 
     
     y = [mean_saturation,maximum_capacity]
-    x = range(len(y))
+    x = list(range(len(y)))
     plt.bar(x,y,width=0.1,color = "blue")
     
     return getBufferImage(plt.gcf())
@@ -239,7 +236,7 @@ def get_queue_length(location_name,conn_string,sg_name,det_name,time1,time2):
     ax.xaxis.set_major_formatter(fmt) 
     
     #The segment codes is for marking dual units(dual axis) using matplotlib
-    ax.bar(count_vehicle_in_queue_dict.keys(),count_vehicle_in_queue_dict.values(),width = 0.0005, color='purple')
+    ax.bar(list(count_vehicle_in_queue_dict.keys()),list(count_vehicle_in_queue_dict.values()),width = 0.0005, color='purple')
     xlabel('Times')
     ylabel('Number of vehicles in queue' )
     
@@ -309,7 +306,7 @@ def get_green_time_2(location_name, conn_string,time1,time2):
     ylabel('Green duration(s)' )
     title('Signalgroup Green Duration in '+location_name)    
     
-    for sg_index in sg_dict.keys():
+    for sg_index in list(sg_dict.keys()):
         sg_name = sg_dict[sg_index] 
         minimum_green_list = []
         start_green_time_list =[]
@@ -342,7 +339,7 @@ def get_saturation_flow_rate(location_name,conn_string,sg_name,time1,time2):
     conn_string = get_config_string('config.cfg','Section1','conn_string') 
     main_data = get_main_data(location_name, conn_string, time1, time2)  #[tt,gint,dint,seq]
     sg_pairs = get_sg_config_in_one(location_name, conn_string)
-    for idx, name in sg_pairs.items():
+    for idx, name in list(sg_pairs.items()):
         if name == sg_name:
             sg_index = idx
             break      
@@ -361,7 +358,7 @@ def get_saturation_flow_rate(location_name,conn_string,sg_name,time1,time2):
     writer = csv.DictWriter(f, fieldnames = ["det_name","saturation_flow_rate"], delimiter = ';')
     writer.writeheader()    
     
-    for det_index in det_dict.keys():
+    for det_index in list(det_dict.keys()):
         det_name = det_dict[det_index]
 
         green_on = False
@@ -424,8 +421,8 @@ def get_saturation_flow_rate(location_name,conn_string,sg_name,time1,time2):
     shutil.copyfile("traffic/static/traffic/result.csv", "traffic/static/traffic/result.txt")  
     
     
-    plt.bar(range(len(mean_saturation_by_det_list)),mean_saturation_by_det_list,width=0.009,color = "r", align='center')
-    plt.xticks(range(len(mean_saturation_by_det_list)),xlabel_list)
+    plt.bar(list(range(len(mean_saturation_by_det_list))),mean_saturation_by_det_list,width=0.009,color = "r", align='center')
+    plt.xticks(list(range(len(mean_saturation_by_det_list))),xlabel_list)
     ylabel("Number of vehicles")
     xlabel("name of each detector")
     title("Saturation flow rate by detectors in signalGroup "+sg_name +" in "+ location_name) 

@@ -1,6 +1,6 @@
-import ConfigParser
+import configparser
 
-config = ConfigParser.RawConfigParser()
+config = configparser.RawConfigParser()
 
 #add sections and items 
 #section one is for the database configuration on chenlu's laptop

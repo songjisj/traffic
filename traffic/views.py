@@ -63,7 +63,7 @@ def index(request):
     #Select signalGroup
     if selectedLocation:
         sgNameDict = get_sg_config_in_one(selectedLocation,"")  
-        sgNameList = sgNameDict.values()
+        sgNameList = list(sgNameDict.values())
     
     try:
         selectedSgName = request.POST['signalGroup']
@@ -74,7 +74,7 @@ def index(request):
     #Select detector
     if selectedSgName and selectedLocation :
         detectorDict = get_det_config_in_one_sg(selectedLocation, selectedSgName, "") 
-        detectorList = detectorDict.values() 
+        detectorList = list(detectorDict.values()) 
     
     try: 
         selectedDetector = request.POST['detector']
