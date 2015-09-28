@@ -240,10 +240,9 @@ def mean_in_list(list):
  
 
 def convert_time_interval_str_to_timedelta(time_interval):
-    from pytimeparse.timeparse import timeparse
-    import datetime 
     
-    time_interval_in_seconds = datetime.timedelta(seconds=timeparse(time_interval))  #timeparse('3m') = 180 , convert 3 minutes to 180 second,type is int.
+    minutes_to_seconds = int(time_interval)*60
+    time_interval_in_seconds = datetime.timedelta(seconds=minutes_to_seconds)  #timeparse('3m') = 180 , convert 3 minutes to 180 second,type is int.
     return time_interval_in_seconds
 
 

@@ -36,7 +36,7 @@ def index(request):
     detectorList = []
     selectedDetector = ""
     startTimeString =""
-    timeIntervalList =["5m","10m","20m","30m","60m"] 
+    timeIntervalList =["5","10","20","30","60"] 
     #Select performance 
     try:
         selectedPerformance = request.POST['performance']
