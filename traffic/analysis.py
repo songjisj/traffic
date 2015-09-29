@@ -569,7 +569,7 @@ def get_arrival_on_green(location_name,conn_string, sg_name,det_name,time_interv
     f.close()   
     shutil.copyfile("traffic/static/traffic/result.csv", "traffic/static/traffic/result.txt")  
     
-    if performance =="Arrival_on_green_percent" or performance == "Volume":
+    if performance =="Arrival_on_green_percent" or performance == "volume":
         fig =plt.figure(figsize=(10,6),facecolor='#99CCFF')  #figsize argument is for resizing the figure.
         ax =fig.add_subplot(111) #fig.add_subplot equivalent to fig.add_subplot(1,1,1), means subplot(nrows.,ncols, plot_number)
         ax.xaxis_date() 
@@ -599,33 +599,114 @@ def get_arrival_on_green(location_name,conn_string, sg_name,det_name,time_interv
         #Linear regression
         fit = np.polyfit(number_vehicle_in_sum_list,number_vehicles_in_green_list,1)
         fit_fn = np.poly1d(fit)
-        plt.plot(number_vehicle_in_sum_list,number_vehicles_in_green_list,'yo',number_vehicle_in_sum_list,fit_fn(number_vehicle_in_sum_list),'--k')
-        
-        #def fitfunc(t, k):
-            #'Function that returns Ca computed from an ODE for a k'
-            #def myode(Ca, t):
-                #return -k * Ca
-        
-            #Green0 = number_vehicles_in_green_list[0]
-            #Greensol = odeint(myode, Green0, t)
-            #return Greensol[:,0]  
-        
-        #k_fit, kcov = curve_fit(fitfunc, number_vehicle_in_sum_list, number_vehicles_in_green_list, p0=1.3)
-        
-        #tfit = np.linspace(0,1);
-        #fit = fitfunc(tfit, k_fit) 
-        #plt.plot(number_vehicle_in_sum_list, number_vehicles_in_green_list, 'ro', label='data')
-        #plt.plot(tfit, fit, 'b-', label='fit')        
+        plt.plot(number_vehicle_in_sum_list,number_vehicles_in_green_list,'yo',number_vehicle_in_sum_list,fit_fn(number_vehicle_in_sum_list),'--k')       
         
         ylabel('Vehicles arriving on green')
         xlabel('All the vehicles arriving in time interval ' +time_interval+' minutes')
         title("Ratio of vehicles arrived intersection " + location_name + " during green in signalGroup " + sg_name +" via detector " + det_name )
         return getBufferImage(fig)  
         
+def get_volume_lanes(location_name,conn_string, sg_name,det_name,time_interval,time1,time2):
+    
+    green_on = False 
+    
+    number_vehicle_in_sum_list = []
+    
+    number_vehicles_in_green_list = []
+    det_paralleled_dict = {}
+    volume_by_lane_dict ={}
       
-       
-            
+    
+    interval = convert_time_interval_str_to_timedelta(time_interval)
+    conn_string = get_config_string('config.cfg','Section1','conn_string') 
+    main_data = get_main_data(location_name, conn_string, time1, time2)  #[tt,gint,dint,seq]
+    
+    
+    lane_by_det = det_name.split('_')[0] #Split det_name by '_', obtain the first part.
+    
+    det_dict = get_det_config_in_one_sg(location_name, sg_name,conn_string) 
+    sg_pairs = get_sg_config_in_one(location_name, conn_string)
+    for idx, name in list(sg_pairs.items()):
+        if name == sg_name:
+            sg_index = idx
+            break   
+    #Look for any detector paralleled with the selected one.
+    for det_id, det_name in list(det_dict.items()):
+        if det_name.startswith(lane_by_det):
+            det_paralleled_dict[det_id]=det_name 
+    
+    f = open("traffic/static/traffic/result.csv","w+") #create a csv file to save data in.
+    writer = csv.DictWriter(f, fieldnames = ["start_time","name of detector","volume"], delimiter = ';')
+    writer.writeheader()     
+    
+    for det_id in list(det_paralleled_dict.keys()):
+        det_name = det_dict[det_id]
+        
+        detector_occupied = False
+        start_time = main_data[0][0]
+        volume = 0 
+        volume_list=[]
+        start_time_list= []
+        for s in main_data: 
+            if s[0] < start_time + interval:
+                if s[2][det_id] =='1' and not detector_occupied:
+                    detector_occupied = True                  
+                elif s[2][det_id] =='0' and detector_occupied:
+                    volume =volume +1
+                    detector_occupied = False
+            else:
+                volume_list.append(volume) 
+                start_time_list.append(start_time)
+                start_time = start_time + interval
+                f.write("{} {} {}\n".format(start_time,det_name, volume)) 
+                volume = 0 
+        volume_by_lane_dict[det_name]=volume_list  
+    f.close()
+    shutil.copyfile("traffic/static/traffic/result.csv", "traffic/static/traffic/result.txt")     
+    
+    fig =plt.figure(figsize=(10,6),facecolor='#99CCFF')  #figsize argument is for resizing the figure.
+    ax =fig.add_subplot(111) #fig.add_subplot equivalent to fig.add_subplot(1,1,1), means subplot(nrows.,ncols, plot_number)
+    ax.xaxis_date()  
+    helsinkiTimezone = timezone('Europe/Helsinki')
+    fmt = mdates.DateFormatter('%H:%M:%S', tz=helsinkiTimezone)
+    ax.xaxis.set_major_formatter(fmt)     
+    matrix = np.array(list(volume_by_lane_dict.values()))
+    p = []
+    colors = ['skyblue', 'blue', 'c', 'purple']
+    labels = list(volume_by_lane_dict.keys())    
+    def create_subplot(matrix,colors):
+        bottoms = np.cumsum(np.vstack((np.zeros(matrix.shape[1]), matrix)), axis=0)[:-1]
+        i= 0
+        bar_renderers = [] 
+    
+        for det_name, det_volume_list in list(volume_by_lane_dict.items()):
+            r = ax.bar(start_time_list,det_volume_list,width=0.001,color=colors[i],bottom=bottoms[i])
+            i=i+1
+            bar_renderers.append(r) 
+        return bar_renderers
+    p.extend(create_subplot(matrix, colors))
+        
+    xlabel("time")
+    ylabel("Amount of vehicles")
+    title("Traffic volume for "+ sg_name +" at " + location_name)  
+    legend((x[0] for x in p),
+           labels)
+    
+    return getBufferImage(fig)
+        
+        
+    
+        
+        
+        
                 
                 
-            
-            
+                
+                
+                
+
+
+
+     
+    
+    

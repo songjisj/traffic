@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from .models import TfRaw,Controller,ControllerConfigDet,ControllerConfigSg
 from traffic.analysis import rowNumber
-from traffic.analysis import get_green_time, get_sg_config_in_one, get_det_config_in_one_sg,get_capacity,get_queue_length,get_green_time_2,get_saturation_flow_rate,get_maxCapacity,get_arrival_on_green
+from traffic.analysis import *
 from .forms import ControlForm
 from .forms import ContactForm
 import dateutil.parser
@@ -123,7 +123,7 @@ def index(request):
         elif selectedPerformance =="Arrival_on_green_percent":
             image = get_arrival_on_green(selectedLocation,"",selectedSgName,selectedDetector,selectedTimeInterval,startTimeStringTimeZone,endTimeStringTimeZone,selectedPerformance)
         elif selectedPerformance =="Volume":
-            image = get_arrival_on_green(selectedLocation,"",selectedSgName,selectedDetector,selectedTimeInterval,startTimeStringTimeZone,endTimeStringTimeZone,selectedPerformance)
+            image = get_volume_lanes(selectedLocation,"",selectedSgName,selectedDetector,selectedTimeInterval,startTimeStringTimeZone,endTimeStringTimeZone)
         elif selectedPerformance =="Arrival_on_green_ratio":
             image = get_arrival_on_green(selectedLocation,"",selectedSgName,selectedDetector,selectedTimeInterval,startTimeStringTimeZone,endTimeStringTimeZone,selectedPerformance)        
     
