@@ -49,7 +49,7 @@
 	    //get html element (here is the select), by id, id is in element's <>
 	    var selectedPerformance = document.getElementById("performanceSelectionId").value;
 	    
-	    var detectorNotNeededArray = ["capacity","greenDuration","activeGreen","saturationFlowRate"];
+	    var detectorNotNeededArray = ["Green_duration","Active_green","Saturation_flow_rate"];
 	    var detectorHidden = (detectorNotNeededArray.indexOf(selectedPerformance) > -1);
 	    
 	    if (detectorHidden) {
@@ -62,7 +62,7 @@
 		document.getElementById('detectorSelectionId').style.display = "block";
 	    }
 	    
-	    var signalGroupNotNeededArray = ["greenDuration"];
+	    var signalGroupNotNeededArray = ["Green_duration"];
 	    var signalGroupHidden = (signalGroupNotNeededArray.indexOf(selectedPerformance) > -1);
 	    
 	    if (signalGroupHidden) {
@@ -74,7 +74,7 @@
 	        document.getElementById('signalGroupSelectionId').style.display = "block";
 	    }
 	    
-	    var timeIntervalNotNeededArray = ["greenDuration","activeGreen","queueLength","saturationFlowRate"];
+	    var timeIntervalNotNeededArray = ["Green_duration","Active_green","Queue_length","Saturation_flow_rate"];
 	    var timeIntervalHidden = (timeIntervalNotNeededArray.indexOf(selectedPerformance) > -1);
 	    
 	    if(timeIntervalHidden) {
@@ -152,7 +152,7 @@
     
 	<label for="performance">Performance measure </label> 
 	<a href="{% url 'traffic:measuresinfo' %}"> 
-	<i class='glyphicon glyphicon-book'></i>
+	<i class='glyphicon glyphicon-book'></i></a>
 	<a href="#" id="timezonetip"  data-toggle="popover" data-trigger="hover" title="" data-content="Saturation flow rate is the number of vehicles being able to cross the stop line;
 	Green duration is green timing length per cycle for all signal groups; Queue length estimates the length of queue; Active green count the percent of active and passive green;
 	Maximum capacity calculates the amount of vehicle being able to cross during total green time in a period; Arrival on green is on how many vehicles pass the stop line duration green timing;

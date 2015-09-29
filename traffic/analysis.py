@@ -569,7 +569,7 @@ def get_arrival_on_green(location_name,conn_string, sg_name,det_name,time_interv
     f.close()   
     shutil.copyfile("traffic/static/traffic/result.csv", "traffic/static/traffic/result.txt")  
     
-    if performance =="arrivalOnGreenPercent" or performance == "volume":
+    if performance =="Arrival_on_green_percent" or performance == "Volume":
         fig =plt.figure(figsize=(10,6),facecolor='#99CCFF')  #figsize argument is for resizing the figure.
         ax =fig.add_subplot(111) #fig.add_subplot equivalent to fig.add_subplot(1,1,1), means subplot(nrows.,ncols, plot_number)
         ax.xaxis_date() 
@@ -578,7 +578,7 @@ def get_arrival_on_green(location_name,conn_string, sg_name,det_name,time_interv
         helsinkiTimezone = timezone('Europe/Helsinki')
         fmt = mdates.DateFormatter('%H:%M:%S', tz=helsinkiTimezone)
         ax.xaxis.set_major_formatter(fmt) 
-        if performance =="arrivalOnGreenPercent":
+        if performance =="Arrival_on_green_percent":
             ax.bar(start_time_list,arrival_on_green_percent_format_list,width = 0.001,color='#99CCCC')
             xlabel('Time')
             ylabel('percentage of arrival on green (%)' )
@@ -591,7 +591,7 @@ def get_arrival_on_green(location_name,conn_string, sg_name,det_name,time_interv
             ylabel('Volume(number of vehicles)' )
             title('Traffic volume for sg '+ sg_name+ ' via '+ det_name +' in '+location_name)
             return getBufferImage(fig) 
-    elif performance =="arrivalOnGreenRatio":
+    elif performance =="Arrival_on_green_ratio":
         fig =plt.figure(figsize=(10,6),facecolor='#99CCFF')  #figsize argument is for resizing the figure.
         
         plt.scatter(number_vehicle_in_sum_list,number_vehicles_in_green_list)
