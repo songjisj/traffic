@@ -303,7 +303,7 @@ def get_green_time_2(location_name, conn_string,time1,time2):
     fmt = mdates.DateFormatter('%H:%M:%S', tz=helsinkiTimezone)  
     ax.xaxis.set_major_formatter(fmt)    
     xlabel('Time')
-    ylabel('Green duration(s)' )
+    ylabel('Green duration(s) per cycle' )
     title('Signalgroup Green Duration in '+location_name)    
     
     for sg_index in list(sg_dict.keys()):
@@ -432,10 +432,10 @@ def get_saturation_flow_rate(location_name,conn_string,sg_name,time1,time2):
 
 def get_maxCapacity(location_name,sg_name,det_name,conn_string,time_interval,time1,time2):
     
-    from pytimeparse.timeparse import timeparse
-    import datetime 
+
     
-    time_interval_in_seconds = datetime.timedelta(seconds=timeparse(time_interval))
+    time_interval_in_seconds = convert_time_interval_str_to_timedelta(
+                                                                     time_interval)
     conn_string = get_config_string('config.cfg','Section1','conn_string') 
     
     sg_status= get_sg_status(location_name, conn_string, sg_name, time1, time2) #[time,grint,seq,dint] 
@@ -493,7 +493,7 @@ def get_maxCapacity(location_name,sg_name,det_name,conn_string,time_interval,tim
     
     xlabel('Time')
     ylabel('maximum capacity(unit:number of vehicles)' )
-    title('Maximum capacity for sg '+ sg_name+ 'via '+ det_name +' in '+location_name)
+    title('Maximum capacity for sg '+ sg_name+ ' via '+ det_name +' in '+location_name)
     
     return getBufferImage(fig)    
     
@@ -582,14 +582,14 @@ def get_arrival_on_green(location_name,conn_string, sg_name,det_name,time_interv
             ax.bar(start_time_list,arrival_on_green_percent_format_list,width = 0.001,color='#99CCCC')
             xlabel('Time')
             ylabel('percentage of arrival on green (%)' )
-            title('percentage of vehicle arrived on green for sg '+ sg_name+ ' via '+ det_name +' in '+location_name)
+            title('Percentage of vehicles arrived during green for sg '+ sg_name+ ' via '+ det_name +' in '+location_name)
             return getBufferImage(fig)   
              
         else :
             ax.bar(start_time_list,number_vehicle_in_sum_list,width = 0.003,color='#CC6666')
             xlabel('Time')
-            ylabel('Volumn(number of vehicles)' )
-            title('Traffic volumn for sg '+ sg_name+ ' via '+ det_name +' in '+location_name)
+            ylabel('Volume(number of vehicles)' )
+            title('Traffic volume for sg '+ sg_name+ ' via '+ det_name +' in '+location_name)
             return getBufferImage(fig) 
     elif performance =="arrivalOnGreenRatio":
         fig =plt.figure(figsize=(10,6),facecolor='#99CCFF')  #figsize argument is for resizing the figure.
@@ -617,8 +617,9 @@ def get_arrival_on_green(location_name,conn_string, sg_name,det_name,time_interv
         #plt.plot(number_vehicle_in_sum_list, number_vehicles_in_green_list, 'ro', label='data')
         #plt.plot(tfit, fit, 'b-', label='fit')        
         
-        ylabel('Vehicles arrived on green')
-        title("Ratio of vehicles arrived intersection " + location_name + " on green in signalGroup " + sg_name +" via detector " + det_name )
+        ylabel('Vehicles arriving on green')
+        xlabel('All the vehicles arriving in time interval ' +time_interval+' minutes')
+        title("Ratio of vehicles arrived intersection " + location_name + " during green in signalGroup " + sg_name +" via detector " + det_name )
         return getBufferImage(fig)  
         
       

@@ -96,7 +96,7 @@ def index(request):
     helsinkiTimezone = timezone('Europe/Helsinki')
     timeZone = datetime.datetime.now(helsinkiTimezone).strftime('%z')
     
-    measuresList = ["saturationFlowRate","greenDuration","queueLength","activeGreen","maximumCapacity","arrivalOnGreenPercent","volume","arrivalOnGreenRatio"] 
+    measuresList = ["Saturation flow rate","Green duration","Queue length","Active green","Maximum capacity","Arrival on green percent","Volume","Arrival on green ratio"] 
     
     
     #display csv file 
@@ -110,21 +110,21 @@ def index(request):
     if refreshType == "Plot" and startTimeString and endTimeString :
         startTimeStringTimeZone = startTimeString + timeZone
         endTimeStringTimeZone = endTimeString + timeZone 
-        if selectedPerformance == "greenDuration":
+        if selectedPerformance == "Green duration":
             image = get_green_time_2(selectedLocation, "",startTimeStringTimeZone, endTimeStringTimeZone)   
-        elif selectedPerformance =="saturationFlowRate":
+        elif selectedPerformance =="Saturation flow rate":
             image = get_saturation_flow_rate(selectedLocation,"",selectedSgName,startTimeStringTimeZone,endTimeStringTimeZone)
-        elif selectedPerformance == "queueLength":
+        elif selectedPerformance == "Queue length":
             image = get_queue_length(selectedLocation,"",selectedSgName,selectedDetector,startTimeStringTimeZone,endTimeStringTimeZone)
-        elif selectedPerformance == "activeGreen":
+        elif selectedPerformance == "Active green":
             image = get_green_time(selectedLocation, "", selectedSgName, startTimeStringTimeZone, endTimeStringTimeZone)
-        elif selectedPerformance =="maximumCapacity":
+        elif selectedPerformance =="Maximum capacity":
             image = get_maxCapacity(selectedLocation,selectedSgName,selectedDetector,"",selectedTimeInterval,startTimeStringTimeZone,endTimeStringTimeZone)
-        elif selectedPerformance =="arrivalOnGreenPercent":
+        elif selectedPerformance =="Arrival on green percent":
             image = get_arrival_on_green(selectedLocation,"",selectedSgName,selectedDetector,selectedTimeInterval,startTimeStringTimeZone,endTimeStringTimeZone,selectedPerformance)
-        elif selectedPerformance =="volume":
+        elif selectedPerformance =="Volume":
             image = get_arrival_on_green(selectedLocation,"",selectedSgName,selectedDetector,selectedTimeInterval,startTimeStringTimeZone,endTimeStringTimeZone,selectedPerformance)
-        elif selectedPerformance =="arrivalOnGreenRatio":
+        elif selectedPerformance =="Arrival on green ratio":
             image = get_arrival_on_green(selectedLocation,"",selectedSgName,selectedDetector,selectedTimeInterval,startTimeStringTimeZone,endTimeStringTimeZone,selectedPerformance)        
     
     context = {'locationNameList':locationNameList, 

@@ -45,20 +45,29 @@
     </div>
 <div class ="col-sm-1"></div> 
 <div class = "col-sm-9">
-<p><b>Saturation Flow Rate</b>It eastimates saturation flow rate, the number of vehicles per hour that could cross the line if number of vehicles remained grren all the time.  It is achieved by introducing the idea of lost time and effective green time.
+<h2>Saturation Flow Rate</h2>
+<p><b>Saturation Flow Rate</b>It estimates saturation flow rate, the number of vehicles per hour that could cross the line if number of vehicles remained green all the time.  It is achieved by introducing the idea of lost time and effective green time.
 The implementation is based on an assumption that the initial queue at the start of green is at least ten vehicles long. The first few vehicles are excluded because the transient effect of starting up the queue.
-Vehicles beyond the tenth are exclude because they may represent the arrival rate instead of the departure rate. This ideal condition is hard to satisified by real data. </p>
+Vehicles beyond the tenth are exclude because they may represent the arrival rate instead of the departure rate. This ideal condition is hard to be satisfied by real data. </p>
 
-<p><b>Green duration:</b> it shows green duration of every signal group in the selected intersection during specified time span. </p>
+<h2>Green duration</h2>
+<p><b>Green duration:</b> it shows green duration of every signal group in the selected intersection during the specified time span. Multi curve lines represent different signals. 
+The colors of lines corresponds signals. Besides, the y-value of points means time duration in seconds and x-value means the time when the green phase starts from. </p>
 
+<h2>Queue length</h2>
 <p><b>Queue length:</b> it estimates the amount of vehicles and length of every queue according to selected detector during specified time span. </p>
 
-<p><b>Active green:</b> It counts the active green time of signal group when there is any detector associated with the signal occupied, compared with passive green in every cycle during specified time span. </p>
+<h2>Active green</h2>
+<p><b>Active green:</b> It counts the active green time of signal group when there is any detector associated with the signal occupied, compared with passive green in every cycle during specified time span. 
+While being able to know general green distribution in intersections, you can learn specific green status in certain signal further.    </p>
 
+<h2>Maximum capacity</h2>
 <p><b>Maximum capacity:</b> It estimates the maximum amount of vehicles being able to pass by the detector in a specified time interval (i.e. every 5 minutes, 20 minutes and I hour). </p>
 
+<h2>Arrival on green</h2>
 <p><b>Arrival on green:</b> it calculates the percentage of vehicles arriving the specified detector during green duration, comparing the number of vehicles arriving on green with the number of all the vehicles in specified time interval. </p>
 
+<h2>Volume</h2>
 <p><b>Volume:</b> It measures the number of vehicles passing by the detector in specified time interval, which indicates the traffic flow changes on a location in different time span. </p>
 </div>
 
