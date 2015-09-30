@@ -3,21 +3,24 @@
     <head>
 	<meta charset="utf-8">
 	<link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
-	<!--<link href="/twitter-bootstrap/twitter-bootstrap-v2/docs/assets/css/bootstrap.css" rel="stylesheet"> -->
-	<script src="//code.jquery.com/jquery-1.10.2.js"></script>
-	<script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+	<!--<link href="/twitter-bootstrap/twitter-bootstrap-v2/docs/assets/css/bootstrap.css" rel="stylesheet">-->
+	
         <!--<script src="/twitter-bootstrap/twitter-bootstrap-v2/js/bootstrap-tooltip.js"></script>  -->
         <!--<script src="/twitter-bootstrap/twitter-bootstrap-v2/js/bootstrap-popover.js"></script>-->
-	<!--<link rel="stylesheet" href="/resources/demos/style.css">-->
-	
+		
 	<link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
-	<script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
-	<script>
-	$(document).ready(function(){
-	    $('[data-toggle="popover"]').popover();   
-	});
-	</script>
+	
+	<!--<link href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.2/css/bootstrap-combined.min.css" rel="stylesheet">-->
+	
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.37/css/bootstrap-datetimepicker.min.css" />
+     
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.js"></script>
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.6/moment.js"></script>
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery.transit/0.9.12/jquery.transit.js"></script>
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery.collapsible/1.2/jquery.collapsible.js"></script>
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.37/js/bootstrap-datetimepicker.min.js"></script>
+	
     </head>
 
     {% load bootstrap3 %}
@@ -106,13 +109,7 @@
 	});
     </script>
     
-    <script type="text/javascript">
-      $(function() {
-          $('#datetimepicker1').datetimepicker({
-              language: 'pt-BR'
-	    });
-        });
-    </script>
+    
     
     <body onload="performanceChanged()">
     {# Navigate bar and a header #}
@@ -253,6 +250,23 @@
 	                
 	{#select datatime #}
 	<br>
+	<div class="form-group">
+		<div class='input-group date' id='datetimepicker1'>
+		    <input type='text' class="form-control" />
+		    <span class="input-group-addon">
+			<span class="glyphicon glyphicon-calendar"></span>
+		    </span>
+		</div>
+	    </div>
+    
+    <script type="text/javascript">
+	    $(function () {
+		$('#datetimepicker1').datetimepicker({
+		    format: 'DD/MM/YYYY HH:mm'
+		});
+	    });
+	</script>
+    
 	<p> <label> Start datetime </label>
 	    {% if startTimeString %}
 		<input type="datetime-local" name="starttime" value={{startTimeString}}> 
@@ -277,16 +291,6 @@
 	    <input type="datetime-local" name="endtime" value="2015-07-10T19:00:00"></p>
 	{% endif %}
 	
-        <!--<div class="well">-->
-            <!--<div id="datetimepicker1" class="input-append date">-->
-	        <!--<input data-format="dd/MM/yyyy hh:mm:ss" type="text"></input>-->
-                <!--<span class="add-on">-->
-                    <!--<i data-time-icon="icon-time" data-date-icon="icon-calendar">-->
-                    <!--</i>-->
-                <!--</span>-->
-           <!--</div>-->
-       <!--</div>-->
-       
 	
 	<p>
 	<a href="#" id="timezonetip"  data-toggle="popover" data-trigger="hover" title="" data-content="Please use timezone Europe/Helsinki" >
