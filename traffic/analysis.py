@@ -30,20 +30,28 @@ green_state_list = ["0","1","3","4","5","6","7","8",":"]
 def get_green_time(location_name, conn_string,sg_name,time1,time2):
     #read configuration file
     conn_string = get_config_string('config.cfg','Section1','conn_string') 
+    activate_green_state_list = ["0","1","3","5","6","7","8",":"] 
+    passive_green_state_list = ["4"]
     
     sg_status= get_sg_status(location_name, conn_string, sg_name, time1, time2) #[time,grint,seq,dint] 
     
     green_on = False
+    passive_green_on = False 
     active_green_list = []
     start_green_time_list =[]
     useless_green_list = []
+    passive_green_time_state_list= []
+    total_passive_green_state_time_list = []
+    active_green_time_state_list = []
     start_green_time = None
     width = 0.0005
     green_end_time = None 
+    total_passive_green_state_time = 0
+    active_green_state_time =0
     
     f = open("traffic/static/traffic/result.csv","w+") #create a csv file to save data in.
     
-    writer = csv.DictWriter(f, fieldnames = ["start_green_time","active_green_duration(seconds)","useless_green_duration(seconds)"], delimiter = ';')
+    writer = csv.DictWriter(f, fieldnames = ["start_green_time","active_green_duration(seconds)","passive_green_duration(seconds)","active_green_duration_from_grint","passive_green_from_grint"], delimiter = ';')
     writer.writeheader()    
     
     for s in sg_status:
@@ -53,7 +61,7 @@ def get_green_time(location_name, conn_string,sg_name,time1,time2):
             start_green_time = s[0] 
             green_on = True
             any_detectors_occupied = True 
-            detector_unoccupied_lastest_time = s[0]
+            detector_unoccupied_lastest_time = s[0] 
         #During green 
         elif green_on and s[1] in green_state_list:
             
@@ -61,40 +69,69 @@ def get_green_time(location_name, conn_string,sg_name,time1,time2):
                 any_detectors_occupied = True 
             elif  int(s[3]) == 0 and any_detectors_occupied:  # record the start that detectors become occupied to unoccupied.
                 detector_unoccupied_lastest_time = s[0]
-                any_detectors_occupied = False      
+                any_detectors_occupied = False 
+            
+            #for the state passive_green part
+            elif s[1] in passive_green_state_list and not passive_green_on:
+                passive_green_on = True 
+                passive_green_start_time = s[0] 
+            elif s[1] not in passive_green_state_list and passive_green_on:
+                passive_green_on = False 
+                current_passive_green_state_time = timedelta.total_seconds(s[0]-passive_green_start_time)
+                total_passive_green_state_time = total_passive_green_state_time + current_passive_green_state_time
             
         elif green_on and s[1] not in green_state_list:
             green_on = False
+            passive_green_on = False 
             active_green = timedelta.total_seconds(detector_unoccupied_lastest_time-start_green_time)
+            total_green = timedelta.total_seconds(s[0]-start_green_time)
             start_green_time_list.append(start_green_time) 
             active_green_list.append(active_green)
+            active_green_state_time = total_green - total_passive_green_state_time 
+            active_green_time_state_list.append(active_green_state_time)
+            total_passive_green_state_time_list.append(total_passive_green_state_time)
+            
             useless_green = timedelta.total_seconds(s[0]-detector_unoccupied_lastest_time) 
             useless_green_list.append(useless_green)
-            f.write("{} {} {}\n".format(start_green_time,active_green,useless_green)) 
-           
+            f.write("{} {} {} {} {}\n".format(start_green_time,active_green,useless_green,active_green_state_time,total_passive_green_state_time)) 
+            total_passive_green_state_time = 0
             
     f.close() #close the file after saving.
     shutil.copyfile("traffic/static/traffic/result.csv", "traffic/static/traffic/result.txt")
     
     fig =plt.figure(figsize=(10,6),facecolor='#FFFFCC')  #figsize argument is for resizing the figure.
-    ax =fig.add_subplot(111) #fig.add_subplot equivalent to fig.add_subplot(1,1,1), means subplot(nrows.,ncols, plot_number)
-    ax.xaxis_date() 
+    fig.suptitle('Signalgroup Green Duration: sg '+ sg_name+ ' in '+location_name, fontsize=14, fontweight='bold')
+    
+
+    ax =fig.add_subplot(211) #fig.add_subplot equivalent to fig.add_subplot(1,1,1), means subplot(nrows.,ncols, plot_number)
+    
     
     #x values are times of a day and using a Formatter to formate them.
     #For avioding crowding the x axis with labels, using a Locator.
     helsinkiTimezone = timezone('Europe/Helsinki')
-    fmt = mdates.DateFormatter('%H:%M:%S', tz=helsinkiTimezone)
-    ax.xaxis.set_major_formatter(fmt)    
-   
+    fmt = mdates.DateFormatter('%m-%d %H:%M:%S', tz=helsinkiTimezone)
+    fmt2 = mdates.DateFormatter('%H:%M:%S', tz=helsinkiTimezone)
+    ax.xaxis.set_major_formatter(fmt2)    
+    ax.xaxis_date()
+    plt.setp( plt.gca().get_xticklabels(), rotation=45, horizontalalignment='right')
+    plt.tick_params(labelsize=6)
     green_active = ax.bar(start_green_time_list, active_green_list,width,color='g')
-    green_useless = ax.bar(start_green_time_list,useless_green_list,width,color='#CCFFFF',bottom = active_green_list)
+    green_useless = ax.bar(start_green_time_list,useless_green_list,width,color='#CCFFFF',bottom = active_green_list)    
+   
+    ax2 = fig.add_subplot(212) 
+    ax2.xaxis.set_major_formatter(fmt)
+    ax2.xaxis_date()
+    plt.setp( plt.gca().get_xticklabels(), rotation=45, horizontalalignment='right')    
+    plt.tick_params(labelsize=6)
+    green_active_state = ax2.bar(start_green_time_list,active_green_time_state_list, width, color ='r')
+    
+    green_passive_state = ax2.bar(start_green_time_list,total_passive_green_state_time_list, width, color='y', bottom = active_green_time_state_list)
     if green_active and green_useless:
         ax.legend((green_active[0], green_useless[0]),("active green", "passive green"))
-    
-    xlabel('Time')
-    ylabel('Green duration(s)' )
-    title('Signalgroup Green Duration: sg '+ sg_name+ ' in '+location_name)
-    
+    if green_active_state and green_passive_state:
+        ax2.legend((green_active_state[0], green_passive_state[0]),("grint active green","grint passive green"))
+    plt.xlabel('Time')
+    ylabel('Green duration(s)')    
     return getBufferImage(fig)    
 
 
@@ -228,13 +265,15 @@ def get_queue_length(location_name,conn_string,sg_name,det_name,time1,time2):
     
     fig =plt.figure(figsize=(10,6),facecolor='#669999')  #figsize argument is for resizing the figure.
     ax =fig.add_subplot(111) #fig.add_subplot equivalent to fig.add_subplot(1,1,1), means subplot(nrows.,ncols, plot_number)
-    ax.xaxis_date()
+    
     
     #The following segment codes is for formatting xaxis and show the correct time in Helsinki timezone.
     helsinkiTimezone = timezone('Europe/Helsinki')
-    fmt = mdates.DateFormatter('%H:%M:%S', tz=helsinkiTimezone)
+    fmt = mdates.DateFormatter('%m-%d %H:%M:%S', tz=helsinkiTimezone)
     ax.xaxis.set_major_formatter(fmt) 
-    
+    ax.xaxis_date()
+    plt.setp( plt.gca().get_xticklabels(), rotation=45, horizontalalignment='right')
+    plt.tick_params(labelsize=6)    
     #The segment codes is for marking dual units(dual axis) using matplotlib
     ax.bar(list(count_vehicle_in_queue_dict.keys()),list(count_vehicle_in_queue_dict.values()),width = 0.0005, color='purple')
     xlabel('Times')
@@ -294,14 +333,17 @@ def get_green_time_2(location_name, conn_string,time1,time2):
     
     fig =plt.figure(figsize=(10,6),facecolor='#8FBC8F')  #figsize argument is for resizing the figure.
     ax =fig.add_subplot(111) #fig.add_subplot equivalent to fig.add_subplot(1,1,1), means subplot(nrows.,ncols, plot_number)
-    ax.xaxis_date()
+    
     plt.subplots_adjust(left=0.07, bottom=0.1, right=0.85, top=0.9, wspace=None, hspace=None)
     
     #x values are times of a day and using a Formatter to formate them.
     #For avioding crowding the x axis with labels, using a Locator.
     helsinkiTimezone = timezone('Europe/Helsinki')
-    fmt = mdates.DateFormatter('%H:%M:%S', tz=helsinkiTimezone)  
-    ax.xaxis.set_major_formatter(fmt)    
+    fmt = mdates.DateFormatter('%m-%d %H:%M:%S', tz=helsinkiTimezone) 
+    ax.xaxis.set_major_formatter(fmt)   
+    ax.xaxis_date()
+    plt.setp( plt.gca().get_xticklabels(), rotation=45, horizontalalignment='right')
+    plt.tick_params(labelsize=6)    
     xlabel('Time')
     ylabel('Green duration(s) per cycle' )
     title('Signalgroup Green Duration in '+location_name)    
@@ -479,14 +521,17 @@ def get_maxCapacity(location_name,sg_name,det_name,conn_string,time_interval,tim
     
     fig =plt.figure(figsize=(10,6),facecolor='#FFFF99')  #figsize argument is for resizing the figure.
     ax =fig.add_subplot(111) #fig.add_subplot equivalent to fig.add_subplot(1,1,1), means subplot(nrows.,ncols, plot_number)
-    ax.xaxis_date() 
+    
     
     
     #x values are times of a day and using a Formatter to formate them.
     #For avioding crowding the x axis with labels, using a Locator.
     helsinkiTimezone = timezone('Europe/Helsinki')
-    fmt = mdates.DateFormatter('%H:%M:%S', tz=helsinkiTimezone)
+    fmt = mdates.DateFormatter('%m-%d %H:%M:%S', tz=helsinkiTimezone)
     ax.xaxis.set_major_formatter(fmt)
+    ax.xaxis_date() 
+    plt.setp( plt.gca().get_xticklabels(), rotation=45, horizontalalignment='right')
+    plt.tick_params(labelsize=6)    
    
     ax.plot(start_time_list,max_capacity_list,marker='D',linestyle='--',color='g')
 
@@ -572,12 +617,15 @@ def get_arrival_on_green(location_name,conn_string, sg_name,det_name,time_interv
     if performance =="Arrival_on_green_percent" or performance == "volume":
         fig =plt.figure(figsize=(10,6),facecolor='#99CCFF')  #figsize argument is for resizing the figure.
         ax =fig.add_subplot(111) #fig.add_subplot equivalent to fig.add_subplot(1,1,1), means subplot(nrows.,ncols, plot_number)
-        ax.xaxis_date() 
+        
         #x values are times of a day and using a Formatter to formate them.
         #For avioding crowding the x axis with labels, using a Locator.
         helsinkiTimezone = timezone('Europe/Helsinki')
-        fmt = mdates.DateFormatter('%H:%M:%S', tz=helsinkiTimezone)
+        fmt = mdates.DateFormatter('%m-%d %H:%M:%S', tz=helsinkiTimezone)
         ax.xaxis.set_major_formatter(fmt) 
+        ax.xaxis_date() 
+        plt.setp( plt.gca().get_xticklabels(), rotation=45, horizontalalignment='right')
+        plt.tick_params(labelsize=6)        
         if performance =="Arrival_on_green_percent":
             ax.bar(start_time_list,arrival_on_green_percent_format_list,width = 0.001,color='#99CCCC')
             xlabel('Time')
@@ -666,10 +714,13 @@ def get_volume_lanes(location_name,conn_string, sg_name,det_name,time_interval,t
     
     fig =plt.figure(figsize=(10,6),facecolor='#99CCFF')  #figsize argument is for resizing the figure.
     ax =fig.add_subplot(111) #fig.add_subplot equivalent to fig.add_subplot(1,1,1), means subplot(nrows.,ncols, plot_number)
-    ax.xaxis_date()  
+     
     helsinkiTimezone = timezone('Europe/Helsinki')
-    fmt = mdates.DateFormatter('%H:%M:%S', tz=helsinkiTimezone)
+    fmt = mdates.DateFormatter('%m-%d %H:%M:%S', tz=helsinkiTimezone)
     ax.xaxis.set_major_formatter(fmt)     
+    ax.xaxis_date() 
+    plt.setp( plt.gca().get_xticklabels(), rotation=45, horizontalalignment='right')
+    plt.tick_params(labelsize=6)    
     matrix = np.array(list(volume_by_lane_dict.values()))
     p = []
     colors = ['skyblue', 'blue', 'c', 'purple']
@@ -693,20 +744,3 @@ def get_volume_lanes(location_name,conn_string, sg_name,det_name,time_interval,t
            labels)
     
     return getBufferImage(fig)
-        
-        
-    
-        
-        
-        
-                
-                
-                
-                
-                
-
-
-
-     
-    
-    

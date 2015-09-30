@@ -106,6 +106,14 @@
 	});
     </script>
     
+    <script type="text/javascript">
+      $(function() {
+          $('#datetimepicker1').datetimepicker({
+              language: 'pt-BR'
+	    });
+        });
+    </script>
+    
     <body onload="performanceChanged()">
     {# Navigate bar and a header #}
     <nav id="myNavbar" class="navbar navbar-default navbar-inverse navbar-fixed-top" role="navigation">
@@ -256,7 +264,7 @@
 	<p><label> End datetime </label>
 	{% if endTimeString %}
 	    {% if endTimeString > startTimeString %}
-	        <input type="datetime-local" name="endtime" value={{endTimeString}}> </p>
+	        <input type="datetime-local" name="endtime" value={{endTimeString}}{{endTimeString|time:"H:i"}}> </p>
 	    {% else %}
 	        <input type="datetime-local" name="endtime" value="2015-07-10T19:00:00"></p>
 	        <div class="alert alert-danger" role="alert">
@@ -268,6 +276,17 @@
 	{% else %}
 	    <input type="datetime-local" name="endtime" value="2015-07-10T19:00:00"></p>
 	{% endif %}
+	
+        <!--<div class="well">-->
+            <!--<div id="datetimepicker1" class="input-append date">-->
+	        <!--<input data-format="dd/MM/yyyy hh:mm:ss" type="text"></input>-->
+                <!--<span class="add-on">-->
+                    <!--<i data-time-icon="icon-time" data-date-icon="icon-calendar">-->
+                    <!--</i>-->
+                <!--</span>-->
+           <!--</div>-->
+       <!--</div>-->
+       
 	
 	<p>
 	<a href="#" id="timezonetip"  data-toggle="popover" data-trigger="hover" title="" data-content="Please use timezone Europe/Helsinki" >
