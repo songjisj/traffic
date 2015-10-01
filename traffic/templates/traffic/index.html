@@ -257,12 +257,31 @@
 			<span class="glyphicon glyphicon-calendar"></span>
 		    </span>
 		</div>
-	    </div>
+	</div>
+	<div class="form-group">
+		<div class='input-group date' id='datetimepicker2'>
+		    <input type='text' class="form-control" />
+		    <span class="input-group-addon">
+			<span class="glyphicon glyphicon-calendar"></span>
+		    </span>
+		</div>
+	</div> 
+	
         <script type="text/javascript">
 	    $(function () {
 		$('#datetimepicker1').datetimepicker({
 		    format: 'DD/MM/YYYY HH:mm'
 		});
+		$('#datetimepicker2').datetimepicker({
+		    format: 'DD/MM/YYYY HH:mm',
+		    useCurrent: false
+		});	
+    	        $("#datetimepicker1").on("dp.change", function (e) {
+	            $('#datetimepicker1').data("DateTimePicker").minDate(e.date);
+	        });
+	        $("#datetimepicker2").on("dp.change", function (e) {
+	            $('#datetimepicker2').data("DateTimePicker").maxDate(e.date);
+	        });		
 	    });
 	</script>
     
