@@ -466,7 +466,7 @@ def get_saturation_flow_rate(location_name,conn_string,sg_name,time1,time2):
     plt.bar(list(range(len(mean_saturation_by_det_list))),mean_saturation_by_det_list,width=0.009,color = "r", align='center')
     plt.xticks(list(range(len(mean_saturation_by_det_list))),xlabel_list)
     ylabel("Number of vehicles")
-    xlabel("name of each detector")
+    xlabel("Name of each detector")
     title("Saturation flow rate by detectors in signalGroup "+sg_name +" in "+ location_name) 
     
     return getBufferImage(plt.gcf())
@@ -731,7 +731,7 @@ def get_volume_lanes(location_name,conn_string, sg_name,det_name,time_interval,t
         bar_renderers = [] 
     
         for det_name, det_volume_list in list(volume_by_lane_dict.items()):
-            r = ax.bar(start_time_list,det_volume_list,width=0.001,color=colors[i],bottom=bottoms[i])
+            r = ax.bar(start_time_list,det_volume_list,width=0.003,color=colors[i],bottom=bottoms[i])
             i=i+1
             bar_renderers.append(r) 
         return bar_renderers

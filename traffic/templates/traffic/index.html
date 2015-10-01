@@ -236,7 +236,7 @@
 	{% endif %}
 	
 	{# Select timeInterval #}
-	<label id = "timeIntervalLabelId" for="timeInterval"> Time interval(minutes) </label>
+	<label id = "timeIntervalLabelId" for="timeInterval"> Time interval (minutes) </label>
 	<select id="timeIntervalSelectionId" name="timeInterval" class="form-control" >
 	{% for timeInterval in timeIntervalList%}
 	    {% if timeInterval = selectedTimeInterval %}
@@ -258,8 +258,7 @@
 		    </span>
 		</div>
 	    </div>
-    
-    <script type="text/javascript">
+        <script type="text/javascript">
 	    $(function () {
 		$('#datetimepicker1').datetimepicker({
 		    format: 'DD/MM/YYYY HH:mm'

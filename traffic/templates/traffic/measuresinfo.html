@@ -45,30 +45,181 @@
     </div>
 <div class ="col-sm-1"></div> 
 <div class = "col-sm-9">
-<h2>Saturation Flow Rate</h2>
-<p><b>Saturation Flow Rate</b>It estimates saturation flow rate, the number of vehicles per hour that could cross the line if number of vehicles remained green all the time.  It is achieved by introducing the idea of lost time and effective green time.
-The implementation is based on an assumption that the initial queue at the start of green is at least ten vehicles long. The first few vehicles are excluded because the transient effect of starting up the queue.
-Vehicles beyond the tenth are exclude because they may represent the arrival rate instead of the departure rate. This ideal condition is hard to be satisfied by real data. </p>
 
 <h2>Green duration</h2>
-<p><b>Green duration:</b> it shows green duration of every signal group in the selected intersection during the specified time span. Multi curve lines represent different signals. 
-The colors of lines corresponds signals. Besides, the y-value of points means time duration in seconds and x-value means the time when the green phase starts from. </p>
 
-<h2>Queue length</h2>
-<p><b>Queue length:</b> it estimates the amount of vehicles and length of every queue according to selected detector during specified time span. </p>
+<h3>Definition</h3>
+
+<p style="font-size:18px">The time duration of every external state green sequence from a signal group.  </p>
+
+<h3>Explanation</h3>
+
+<p style="font-size:18px">The function calculates green duration per cycle. Multi curve lines represent all the signals at the selected intersection. 
+As to signal line, the y-value of solid points means time duration in seconds and x-value of points means the date and time when the green phase starts from.   </p>
+
+<h3>Illustration</h3>
+
+<p style="font-size:18px">The following image demonstrates the green duration in intersection TRE303 from 14:00 to 14:40 on 10th, July, 2015. </p>
+
+{% load staticfiles %}
+<img src="{% static "traffic/illustration/greenduration.png" %}"/> 
+
+<br></br>
 
 <h2>Active green</h2>
-<p><b>Active green:</b> It counts the active green time of signal group when there is any detector associated with the signal occupied, compared with passive green in every cycle during specified time span. 
-While being able to know general green distribution in intersections, you can learn specific green status in certain signal further.    </p>
+
+<h3>Definition</h3>
+
+<ol>
+
+<li style="font-size:18px">From general knowledge, it is defined that green timing of a signal group is any vehicle passing during the green, oppositely, 
+passive green is the timing no vehicle passing any more.</li>
+
+<li style="font-size:18px">From internal state of signal group (grint) from traffic signal controller, 
+the active green timing is to the contrary of passive green timing during a green sequence. </li>
+
+</ol>
+
+
+<h3>Explanation</h3>
+
+<p style="font-size:18px"> The function calculates active green length per cycle of the selected signal, 
+comparing its timing of passive green based on the two different definitions. This stacked bar chart shows proportion of both active green and passive green.
+The x-axis is actual time of a day, and y axis is time duration in seconds.</p>
+
+<p style="font-size:18px">The upper chart is for definition-1, every bar represent length of an entire green sequence. 
+During <q>active green</q> (dark green), there is request received by any associated detector. Conversely, during <q>passive green</q> (light blue), 
+no detector is occupied at all.  </p>
+
+<p style="font-size:18px">The second chart is for definition-2, red part means grint-active green timing when signal state are included in
+active green state. And yellow part is for the time duration when the signal state is <q>PASSIVE_GREEN</q>. </p>
+
+<h3>Illustration</h3>
+
+<p style="font-size:18px">The following image shows the result of this measure for signal group B at intersection TRE309 in Tampere from 18:00 to 19:00 on 10th, July, 2015. </p>
+
+
+{% load staticfiles %}
+<img src="{% static "traffic/illustration/activegreen.png" %}"/> 
+
+<br></br>
+
+<h2>Queue length</h2>
+
+<h3>Definition</h3>
+
+<p style="font-size:18px">At signalized intersections, queue lengths is the queue of vehicles at the end of red time (red -end) by lanes according to detectors.  </p>
+
+<h3>Explanation</h3>
+
+<p style="font-size:18px">This measure calculates the length of queue in meters and the amount of vehicles forming the queue at the end of red time. 
+The plot of this measure has dual y-axis. The left y-axis is number of vehicles and right y-axis is length of queue in meters, 
+while x-axis is actual time of a day, indicating when the red time ends.   </p>
+
+<h3>Illustration</h3>
+
+<p style="font-size:18px">The following image shows the result of this measure via detector A60_2 under controlling of signal group A 
+at intersection TRE303 in Tampere from 18:00 to 19:00 on 10th, July, 2015. </p>
+
+{% load staticfiles %}
+<img src="{% static "traffic/illustration/queuelength.png" %}"/> 
+
+<br></br>
+
+<h2>Saturation flow rate</h2>
+
+<h3>Definition</h3>
+
+<p style="font-size:18px">The saturation flow rate crossing a signalized stop line is defined as the number of vehicles per hour 
+that are able to cross the line if the signal remained green all of the time.   </p>
+
+<h3>Explanation</h3>
+
+<p style="font-size:18px">It estimates the saturation flow rate for each lane controlled by the selected signal group at intersections using real data. 
+The algorithm requires real data satisfy a high restrict with a relative long traffic flow.
+Hence, according to some selections, the result returns null because no data satisfy the calculation conditions.
+As to the plot, x-ticks are the names of detectors associated to the specified signal group, y-axis shows the number of vehicle.    </p>
+
+<h3>Illustration</h3>
+
+<p style="font-size:18px">The following images illustrates saturation flow rate for lanes associated with signal group B at intersection TRE303 in Tampere. </p>
+
+{% load staticfiles %}
+<img src="{% static "traffic/illustration/saturationflowrate.png" %}"/> 
+
+<br></br>
 
 <h2>Maximum capacity</h2>
-<p><b>Maximum capacity:</b> It estimates the maximum amount of vehicles being able to pass by the detector in a specified time interval (i.e. every 5 minutes, 20 minutes and I hour). </p>
 
-<h2>Arrival on green</h2>
-<p><b>Arrival on green:</b> it calculates the percentage of vehicles arriving the specified detector during green duration, comparing the number of vehicles arriving on green with the number of all the vehicles in specified time interval. </p>
+<h3>Definition</h3>
+
+<p style="font-size:18px">Maximum capacity is defined as the maximum number of vehicles can be reasonably expected to traverse a point 
+or a uniform segment of a lane or roadway during a given time period under prevailing roadway, traffic control conditions.   </p>
+
+<h3>Explanation</h3>
+
+<p style="font-size:18px">This measure calculates the total number of vehicles could pass over the specified detector during the sum of green timing 
+in a certain time period (5 minutes, 10 minutes and 1 hour etc.).  Maximum capacity is positive correlated with saturation flow rate on a lane and green time in a period of a signal group. 
+As to the plot on this measure, the x-coordination of the green solid diamonds is actual starting time of every time interval, and its y-coordination indicates the number of vehicles. 
+The dashed line passes through all diamonds by time to show the trend of maximum capacity.    </p>
+
+<h3>Illustration</h3>
+
+<p style="font-size:18px">The following image shows maximum capacity every other 30-minute interval at detector B60 belonging to signal group B 
+at intersection TRE303 in Tampere from 6:00 AM to 8:00 PM on 10th, July, 2015. The range of number of vehicles at y-axis is from 440 to 560.</p>
+
+{% load staticfiles %}
+<img src="{% static "traffic/illustration/maximumcapacity.png" %}"/> 
+
+<br></br>
 
 <h2>Volume</h2>
-<p><b>Volume:</b> It measures the number of vehicles passing by the detector in specified time interval, which indicates the traffic flow changes on a location in different time span. </p>
+
+<h3>Definition</h3>
+
+<p style="font-size:18px">Traffic volume is the procedure to determine mainly the volume of traffic moving on the roads at a particular point or a uniform segment
+during a particular time period.  </p>
+
+<h3>Explanation</h3>
+
+<p style="font-size:18px">This measure counts the total number of vehicles could pass over the specified detector on a lane during a certain time period 
+(5 minutes, 10 minutes and 1 hour etc.). Besides, if the selected detector to measure has paralleled detectors on other lanes,
+the function counts the volume on each lane separately and summate them as stacked bars. Thus, the traffic volume of each lane in a direction is shown directly with comparison among lanes.
+The x-coordination of bars is the starting time of intervals and y-axis indicates traffic volume. </p>
+
+<h3>Illustration</h3>
+
+<p style="font-size:18px">The following image demonstrates that traffic volume per 10 minutes on lane-1 and lane-2 of the direction controlled by signal group A 
+at the place with 60-meter distance to intersection stop line from 18:00 to 20:00 on 10th, July, 2015 at intersection TRE303 in Tampere.</p>
+
+{% load staticfiles %}
+<img src="{% static "traffic/illustration/volume.png" %}"/> 
+
+<br></br>
+
+<h2>Arrival on green percent</h2>
+
+<h3>Definition</h3>
+
+<p style="font-size:18px">Arrival during green is defined as vehicles arriving at intersection stop bar during green time. </p>
+
+<h3>Explanation</h3>
+
+<p style="font-size:18px">The percentage of arrival during green is the value that number of vehicles arriving on green divides the traffic volume 
+detected by a particular detector in a time period (5 minutes, 10 minutes and 1 hour etc.). 
+It is a useful traffic performance to indicate the efficiency of traffic signal control and deduce the density of traffic flow. As to the plot on this measurement,
+the x-axis is the start date and time of every interval, and y-axis shows the percentage. </p>
+
+<h3>Illustration</h3>
+
+<p style="font-size:18px">The following image demonstrates that the percent of arrival during green changes over time via detector A60_2 at intersection TRE303 
+in Tampere from 6:00 to 18:00 on 10th, July. The time interval for counting vehicle is 5 minutes. </p>
+
+{% load staticfiles %}
+<img src="{% static "traffic/illustration/arrivalongreenpercent.png" %}"/> 
+
+<br></br>
+
 </div>
 
 </body>
