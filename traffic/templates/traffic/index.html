@@ -110,6 +110,23 @@
     </script>
     
     
+    <script type="text/javascript">
+	$(function () {
+	    $('#datetimepicker1').datetimepicker({
+		format: 'DD/MM/YYYY HH:mm'
+	    });
+	    $('#datetimepicker2').datetimepicker({
+		format: 'DD/MM/YYYY HH:mm',
+		useCurrent: false
+	    });	
+	    $("#datetimepicker1").on("dp.change", function (e) {
+		$('#datetimepicker2').data("DateTimePicker").minDate(e.date);
+	    });
+	    $("#datetimepicker2").on("dp.change", function (e) {
+		$('#datetimepicker1').data("DateTimePicker").maxDate(e.date);
+	    });		
+	});
+    </script>
     
     <body onload="performanceChanged()">
     {# Navigate bar and a header #}
@@ -267,23 +284,6 @@
 		</div>
 	</div> 
 	
-        <script type="text/javascript">
-	    $(function () {
-		$('#datetimepicker1').datetimepicker({
-		    format: 'DD/MM/YYYY HH:mm'
-		});
-		$('#datetimepicker2').datetimepicker({
-		    format: 'DD/MM/YYYY HH:mm',
-		    useCurrent: false
-		});	
-    	        $("#datetimepicker1").on("dp.change", function (e) {
-	            $('#datetimepicker2').data("DateTimePicker").minDate(e.date);
-	        });
-	        $("#datetimepicker2").on("dp.change", function (e) {
-	            $('#datetimepicker1').data("DateTimePicker").maxDate(e.date);
-	        });		
-	    });
-	</script>
     
 	<p> <label> Start datetime </label>
 	    {% if startTimeString %}
