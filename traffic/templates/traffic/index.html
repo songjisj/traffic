@@ -268,8 +268,9 @@
 	{#select datatime #}
 	<br>
 	<div class="form-group">
-		<div class='input-group date' id='datetimepicker1'>
-		    <input type='text' class="form-control" />
+		<div class='input-group date' id='datetimepicker1'> 
+		
+		    <input type='text' class="form-control" name="starttime" value={{startTimeString}}/>
 		    <span class="input-group-addon">
 			<span class="glyphicon glyphicon-calendar"></span>
 		    </span>
@@ -277,7 +278,7 @@
 	</div>
 	<div class="form-group">
 		<div class='input-group date' id='datetimepicker2'>
-		    <input type='text' class="form-control" />
+		    <input type='text' class="form-control" name="endtime" value={{endTimeString}} />
 		    <span class="input-group-addon">
 			<span class="glyphicon glyphicon-calendar"></span>
 		    </span>
@@ -285,29 +286,30 @@
 	</div> 
 	
     
-	<p> <label> Start datetime </label>
-	    {% if startTimeString %}
-		<input type="datetime-local" name="starttime" value={{startTimeString}}> 
-	    {% else %}
-		<input type="datetime-local" name="starttime" value="2015-07-10T18:00:00"> </p>
-	    {% endif %}
-	</p>	
+	<!--<p> <label> Start datetime </label>-->
+	    <!--{% if startTimeString %}-->
+		<!--<input type="datetime-local" name="starttime" value={{startTimeString}}> -->
+	    <!--{% else %}-->
+		<!--<input type="datetime-local" name="starttime" value="2015-07-10T18:00:00"> </p>-->
+	    <!--{% endif %}-->
+	<!--</p>	-->
 	
-	<p><label> End datetime </label>
-	{% if endTimeString %}
-	    {% if endTimeString > startTimeString %}
-	        <input type="datetime-local" name="endtime" value={{endTimeString}}{{endTimeString|time:"H:i"}}> </p>
-	    {% else %}
-	        <input type="datetime-local" name="endtime" value="2015-07-10T19:00:00"></p>
-	        <div class="alert alert-danger" role="alert">
-                  <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
-                  <span class="sr-only">Error:</span>
-                   Enter end time later then start time 
-                  </div>
-	    {% endif %}
-	{% else %}
-	    <input type="datetime-local" name="endtime" value="2015-07-10T19:00:00"></p>
-	{% endif %}
+	<!--<p><label> End datetime </label>-->
+	<!--{% if endTimeString %}-->
+	    <!--{% if endTimeString > startTimeString %}-->
+	        <!--<input type="datetime-local" name="endtime" value={{endTimeString}}{{endTimeString|time:"H:i"}}> </p>-->
+	    <!--{% else %}-->
+	        <!--<input type="datetime-local" name="endtime" value="2015-07-10T19:00:00"></p>-->
+		
+	        <!--<div class="alert alert-danger" role="alert">-->
+                  <!--<span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>-->
+                  <!--<span class="sr-only">Error:</span>-->
+                   <!--Enter end time later then start time -->
+		<!--</div>-->
+	    <!--{% endif %}-->
+	<!--{% else %}-->
+	    <!--<input type="datetime-local" name="endtime" value="2015-07-10T19:00:00"></p>-->
+	<!--{% endif %}-->
 	
 	
 	<p>
