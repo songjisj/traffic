@@ -292,7 +292,7 @@
 		{% if startTimeString %}
 		    <input type='text' class="form-control" name="starttime" value={{startTimeString}}/>
 		{% else %}
-		    <input type='text' class="form-control" name="starttime" value="2015-07-10T18:00:00"/>
+		    <input type='text' class="form-control" name="starttime" value="10/07/2015 18:00"/>
 		{% endif %}
 		    <span class="input-group-addon">
 			<span class="glyphicon glyphicon-calendar"></span>
@@ -302,7 +302,11 @@
 	<div class="form-group">
 	    <label> End datetime </label>
 		<div class='input-group date' id='datetimepicker2'>
-		    <input type='text' class="form-control" name="endtime" value={{endTimeString}} />
+		    {% if endTimeString %}
+			<input type='text' class="form-control" name="endtime" value={{endTimeString}} />
+		    {% else %}
+			<input type='text' class="form-control" name="endtime" value="10/07/2015 19:00"/>
+		    {% endif %}
 		    <span class="input-group-addon">
 			<span class="glyphicon glyphicon-calendar"></span>
 		    </span>

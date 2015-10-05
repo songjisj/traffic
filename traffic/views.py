@@ -42,13 +42,7 @@ def index(request):
     try:
         selectedPerformance = request.POST['performance']
     except(KeyError):
-        selectedPerformance = "greenDuration" 
-    
-    
-    try:
-        startTime = request.POST['startdate']   
-    except(KeyError):
-        startTime = "2015-07-08 13:00:24+03"   
+        selectedPerformance = "greenDuration"  
         
     #Select location
     locationObjectList = Controller.objects.all() 
@@ -158,7 +152,6 @@ def index(request):
                'detectorListInSelectedLocation':detectorListInSelectedLocation,
                'selectedDetector':selectedDetector,
                'selectedDetectorList':selectedDetectorList, 
-               'startTimeString':startTimeString,
                'startTimeString':startTimeString,
                'endTimeString':endTimeString,
                'fileReader':fileReader,
