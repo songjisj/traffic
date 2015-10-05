@@ -75,7 +75,7 @@ def index(request):
     #Select detector
     if selectedSgName and selectedLocation :
         detectorDict = get_det_config_in_one_sg(selectedLocation, selectedSgName, "") 
-        detectorList = list(detectorDict.values()) 
+        detectorList = sorted(list(detectorDict.values()))
     
     try: 
         selectedDetector = request.POST['detector']
@@ -83,9 +83,18 @@ def index(request):
         if detectorList :
             selectedDetector = detectorList[0]
     
-    # Select multiple detectors   
-    selectedDetectorList = request.POST.getlist('detectors[]') 
-            
+    # Select multiple detectors  
+    if selectedLocation:
+        detectorDictInSelectedLocation = get_det_in_one_location(selectedLocation,"")
+        detectorListInSelectedLocation = sorted(list(detectorDictInSelectedLocation.values())) 
+
+    try:
+        selectedDetectorList = request.POST.getlist('detectors[]')  
+    except(KeyError):
+        if detectorListInSelectedLocation :
+            selectedDetectorList =detectorListInSelectedLocation[0:1] 
+     
+    # Select time interval         
     try:
         selectedTimeInterval = request.POST['timeInterval']
     except(KeyError):
@@ -93,14 +102,15 @@ def index(request):
             selectedTimeInterval = timeIntervalList[0]
  
     form = ContactForm(request.POST)
-        
+     
+    # select start and end time   
     startTimeString = request.POST.get('starttime',"")
     endTimeString = request.POST.get('endtime',"")
     
     helsinkiTimezone = timezone('Europe/Helsinki')
     timeZone = datetime.datetime.now(helsinkiTimezone).strftime('%z')
     
-    measuresList = ["Saturation_flow_rate","Percent_of_green_duration","Green_duration","Queue_length","Active_green","Maximum_capacity","Arrival_on_green_percent","Volume","Arrival_on_green_ratio"] 
+    measuresList = ["Saturation_flow_rate","Percent_of_green_duration","Green_duration","Queue_length","Active_green","Maximum_capacity","Arrival_on_green_percent","Volume","Arrival_on_green_ratio","Compared_arrival_on_green_ratio"] 
     
     
     #display csv file 
@@ -132,6 +142,8 @@ def index(request):
             image = get_volume_lanes(selectedLocation,"",selectedSgName,selectedDetector,selectedTimeInterval,startTimeStringTimeZone,endTimeStringTimeZone)
         elif selectedPerformance =="Arrival_on_green_ratio":
             image = get_arrival_on_green(selectedLocation,"",selectedSgName,selectedDetector,selectedTimeInterval,startTimeStringTimeZone,endTimeStringTimeZone,selectedPerformance)        
+        elif selectedPerformance =="Compared_arrival_on_green_ratio":
+            image = get_compared_arrival_on_green_ratio(selectedDetectorList,"", selectedDetectorList,selectedTimeInterval,startTimeStringTimeZone,endTimeStringTimeZone)
     
     context = {'locationNameList':locationNameList, 
                'selectedPerformance':selectedPerformance,
@@ -142,6 +154,7 @@ def index(request):
                'sgNameList':sgNameList,
                'selectedSgName':selectedSgName,
                'detectorList':detectorList,
+               'detectorListInSelectedLocation':detectorListInSelectedLocation,
                'selectedDetector':selectedDetector,
                'selectedDetectorList':selectedDetectorList, 
                'startTimeString':startTimeString,

@@ -257,7 +257,7 @@
 	{% if sgNameList %}
 	    <p>
 	    <select id = "detectorMultipleSelectionID" name = "detectors" class="form-control" multiple ="multiple" size ="5">
-		{% for detector in detectorList %}
+		{% for detector in detectorListInSelectedLocation %}
 		
                     {% if detector in selectedDetectorList %} 
 			<option value = {{detector}} selected="selected">{{detector}}</option>

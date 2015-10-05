@@ -1,29 +1,21 @@
-#TODO: This should be refactored and either split by functionality or import * from (and then hide package private members)
 from .process import *
-import psycopg2.extras 
-import datetime
-from operator import itemgetter
-from datetime import timedelta
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from matplotlib import pylab
 from pylab import *
-from django.conf import settings
 import csv
 from pytz import timezone
 from dateutil import parser
 import shutil
-import numpy as np 
-#from scipy.optimize import curve_fit
-#from scipy.integrate import odeint
+import numpy as np
+
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 
 GREEN = "GREEN"
 AMBER = "AMBER"
 RED = "RED"
 UNKNOWN = "UNKNOWN"
-green_state_list = ["0","1","3","4","5","6","7","8",":"] 
+green_state_list = ["0", "1", "3", "4", "5", "6", "7", "8", ":"]
 
 
 #active green
@@ -314,7 +306,7 @@ def get_queue_length(location_name,conn_string,sg_name,det_name,time1,time2):
     
     return getBufferImage(fig)
 
-def get_green_time_2(location_name, conn_string,time1,time2):
+def get_green_time_2(location_name, conn_string,time1,time2,performance): 
     
     green_on = False
 
@@ -328,7 +320,7 @@ def get_green_time_2(location_name, conn_string,time1,time2):
     
     f = open("traffic/static/traffic/result.csv","w+") #create a csv file to save data in.
     
-    writer = csv.DictWriter(f, fieldnames = ["sg_name","start_green_time","green_duration(seconds)"], delimiter = ';')
+    writer = csv.DictWriter(f, fieldnames = ["sg_name","start_green_time","green_duration(seconds)","cycle_duration","percent_of_green"], delimiter = ';')
     writer.writeheader()   
     
     fig =plt.figure(figsize=(10,6),facecolor='#8FBC8F')  #figsize argument is for resizing the figure.
@@ -352,20 +344,40 @@ def get_green_time_2(location_name, conn_string,time1,time2):
         sg_name = sg_dict[sg_index] 
         minimum_green_list = []
         start_green_time_list =[]
+        cycle_duration_list =[]
+        start_cycle_time_list = []
+        percent_green_list = []
         green_on = False
+        cycle_duration = 0
+        percent_green = 0 
+        count = 0 
         for r in main_data:
             if not green_on and r[1][sg_index] in green_state_list:
                 start_green_time = r[0]
                 green_on = True
+                
+                
             elif green_on and r[1][sg_index] not in green_state_list:
+                count = count +1 
+                if count>1:
+                    cycle_duration = timedelta.total_seconds(r[0] - green_end_time )
+                    cycle_duration_list.append(cycle_duration)
+                    minimum_green = timedelta.total_seconds(r[0]-start_green_time)
+                    percent_green = minimum_green / cycle_duration
+                    percent_green_list.append(percent_green)
+                    start_cycle_time_list.append(start_green_time)
                 green_on = False 
                 minimum_green = timedelta.total_seconds(r[0]-start_green_time) 
                 start_green_time_list.append(start_green_time)
                 minimum_green_list.append(minimum_green)
-                
-                f.write("{} {} {}\n".format(sg_name,start_green_time,minimum_green)) 
-        
-        ax.plot(start_green_time_list, minimum_green_list, marker='o', linestyle='-', label = "sg"+sg_name) 
+                green_end_time = r[0] 
+                f.write("{} {} {} {} {}\n".format(sg_name,start_green_time,minimum_green,cycle_duration,percent_green)) 
+
+            
+        if performance == "Green_duration":
+            ax.plot(start_green_time_list, minimum_green_list, marker='o', linestyle='-', label = "sg"+sg_name) 
+        if performance == "Percent_of_green_duration":
+            ax.plot(start_cycle_time_list, percent_green_list, marker='o', linestyle='-', label = "sg"+sg_name) 
     ax.legend(bbox_to_anchor=(1, 1), loc=2, borderaxespad=0.)
     f.close() 
     
@@ -744,3 +756,77 @@ def get_volume_lanes(location_name,conn_string, sg_name,det_name,time_interval,t
            labels)
     
     return getBufferImage(fig)
+
+def get_compared_arrival_on_green_ratio(location_name,conn_string,det_name_list,time_interval,time1,time2):
+    conn_string = get_config_string('config.cfg','Section1','conn_string') 
+    main_data = get_main_data(location_name, conn_string, time1, time2) # tt,grint,dint,seq
+    interval = convert_time_interval_str_to_timedelta(time_interval)
+       
+    
+    for det_name in det_name_list:
+        green_on = False 
+        detector_occupied = False
+        number_vehicles_in_green = 0 
+        number_vehicles_in_red = 0
+        start_time = sg_det_status[0][0] 
+        arrival_on_green_percent_format_list = []
+        number_vehicle_in_sum_list = []
+        start_time_list = []
+        number_vehicles_in_green_list = []         
+        row = get_sg_and_det_index_by_det_name(location_name, conn_string, det_name)
+        sg_index = row[0]
+        det_index = row[1] 
+        for r in main_data: 
+            sg_state =r[1][sg_index]
+            det_state = r[2][det_index]
+            
+            if r[0] < start_time + interval:
+                if not green_on and sg_state in green_state_list:
+                    green_on = True 
+                elif green_on and sg_state in green_state_list:
+                    if not detector_occupied and det_state =='1':
+                        detector_occupied = True
+                        number_vehicles_in_green = number_vehicles_in_green + 1 
+                    elif detector_occupied and det_state =='0': 
+                        detector_occupied = False
+                        
+                elif green_on and sg_state not in green_state_list:
+                    green_on = False 
+                elif not green_on and sg_state not in green_state_list:
+                    if not detector_occupied and det_state == '1':
+                        detector_occupied = True
+                        number_vehicles_in_red = number_vehicles_in_red + 1 
+                    elif detector_occupied and det_state == '0':
+                        detector_occupied = False
+                       
+            else:
+                number_vehicle_in_sum = number_vehicles_in_green + number_vehicles_in_red
+                    
+                if number_vehicle_in_sum > 0:
+                    number_vehicles_in_green_list.append(number_vehicles_in_green)
+                    arrival_on_green = (float(number_vehicles_in_green)/(number_vehicle_in_sum))*100
+                        #arrival_on_green_percent_format = "{:.0%}".format(arrival_on_green)
+                    arrival_on_green_percent_format_list.append(arrival_on_green)
+                    start_time_list.append(start_time)
+                        
+                    number_vehicle_in_sum_list.append(number_vehicle_in_sum)
+                    f.write("{} {} {} {}\n".format(start_time,number_vehicles_in_green, number_vehicle_in_sum,arrival_on_green))
+                number_vehicles_in_green = 0
+                number_vehicles_in_red = 0 
+                start_time= start_time + interval               
+        fig =plt.figure(figsize=(10,6),facecolor='#99CCFF')  #figsize argument is for resizing the figure.
+
+        plt.scatter(number_vehicle_in_sum_list,number_vehicles_in_green_list,marker ='o',label = detector+"det_name")
+
+        #Linear regression
+        #fit = np.polyfit(number_vehicle_in_sum_list,number_vehicles_in_green_list,1)
+        #fit_fn = np.poly1d(fit)
+        #plt.plot(number_vehicle_in_sum_list,number_vehicles_in_green_list,'yo',number_vehicle_in_sum_list,fit_fn(number_vehicle_in_sum_list),'--k')       
+
+    ylabel('Vehicles arriving on green')
+    xlabel('All the vehicles arriving in time interval ' +time_interval+' minutes')
+    title("Ratio of vehicles arrived intersection " + location_name + " during green in signalGroup " + sg_name +" via detector " + det_name )
+    return getBufferImage(fig)          
+        
+        
+        
