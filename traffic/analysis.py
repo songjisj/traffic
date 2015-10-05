@@ -761,14 +761,17 @@ def get_compared_arrival_on_green_ratio(location_name,conn_string,det_name_list,
     conn_string = get_config_string('config.cfg','Section1','conn_string') 
     main_data = get_main_data(location_name, conn_string, time1, time2) # tt,grint,dint,seq
     interval = convert_time_interval_str_to_timedelta(time_interval)
-       
+    
+    f = open("traffic/static/traffic/result.csv","w+") #create a csv file to save data in.
+    writer = csv.DictWriter(f, fieldnames = ["start_time","name of vehicle in green","volume","arrival_on_green"], delimiter = ';')
+    writer.writeheader()           
     
     for det_name in det_name_list:
         green_on = False 
         detector_occupied = False
         number_vehicles_in_green = 0 
         number_vehicles_in_red = 0
-        start_time = sg_det_status[0][0] 
+        start_time = main_data[0][0] 
         arrival_on_green_percent_format_list = []
         number_vehicle_in_sum_list = []
         start_time_list = []
@@ -816,7 +819,7 @@ def get_compared_arrival_on_green_ratio(location_name,conn_string,det_name_list,
                 start_time= start_time + interval               
         fig =plt.figure(figsize=(10,6),facecolor='#99CCFF')  #figsize argument is for resizing the figure.
 
-        plt.scatter(number_vehicle_in_sum_list,number_vehicles_in_green_list,marker ='o',label = detector+"det_name")
+        plt.scatter(number_vehicle_in_sum_list,number_vehicles_in_green_list,marker ='o',label = "detector"+det_name)
 
         #Linear regression
         #fit = np.polyfit(number_vehicle_in_sum_list,number_vehicles_in_green_list,1)
@@ -825,7 +828,7 @@ def get_compared_arrival_on_green_ratio(location_name,conn_string,det_name_list,
 
     ylabel('Vehicles arriving on green')
     xlabel('All the vehicles arriving in time interval ' +time_interval+' minutes')
-    title("Ratio of vehicles arrived intersection " + location_name + " during green in signalGroup " + sg_name +" via detector " + det_name )
+    title("Ratio of vehicles arrived intersection " + location_name + " during green in signalGroup via detector " + det_name )
     return getBufferImage(fig)          
         
         

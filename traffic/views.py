@@ -106,7 +106,8 @@ def index(request):
     # select start and end time   
     startTimeString = request.POST.get('starttime',"")
     endTimeString = request.POST.get('endtime',"")
-    
+    print(startTimeString)
+    print(endTimeString)
     helsinkiTimezone = timezone('Europe/Helsinki')
     timeZone = datetime.datetime.now(helsinkiTimezone).strftime('%z')
     
@@ -143,7 +144,7 @@ def index(request):
         elif selectedPerformance =="Arrival_on_green_ratio":
             image = get_arrival_on_green(selectedLocation,"",selectedSgName,selectedDetector,selectedTimeInterval,startTimeStringTimeZone,endTimeStringTimeZone,selectedPerformance)        
         elif selectedPerformance =="Compared_arrival_on_green_ratio":
-            image = get_compared_arrival_on_green_ratio(selectedDetectorList,"", selectedDetectorList,selectedTimeInterval,startTimeStringTimeZone,endTimeStringTimeZone)
+            image = get_compared_arrival_on_green_ratio(selectedLocation,"", selectedDetectorList,selectedTimeInterval,startTimeStringTimeZone,endTimeStringTimeZone)
     
     context = {'locationNameList':locationNameList, 
                'selectedPerformance':selectedPerformance,

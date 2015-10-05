@@ -239,7 +239,7 @@
 		<p> Sorry, there is no valid detector configuration data in the selected signal group. Please choose other signal group. </p>
 	    {% else %}
 		<label id="detectorLabelId" for="detector">Detector</label>
-		<select id="detectorSelectionId" name ="detector" class="form-control" >
+		<select id="detectorSelectionId" name ="detector[]" class="form-control" >
 		{% for detector in detectorList %}
 		    {% if detector == selectedDetector %}
 		        <option value ={{detector}} selected="selected">{{detector}}</option>
@@ -256,7 +256,7 @@
 	<label> Multiple choice of detectors </label>
 	{% if sgNameList %}
 	    <p>
-	    <select id = "detectorMultipleSelectionID" name = "detectors" class="form-control" multiple ="multiple" size ="5">
+	    <select id = "detectorMultipleSelectionID" name = "detectors[]" class="form-control" multiple ="multiple" size ="5">
 		{% for detector in detectorListInSelectedLocation %}
 		
                     {% if detector in selectedDetectorList %} 

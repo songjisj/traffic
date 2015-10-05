@@ -69,6 +69,17 @@ def get_location_id(location_name,conn_string):
     
     return location_id
     #get_signalgroup = cursor.execute
+    
+def get_sg_and_det_index_by_det_name(location_name,conn_string,det_name):
+    
+    conn = connect_db(conn_string)
+    location_id = get_location_id(location_name, conn_string)
+    cursor = conn.cursor()
+    cursor.execute("SELECT sgidx, idx from controller_config_det where fk_cid ='" + str(location_id) +"' AND " +"name = '" +det_name +"'")
+    row =cursor.fetchone()
+    disconnect_db(conn)
+    return row
+    
 
 #Function to get a dictionary that all signals' indexes are keys and names are values when input location_name   
 def get_sg_config_in_one(location_name,conn_string):
@@ -103,16 +114,7 @@ def get_det_in_one_location(location_name, conn_string):
     disconnect_db(conn)
     return detectors
 
-def get_sg_and_det_index_by_det_name(location_name,conn_string,det_name):
-    conn_string = get_config_string('config.cfg', 'Section1', 'conn_string')
-    conn = connect_db(conn_string)
-    location_id = get_location_id(location_name, conn_string)
-    cursor = conn.cursor('cursor_unique_name', cursor_factory=psycopg2.extras.DictCursor)
-    cursor.excute("SELECT sgidx from controller_config_det where fk_cid ='" + str(location_id) +"'" +"name = '" +det_name +"'")
-    row =cursor.fetchone()
-    disconnect_db(conn)
-    return row
-    
+
 
 #Function to get the configuration of detectors in the intersection and the specified signalgroup whose name is provided 
 #Return a dictionary detectors, the keys are index of detectors and values are names of detectors.
@@ -146,6 +148,8 @@ def get_main_data(location_name,conn_string, time1,time2):
     location_id = get_location_id(location_name, conn_string)
     cursor = conn.cursor('cursor_unique_name', cursor_factory = psycopg2.extras.DictCursor)
     cursor.execute("SELECT tt, grint, dint,seq FROM tf_raw WHERE fk_cid = '" + str(location_id) + "' AND tt >= '" + str(time1) + "' AND tt < '" + str(time2)+"'")
+    print(str(time1))
+    print(str(time2))
     rows =cursor.fetchall()
     main_data = []
     for i in range(len(rows)):
