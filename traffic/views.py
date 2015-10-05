@@ -34,6 +34,7 @@ def index(request):
     sgNameList = [] 
     selectedSgName = ""
     detectorList = []
+    selectedDetectorList = []
     selectedDetector = ""
     startTimeString =""
     timeIntervalList =["5","10","20","30","60"] 
@@ -81,6 +82,9 @@ def index(request):
     except(KeyError):
         if detectorList :
             selectedDetector = detectorList[0]
+    
+    # Select multiple detectors   
+    selectedDetectorList = request.POST.getlist('detectors[]') 
             
     try:
         selectedTimeInterval = request.POST['timeInterval']
@@ -96,7 +100,7 @@ def index(request):
     helsinkiTimezone = timezone('Europe/Helsinki')
     timeZone = datetime.datetime.now(helsinkiTimezone).strftime('%z')
     
-    measuresList = ["Saturation_flow_rate","Green_duration","Queue_length","Active_green","Maximum_capacity","Arrival_on_green_percent","Volume","Arrival_on_green_ratio"] 
+    measuresList = ["Saturation_flow_rate","Percent_of_green_duration","Green_duration","Queue_length","Active_green","Maximum_capacity","Arrival_on_green_percent","Volume","Arrival_on_green_ratio"] 
     
     
     #display csv file 
@@ -111,7 +115,9 @@ def index(request):
         startTimeStringTimeZone = startTimeString + timeZone
         endTimeStringTimeZone = endTimeString + timeZone 
         if selectedPerformance == "Green_duration":
-            image = get_green_time_2(selectedLocation, "",startTimeStringTimeZone, endTimeStringTimeZone)   
+            image = get_green_time_2(selectedLocation, "",startTimeStringTimeZone, endTimeStringTimeZone,selectedPerformance)   
+        elif selectedPerformance == "Percent_of_green_duration":
+            image = get_green_time_2(selectedLocation, "",startTimeStringTimeZone, endTimeStringTimeZone,selectedPerformance)           
         elif selectedPerformance =="Saturation_flow_rate":
             image = get_saturation_flow_rate(selectedLocation,"",selectedSgName,startTimeStringTimeZone,endTimeStringTimeZone)
         elif selectedPerformance == "Queue_length":
@@ -137,6 +143,7 @@ def index(request):
                'selectedSgName':selectedSgName,
                'detectorList':detectorList,
                'selectedDetector':selectedDetector,
+               'selectedDetectorList':selectedDetectorList, 
                'startTimeString':startTimeString,
                'startTimeString':startTimeString,
                'endTimeString':endTimeString,

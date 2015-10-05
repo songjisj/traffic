@@ -1,32 +1,28 @@
 import configparser
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from matplotlib import pylab
 from pylab import *
-import PIL
-import PIL.Image
 from io import BytesIO
-import psycopg2.extras 
-from operator import itemgetter
-import datetime
+import psycopg2.extras
 from operator import itemgetter
 from datetime import timedelta
 import base64
 
 
-def create_plot_define_format(backgroud_color):
-    fig =plt.figure(figsize=(10,6),facecolor=backgroud_color)  #figsize argument is for resizing the figure.
-    ax =fig.add_subplot(111) #fig.add_subplot equivalent to fig.add_subplot(1,1,1), means subplot(nrows.,ncols, plot_number)
-    ax.xaxis_date()  
-    
+def create_plot_define_format(backgroud_color): 
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+
+    fig = plt.figure(figsize=(10,6),facecolor=backgroud_color)  #figsize argument is for resizing the figure.
+    ax = fig.add_subplot(111) #fig.add_subplot equivalent to fig.add_subplot(1,1,1), means subplot(nrows.,ncols, plot_number)
+    ax.xaxis_date()
+
     #x values are times of a day and using a Formatter to formate them.
     #For avioding crowding the x axis with labels, using a Locator.
-    helsinkiTimezone = timezone('Europe/Helsinki')
+    helsinkiTimezone = datetime.timezone('Europe/Helsinki')
     fmt = mdates.DateFormatter('%H:%M:%S', tz=helsinkiTimezone)
-    ax.xaxis.set_major_formatter(fmt)    
-    
+    ax.xaxis.set_major_formatter(fmt)
+
 
 def get_config_string(config_file,section_number,content):
     config = configparser.RawConfigParser()
@@ -61,8 +57,9 @@ def disconnect_db(conn):
 
 
 
-# write a function: the location name of intersection is the only parameter  
-# return all the signals and detectors related to it. 
+""" write a function: the location name of intersection is the only parameter  
+    return all the signals and detectors related to it. 
+""" 
 def get_location_id(location_name,conn_string):
     conn = connect_db(conn_string)
     cursor = conn.cursor() 
@@ -84,50 +81,51 @@ def get_sg_config_in_one(location_name,conn_string):
     rows = cursor.fetchall()
     signals = {}
     for i in range(len(rows)):
-        signals[rows[i][0]] = rows[i][1]
+        signals[rows[i][0]] = rows[i][1] 
         
     disconnect_db(conn)
     return signals
 
 
 #Return a dictionary of all detectors in one intersection, the key is the local index of detector, the value is its name.
-def get_det_in_one_location(location_name,conn_string):
-    conn_string = get_config_string('config.cfg','Section1','conn_string')       
-    conn = connect_db(conn_string)    
+# TODO: Seems to be unused, cleanup before first release if not used
+def get_det_in_one_location(location_name, conn_string):
+    conn_string = get_config_string('config.cfg', 'Section1', 'conn_string')
+    conn = connect_db(conn_string)
     location_id = get_location_id(location_name, conn_string)
-    cursor = conn.cursor('cursor_unique_name', cursor_factory = psycopg2.extras.DictCursor) 
-    cursor.execute("SELECT idx,name from controller_config_det WHERE fk_cid = '" +str(location_id) +"'") 
+    cursor = conn.cursor('cursor_unique_name', cursor_factory=psycopg2.extras.DictCursor)
+    cursor.execute("SELECT idx,name from controller_config_det WHERE fk_cid = '" + str(location_id) + "'")
     rows = cursor.fetchall()
     detectors = {}
     for i in range(len(rows)):
-        detecotrs[rows[i][0]] = rows[i][1]
-        
+        detectors[rows[i][0]] = rows[i][1]
+
     disconnect_db(conn)
-    return detectors 
+    return detectors
 
 
 #Function to get the configuration of detectors in the intersection and the specified signalgroup whose name is provided 
 #Return a dictionary detectors, the keys are index of detectors and values are names of detectors.
-def get_det_config_in_one_sg(location_name,sg_name,conn_string): 
-    conn_string = get_config_string('config.cfg','Section1','conn_string')       
+def get_det_config_in_one_sg(location_name, sg_name, conn_string):
+    conn_string = get_config_string('config.cfg', 'Section1', 'conn_string')
     conn = connect_db(conn_string)
     location_id = get_location_id(location_name, conn_string)
     sg_dict = get_sg_config_in_one(location_name, conn_string)
-    
+
     sg_id = -1
     for sg_key in list(sg_dict.keys()):
         if sg_dict[sg_key] == sg_name:
             sg_id = sg_key
-            
-    cursor = conn.cursor('cursor_unique_name', cursor_factory = psycopg2.extras.DictCursor)
+
+    cursor = conn.cursor('cursor_unique_name', cursor_factory=psycopg2.extras.DictCursor)
     rows = []
-    if sg_id > -1 :
-        cursor.execute("SELECT idx,name FROM controller_config_det WHERE fk_cid = '" + str(location_id) +"' AND sgidx ='" +str(sg_id)+"'")
+    if sg_id > -1:
+        cursor.execute("SELECT idx,name FROM controller_config_det WHERE fk_cid = '" + str(location_id) + "' AND sgidx ='" + str(sg_id) + "'")
         rows = cursor.fetchall()
     detectors = {}
     for i in range(len(rows)):
         detectors[rows[i][0]] = rows[i][1]
-        
+
     disconnect_db(conn)
     return detectors
 
