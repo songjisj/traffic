@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.http import HttpResponse
 from .models import TfRaw,Controller,ControllerConfigDet,ControllerConfigSg
-from traffic.analysis import rowNumber
+
 from traffic.analysis import *
 from .forms import ControlForm
 from .forms import ContactForm
@@ -57,7 +57,7 @@ def index(request):
         
     #Select signalGroup
     if selectedLocation:
-        sgNameDict = get_sg_config_in_one(selectedLocation,"")  
+        sgNameDict = get_sg_config_in_one(selectedLocation)  
         sgNameList = list(sgNameDict.values())
     
     try:
@@ -68,7 +68,7 @@ def index(request):
     
     #Select detector
     if selectedSgName and selectedLocation :
-        detectorDict = get_det_config_in_one_sg(selectedLocation, selectedSgName, "") 
+        detectorDict = get_det_config_in_one_sg(selectedLocation, selectedSgName) 
         detectorList = sorted(list(detectorDict.values()))
     
     try: 
@@ -79,7 +79,7 @@ def index(request):
     
     # Select multiple detectors  
     if selectedLocation:
-        detectorDictInSelectedLocation = get_det_in_one_location(selectedLocation,"")
+        detectorDictInSelectedLocation = get_det_in_one_location(selectedLocation)
         detectorListInSelectedLocation = sorted(list(detectorDictInSelectedLocation.values())) 
 
     try:
@@ -105,7 +105,9 @@ def index(request):
     helsinkiTimezone = timezone('Europe/Helsinki')
     timeZone = datetime.datetime.now(helsinkiTimezone).strftime('%z')
     
-    measuresList = ["Saturation_flow_rate","Percent_of_green_duration","Green_duration","Queue_length","Active_green","Maximum_capacity","Arrival_on_green_percent","Volume","Arrival_on_green_ratio","Compared_arrival_on_green_ratio"] 
+    measuresList = ["Saturation_flow_rate","Percent_of_green_duration","Green_duration","Queue_length","Active_green",
+                    "Maximum_capacity","Arrival_on_green_percent","Volume","Arrival_on_green_ratio","Comparison_volume",
+                    "Comparison_arrival_on_green","Comparison_arrival_on_green_ratio"] 
     
     
     #display csv file 
@@ -120,26 +122,29 @@ def index(request):
         startTimeStringTimeZone = startTimeString + timeZone
         endTimeStringTimeZone = endTimeString + timeZone 
         if selectedPerformance == "Green_duration":
-            image = get_green_time_2(selectedLocation, "",startTimeStringTimeZone, endTimeStringTimeZone,selectedPerformance)   
+            image = get_green_time_2(selectedLocation,startTimeStringTimeZone, endTimeStringTimeZone,selectedPerformance)   
         elif selectedPerformance == "Percent_of_green_duration":
-            image = get_green_time_2(selectedLocation, "",startTimeStringTimeZone, endTimeStringTimeZone,selectedPerformance)           
+            image = get_green_time_2(selectedLocation,startTimeStringTimeZone, endTimeStringTimeZone,selectedPerformance)           
         elif selectedPerformance =="Saturation_flow_rate":
-            image = get_saturation_flow_rate(selectedLocation,"",selectedSgName,startTimeStringTimeZone,endTimeStringTimeZone)
+            image = get_saturation_flow_rate(selectedLocation,selectedSgName,startTimeStringTimeZone,endTimeStringTimeZone)
         elif selectedPerformance == "Queue_length":
-            image = get_queue_length(selectedLocation,"",selectedSgName,selectedDetector,startTimeStringTimeZone,endTimeStringTimeZone)
+            image = get_queue_length(selectedLocation,selectedSgName,selectedDetector,startTimeStringTimeZone,endTimeStringTimeZone)
         elif selectedPerformance == "Active_green":
-            image = get_green_time(selectedLocation, "", selectedSgName, startTimeStringTimeZone, endTimeStringTimeZone)
+            image = get_green_time(selectedLocation, selectedSgName, startTimeStringTimeZone, endTimeStringTimeZone)
         elif selectedPerformance =="Maximum_capacity":
             image = get_maxCapacity(selectedLocation,selectedSgName,selectedDetector,"",selectedTimeInterval,startTimeStringTimeZone,endTimeStringTimeZone)
         elif selectedPerformance =="Arrival_on_green_percent":
-            image = get_arrival_on_green(selectedLocation,"",selectedSgName,selectedDetector,selectedTimeInterval,startTimeStringTimeZone,endTimeStringTimeZone,selectedPerformance)
+            image = get_arrival_on_green(selectedLocation,selectedSgName,selectedDetector,selectedTimeInterval,startTimeStringTimeZone,endTimeStringTimeZone,selectedPerformance)
         elif selectedPerformance =="Volume":
-            image = get_volume_lanes(selectedLocation,"",selectedSgName,selectedDetector,selectedTimeInterval,startTimeStringTimeZone,endTimeStringTimeZone)
+            image = get_volume_lanes(selectedLocation,selectedSgName,selectedDetector,selectedTimeInterval,startTimeStringTimeZone,endTimeStringTimeZone)
         elif selectedPerformance =="Arrival_on_green_ratio":
-            image = get_arrival_on_green(selectedLocation,"",selectedSgName,selectedDetector,selectedTimeInterval,startTimeStringTimeZone,endTimeStringTimeZone,selectedPerformance)        
-        elif selectedPerformance =="Compared_arrival_on_green_ratio":
-            image = get_compared_arrival_on_green_ratio(selectedLocation,"", selectedDetectorList,selectedTimeInterval,startTimeStringTimeZone,endTimeStringTimeZone)
-    
+            image = get_arrival_on_green(selectedLocation,selectedSgName,selectedDetector,selectedTimeInterval,startTimeStringTimeZone,endTimeStringTimeZone,selectedPerformance)        
+        elif selectedPerformance =="Comparison_volume":
+            image = get_compared_arrival_on_green_ratio(selectedLocation, selectedDetectorList,selectedTimeInterval,startTimeStringTimeZone,endTimeStringTimeZone,selectedPerformance)
+        elif selectedPerformance =="Comparison_arrival_on_green":
+            image = get_compared_arrival_on_green_ratio(selectedLocation, selectedDetectorList,selectedTimeInterval,startTimeStringTimeZone,endTimeStringTimeZone,selectedPerformance)
+        elif selectedPerformance =="Comparison_arrival_on_green_ratio":
+            image = get_compared_arrival_on_green_ratio(selectedLocation, selectedDetectorList,selectedTimeInterval,startTimeStringTimeZone,endTimeStringTimeZone,selectedPerformance)        
     context = {'locationNameList':locationNameList, 
                'selectedPerformance':selectedPerformance,
                'measuresList':measuresList,

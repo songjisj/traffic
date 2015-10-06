@@ -8,6 +8,7 @@ from operator import itemgetter
 from datetime import timedelta
 import base64
 
+conn_string = "host='localhost' dbname='tfg-db' user='postgres' password='4097' port='5432'"
 
 def create_plot_define_format(backgroud_color): 
     matplotlib.use('Agg')
@@ -47,7 +48,7 @@ def getBufferImage(fig):
     
 
 #Function to connect to postgresql 
-def connect_db(conn_string):
+def connect_db():
     conn = psycopg2.connect(conn_string)
     return conn
     
@@ -60,8 +61,8 @@ def disconnect_db(conn):
 """ write a function: the location name of intersection is the only parameter  
     return all the signals and detectors related to it. 
 """ 
-def get_location_id(location_name,conn_string):
-    conn = connect_db(conn_string)
+def get_location_id(location_name,):
+    conn = connect_db()
     cursor = conn.cursor() 
     cursor.execute("SELECT cid FROM controller WHERE cname = '" + location_name +"'") 
     location_id = cursor.fetchone()[0]   
@@ -70,10 +71,10 @@ def get_location_id(location_name,conn_string):
     return location_id
     #get_signalgroup = cursor.execute
     
-def get_sg_and_det_index_by_det_name(location_name,conn_string,det_name):
+def get_sg_and_det_index_by_det_name(location_name,det_name):
     
-    conn = connect_db(conn_string)
-    location_id = get_location_id(location_name, conn_string)
+    conn = connect_db()
+    location_id = get_location_id(location_name)
     cursor = conn.cursor()
     cursor.execute("SELECT sgidx, idx from controller_config_det where fk_cid ='" + str(location_id) +"' AND " +"name = '" +det_name +"'")
     row =cursor.fetchone()
@@ -82,11 +83,11 @@ def get_sg_and_det_index_by_det_name(location_name,conn_string,det_name):
     
 
 #Function to get a dictionary that all signals' indexes are keys and names are values when input location_name   
-def get_sg_config_in_one(location_name,conn_string):
+def get_sg_config_in_one(location_name):
     
-    conn_string = get_config_string('config.cfg','Section1','conn_string') 
-    conn = connect_db(conn_string)
-    location_id = get_location_id(location_name, conn_string)
+    
+    conn = connect_db()
+    location_id = get_location_id(location_name)
     cursor = conn.cursor('cursor_unique_name', cursor_factory = psycopg2.extras.DictCursor) 
     cursor.execute("SELECT idx,name from controller_config_sg WHERE fk_cid = '" +str(location_id) +"'") 
     rows = cursor.fetchall()
@@ -100,10 +101,10 @@ def get_sg_config_in_one(location_name,conn_string):
 
 #Return a dictionary of all detectors in one intersection, the key is the local index of detector, the value is its name.
 # TODO: Seems to be unused, cleanup before first release if not used
-def get_det_in_one_location(location_name, conn_string):
-    conn_string = get_config_string('config.cfg', 'Section1', 'conn_string')
-    conn = connect_db(conn_string)
-    location_id = get_location_id(location_name, conn_string)
+def get_det_in_one_location(location_name):
+    
+    conn = connect_db()
+    location_id = get_location_id(location_name)
     cursor = conn.cursor('cursor_unique_name', cursor_factory=psycopg2.extras.DictCursor)
     cursor.execute("SELECT idx,name from controller_config_det WHERE fk_cid = '" + str(location_id) + "'")
     rows = cursor.fetchall()
@@ -118,11 +119,11 @@ def get_det_in_one_location(location_name, conn_string):
 
 #Function to get the configuration of detectors in the intersection and the specified signalgroup whose name is provided 
 #Return a dictionary detectors, the keys are index of detectors and values are names of detectors.
-def get_det_config_in_one_sg(location_name, sg_name, conn_string):
-    conn_string = get_config_string('config.cfg', 'Section1', 'conn_string')
-    conn = connect_db(conn_string)
-    location_id = get_location_id(location_name, conn_string)
-    sg_dict = get_sg_config_in_one(location_name, conn_string)
+def get_det_config_in_one_sg(location_name, sg_name):
+
+    conn = connect_db()
+    location_id = get_location_id(location_name)
+    sg_dict = get_sg_config_in_one(location_name)
 
     sg_id = -1
     for sg_key in list(sg_dict.keys()):
@@ -143,9 +144,9 @@ def get_det_config_in_one_sg(location_name, sg_name, conn_string):
 
 #Function get_main_data returns raw data whose columns are timestamp, grint, dint
 #Parameters: location_name, conn_string, the selected start time and end time.
-def get_main_data(location_name,conn_string, time1,time2):
-    conn = connect_db(conn_string)
-    location_id = get_location_id(location_name, conn_string)
+def get_main_data(location_name, time1,time2):
+    conn = connect_db()
+    location_id = get_location_id(location_name)
     cursor = conn.cursor('cursor_unique_name', cursor_factory = psycopg2.extras.DictCursor)
     cursor.execute("SELECT tt, grint, dint,seq FROM tf_raw WHERE fk_cid = '" + str(location_id) + "' AND tt >= '" + str(time1) + "' AND tt < '" + str(time2)+"'")
     print(str(time1))
@@ -164,16 +165,15 @@ def get_main_data(location_name,conn_string, time1,time2):
 #This function is used to filter the status of single signalgroup with timestamp.
 #Parameters:
 #location_name, conn_string, sg_name, start time and end time.
-def get_sg_status(location_name,conn_string,sg_name,time1,time2): 
+def get_sg_status(location_name,sg_name,time1,time2): 
     
-    sg_pairs = get_sg_config_in_one(location_name, conn_string)
+    sg_pairs = get_sg_config_in_one(location_name)
     for idx, name in list(sg_pairs.items()):
         if name == sg_name:
             sg_index = idx
             break   
-    main_data = get_main_data(location_name, conn_string, time1, time2) 
-    det_dict_in_the_sg = get_det_config_in_one_sg(location_name, sg_name, 
-                                                 conn_string)
+    main_data = get_main_data(location_name, time1, time2) 
+    det_dict_in_the_sg = get_det_config_in_one_sg(location_name, sg_name)
     det_index_list = list(det_dict_in_the_sg.keys())
     sg_status = []
     for i in range(len(main_data)):
@@ -197,24 +197,24 @@ def get_sg_status(location_name,conn_string,sg_name,time1,time2):
 #This function is used to filter the status of single signalgroup and signal detector with timestamp.
 #Parameters:
 #location_name, conn_string, sg_name, start time and end time.
-def get_sg_det_status(location_name,conn_string,sg_name,det_name,time1,time2): 
+def get_sg_det_status(location_name,sg_name,det_name,time1,time2): 
     sg_index = 0
     det_index = 0
     #look for the index of the input sg_name.
-    sg_pairs = get_sg_config_in_one(location_name, conn_string)
+    sg_pairs = get_sg_config_in_one(location_name)
     for idx, name in list(sg_pairs.items()):
         if name == sg_name:
             sg_index = idx
             break  
     #look for the index for the input detector.
-    det_pairs = get_det_config_in_one_sg(location_name, sg_name, conn_string)
+    det_pairs = get_det_config_in_one_sg(location_name, sg_name)
     for idx, name in list(det_pairs.items()):
         if name==det_name:  
             det_index =idx 
             break 
              
         
-    main_data = get_main_data(location_name, conn_string, time1, time2)
+    main_data = get_main_data(location_name, time1, time2)
     sg_status = []
     for i in range(len(main_data)):
         sg_status.append([])
@@ -266,24 +266,24 @@ def addCapacityInList(start_time_list, start_time, sum_green, max_capacity_list)
     
     return max_capacity
 
-def rowNumber():
+#def rowNumber():
     
-    #read configuration file
-    config = configparser.RawConfigParser()
-    config.read('config.cfg')
+    ##read configuration file
+    #config = configparser.RawConfigParser()
+    #config.read('config.cfg')
     
-    conn_string = config.get('Section1','conn_string') 
-    conn = psycopg2.connect(conn_string)
-    cursor = conn.cursor('cursor_unique_name', cursor_factory = psycopg2.extras.DictCursor)
-    query = "SELECT fk_cid from controller_config_det"
-    cursor.execute(query)
-    rows = cursor.fetchall()     
-    conn.close()
-    return len(rows) % 2 + 1
+    #conn_string = config.get('Section1','conn_string') 
+    #conn = psycopg2.connect()
+    #cursor = conn.cursor('cursor_unique_name', cursor_factory = psycopg2.extras.DictCursor)
+    #query = "SELECT fk_cid from controller_config_det"
+    #cursor.execute(query)
+    #rows = cursor.fetchall()     
+    #conn.close()
+    #return len(rows) % 2 + 1
 
 
-def fetch_data(conn_string,query): 
-    conn = connect_db(conn_string)
+def fetch_data(query): 
+    conn = connect_db()
     #conn.cursor will return a cursor object, you can use the cursor to perfor queries
     cursor = conn.cursor('cursor_unique_name', cursor_factory = psycopg2.extras.DictCursor)
     cursor.execute(query)
@@ -293,10 +293,50 @@ def fetch_data(conn_string,query):
 
 # fetch configuration data and save in dictionary
 # parameter dict_key :select values of a column as the key of dictionary
-def config(conn_string,query,dict_key):
-    rows = fetch_data(conn_string, query)
+def config(query,dict_key):
+    rows = fetch_data(query)
     dict_data = {}
     for i in range(len(rows)):
         dict_data[rows[i][dict_key]] = rows[i]
     
     return dict_data   
+
+def count_volume_and_arrival_on_green(sg_state,det_state,interval,start_time,time_in_row,green_on,
+                                      green_state_list,detector_occupied,number_vehicles_in_red,number_vehicles_in_green,
+                                      arrival_on_green_percent_format_list,number_vehicle_in_sum_list,start_time_list,
+                                      number_vehicles_in_green_list):
+    if time_in_row < start_time + interval:
+        if not green_on and sg_state in green_state_list:
+            green_on = True 
+        elif green_on and sg_state in green_state_list:
+            if not detector_occupied and det_state =='1':
+                detector_occupied = True
+                number_vehicles_in_green = number_vehicles_in_green + 1 
+            elif detector_occupied and det_state =='0': 
+                detector_occupied = False
+
+        elif green_on and sg_state not in green_state_list:
+            green_on = False 
+        elif not green_on and sg_state not in green_state_list:
+            if not detector_occupied and det_state == '1':
+                detector_occupied = True
+                number_vehicles_in_red = number_vehicles_in_red + 1 
+            elif detector_occupied and det_state == '0':
+                detector_occupied = False
+
+    else:
+        number_vehicle_in_sum = number_vehicles_in_green + number_vehicles_in_red
+
+        if number_vehicle_in_sum > 0:
+            number_vehicles_in_green_list.append(number_vehicles_in_green)
+            arrival_on_green = (float(number_vehicles_in_green)/(number_vehicle_in_sum))*100
+            #arrival_on_green_percent_format = "{:.0%}".format(arrival_on_green)
+            arrival_on_green_percent_format_list.append(arrival_on_green)
+            start_time_list.append(start_time)
+
+            number_vehicle_in_sum_list.append(number_vehicle_in_sum)
+            f.write("{} {} {} {} {}\n".format(det_name,start_time,number_vehicles_in_green, number_vehicle_in_sum,arrival_on_green))
+        number_vehicles_in_green = 0
+        number_vehicles_in_red = 0 
+        start_time= start_time + interval 
+    return(start_time_list,number_vehicle_in_sum_list,arrival_on_green_percent_format_list) 

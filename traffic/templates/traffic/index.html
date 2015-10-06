@@ -51,44 +51,39 @@
 	function performanceChanged() {
 	    //get html element (here is the select), by id, id is in element's <>
 	    var selectedPerformance = document.getElementById("performanceSelectionId").value;
+
+	    function elementDisplay(elementHiddenCondition,elementLabelId,elementSelectionId) {
+		if (elementHiddenCondition) {
+		    //get detector label by its id and change delector style, by change display to none or block (means hide or show)
+		    document.getElementById(elementLabelId).style.display = "none";
+		    document.getElementById(elementSelectionId).style.display = "none";
+		}
+		else{
+		    document.getElementById(elementLabelId).style.display = "block";
+		    document.getElementById(elementSelectionId).style.display = "block";
+		}
+	    }
 	    
-	    var detectorNotNeededArray = ["Green_duration","Percent_of_green_duration","Active_green","Saturation_flow_rate"];
+	    var detectorNotNeededArray = ["Green_duration","Percent_of_green_duration","Active_green","Saturation_flow_rate",
+	    "Comparison_volume","Comparison_arrival_on_green"];
 	    var detectorHidden = (detectorNotNeededArray.indexOf(selectedPerformance) > -1);
-	    
-	    if (detectorHidden) {
-		//get detector label by its id and change delector style, by change display to none or block (means hide or show)
-		document.getElementById('detectorLabelId').style.display = "none";
-		document.getElementById('detectorSelectionId').style.display = "none";
-	    }
-	    else {
-		document.getElementById('detectorLabelId').style.display = "block";
-		document.getElementById('detectorSelectionId').style.display = "block";
-	    }
-	    
+    
+	    elementDisplay(detectorHidden,'detectorLabelId','detectorSelectionId')
+	   
 	    var signalGroupNotNeededArray = ["Green_duration","Percent_of_green_duration"];
 	    var signalGroupHidden = (signalGroupNotNeededArray.indexOf(selectedPerformance) > -1);
 	    
-	    if (signalGroupHidden) {
-	        document.getElementById('signalGroupLabelId').style.display = "none";
-	        document.getElementById('signalGroupSelectionId').style.display = "none";
-	    }
-	    else { 
-		document.getElementById('signalGroupLabelId').style.display = "block";
-	        document.getElementById('signalGroupSelectionId').style.display = "block";
-	    }
-	    
+	    elementDisplay(signalGroupHidden,'signalGroupLabelId','signalGroupSelectionId')
+  
 	    var timeIntervalNotNeededArray = ["Green_duration","Percent_of_green_duration","Active_green","Queue_length","Saturation_flow_rate"];
 	    var timeIntervalHidden = (timeIntervalNotNeededArray.indexOf(selectedPerformance) > -1);
 	    
-	    if(timeIntervalHidden) {
-	        document.getElementById('timeIntervalLabelId').style.display = "none" ;
-		document.getElementById('timeIntervalSelectionId').style.display = "none";
-	    }
-	    else{
-	        document.getElementById('timeIntervalLabelId').style.display = "block";
-		document.getElementById('timeIntervalSelectionId').style.display = "block";
-	    }
+	    elementDisplay(timeIntervalHidden,'timeIntervalLabelId', 'timeIntervalSelectionId')
 	    
+	    var multipleDetectorsNotNeededArray = ["Green_duration","Percent_of_green_duration","Active_green","Saturation_flow_rate"];
+	    var multipleDetectorsHidden = (multipleDetectorsNotNeededArray.indexOf(selectedPerformance) > -1);
+	                                  
+	    elementDisplay(multipleDetectorsHidden,'detectorMultipleLabelId', 'detectorMultipleSelectionId')
 	}
 	
 	function showLocationMap() {
@@ -239,7 +234,7 @@
 		<p> Sorry, there is no valid detector configuration data in the selected signal group. Please choose other signal group. </p>
 	    {% else %}
 		<label id="detectorLabelId" for="detector">Detector</label>
-		<select id="detectorSelectionId" name ="detector[]" class="form-control" >
+		<select id="detectorSelectionId" name ="detector" class="form-control" >
 		{% for detector in detectorList %}
 		    {% if detector == selectedDetector %}
 		        <option value ={{detector}} selected="selected">{{detector}}</option>
@@ -253,10 +248,10 @@
 	{% endif %}
 	
 	{# multiple select detectors #}
-	<label> Multiple choice of detectors </label>
+	<label id="detectorMultipleLabelId" for="detectors[]" > Multiple choice of detectors <em>(Ctrl + click)</em> </label>
 	{% if sgNameList %}
 	    <p>
-	    <select id = "detectorMultipleSelectionID" name = "detectors[]" class="form-control" multiple ="multiple" size ="5">
+	    <select id = "detectorMultipleSelectionId" name = "detectors[]" class="form-control" multiple ="multiple" size ="5">
 		{% for detector in detectorListInSelectedLocation %}
 		
                     {% if detector in selectedDetectorList %} 

@@ -16,16 +16,15 @@ AMBER = "AMBER"
 RED = "RED"
 UNKNOWN = "UNKNOWN"
 green_state_list = ["0", "1", "3", "4", "5", "6", "7", "8", ":"]
-
+conn_string = "host='localhost' dbname='tfg-db' user='postgres' password='4097' port='5432'"
 
 #active green
-def get_green_time(location_name, conn_string,sg_name,time1,time2):
-    #read configuration file
-    conn_string = get_config_string('config.cfg','Section1','conn_string') 
+def get_green_time(location_name,sg_name,time1,time2):
+   
     activate_green_state_list = ["0","1","3","5","6","7","8",":"] 
     passive_green_state_list = ["4"]
     
-    sg_status= get_sg_status(location_name, conn_string, sg_name, time1, time2) #[time,grint,seq,dint] 
+    sg_status= get_sg_status(location_name, sg_name, time1, time2) #[time,grint,seq,dint] 
     
     green_on = False
     passive_green_on = False 
@@ -127,10 +126,9 @@ def get_green_time(location_name, conn_string,sg_name,time1,time2):
     return getBufferImage(fig)    
 
 
-def get_capacity(location_name,conn_string,sg_name,det_name,time1,time2):
-    conn_string = get_config_string('config.cfg','Section1','conn_string')    
+def get_capacity(location_name,sg_name,det_name,time1,time2):   
     
-    sg_det_status = get_sg_det_status(location_name,conn_string,sg_name,det_name,time1,time2) #sg_det_status[time,seq,grint,dint]
+    sg_det_status = get_sg_det_status(location_name,sg_name,det_name,time1,time2) #sg_det_status[time,seq,grint,dint]
      
     green_on = False
      
@@ -209,11 +207,11 @@ def get_capacity(location_name,conn_string,sg_name,det_name,time1,time2):
     
     return getBufferImage(plt.gcf())
 
-def get_queue_length(location_name,conn_string,sg_name,det_name,time1,time2): 
+def get_queue_length(location_name,sg_name,det_name,time1,time2): 
     
-    conn_string = get_config_string('config.cfg','Section1','conn_string')     
+        
     
-    sg_det_status = get_sg_det_status(location_name,conn_string,sg_name,det_name,time1,time2) #sg_det_status[time,seq,grint,dint]
+    sg_det_status = get_sg_det_status(location_name,sg_name,det_name,time1,time2) #sg_det_status[time,seq,grint,dint]
     
     green_on = True
     
@@ -306,16 +304,16 @@ def get_queue_length(location_name,conn_string,sg_name,det_name,time1,time2):
     
     return getBufferImage(fig)
 
-def get_green_time_2(location_name, conn_string,time1,time2,performance): 
+def get_green_time_2(location_name, time1,time2,performance): 
     
     green_on = False
 
     start_green_time = None    
-    conn_string = get_config_string('config.cfg','Section1','conn_string') 
     
-    main_data = get_main_data(location_name, conn_string, time1, time2) #main_data[tt,grint,dint,seq] 
     
-    sg_dict = get_sg_config_in_one(location_name, conn_string)
+    main_data = get_main_data(location_name, time1, time2) #main_data[tt,grint,dint,seq] 
+    
+    sg_dict = get_sg_config_in_one(location_name)
     
     
     f = open("traffic/static/traffic/result.csv","w+") #create a csv file to save data in.
@@ -389,15 +387,15 @@ def get_green_time_2(location_name, conn_string,time1,time2,performance):
 #Saturation flow rate crossing a signalized stop line is define as the number of vechiles per hour that could cross the line if the signal remained green all of the time 
 #The time of passage of the third and last third vehicles over several cycles to determine this value in this function. 
 #The first few vehicles and the last vehicles are excluded because of starting up the queue or represent the arrival rate.  
-def get_saturation_flow_rate(location_name,conn_string,sg_name,time1,time2):
-    conn_string = get_config_string('config.cfg','Section1','conn_string') 
-    main_data = get_main_data(location_name, conn_string, time1, time2)  #[tt,gint,dint,seq]
-    sg_pairs = get_sg_config_in_one(location_name, conn_string)
+def get_saturation_flow_rate(location_name,sg_name,time1,time2):
+    
+    main_data = get_main_data(location_name,  time1, time2)  #[tt,gint,dint,seq]
+    sg_pairs = get_sg_config_in_one(location_name)
     for idx, name in list(sg_pairs.items()):
         if name == sg_name:
             sg_index = idx
             break      
-    det_dict = get_det_config_in_one_sg(location_name, sg_name, conn_string)
+    det_dict = get_det_config_in_one_sg(location_name, sg_name)
 
 
     required_vehicle_number = 8
@@ -484,15 +482,14 @@ def get_saturation_flow_rate(location_name,conn_string,sg_name,time1,time2):
     return getBufferImage(plt.gcf())
 
 
-def get_maxCapacity(location_name,sg_name,det_name,conn_string,time_interval,time1,time2):
+def get_maxCapacity(location_name,sg_name,det_name,time_interval,time1,time2):
     
 
     
-    time_interval_in_seconds = convert_time_interval_str_to_timedelta(
-                                                                     time_interval)
-    conn_string = get_config_string('config.cfg','Section1','conn_string') 
+    time_interval_in_seconds = convert_time_interval_str_to_timedelta(time_interval)
     
-    sg_status= get_sg_status(location_name, conn_string, sg_name, time1, time2) #[time,grint,seq,dint] 
+    
+    sg_status= get_sg_status(location_name, sg_name, time1, time2) #[time,grint,seq,dint] 
     green_on = False
     sum_green_list = []
     start_time_list = []
@@ -557,11 +554,11 @@ def get_maxCapacity(location_name,sg_name,det_name,conn_string,time_interval,tim
     
 
 
-def get_arrival_on_green(location_name,conn_string, sg_name,det_name,time_interval,time1,time2,performance):
+def get_arrival_on_green(location_name, sg_name,det_name,time_interval,time1,time2,performance):
 
     interval = convert_time_interval_str_to_timedelta(time_interval)
-    conn_string = get_config_string('config.cfg','Section1','conn_string') 
-    sg_det_status = get_sg_det_status(location_name, conn_string, sg_name, det_name, time1, time2) #[time,seq,sg_stauts, det_status]
+    
+    sg_det_status = get_sg_det_status(location_name,sg_name, det_name, time1, time2) #[time,seq,sg_stauts, det_status]
     
     green_on = False 
     detector_occupied = False
@@ -666,7 +663,7 @@ def get_arrival_on_green(location_name,conn_string, sg_name,det_name,time_interv
         title("Ratio of vehicles arrived intersection " + location_name + " during green in signalGroup " + sg_name +" via detector " + det_name )
         return getBufferImage(fig)  
         
-def get_volume_lanes(location_name,conn_string, sg_name,det_name,time_interval,time1,time2):
+def get_volume_lanes(location_name, sg_name,det_name,time_interval,time1,time2):
     
     green_on = False 
     
@@ -678,14 +675,14 @@ def get_volume_lanes(location_name,conn_string, sg_name,det_name,time_interval,t
       
     
     interval = convert_time_interval_str_to_timedelta(time_interval)
-    conn_string = get_config_string('config.cfg','Section1','conn_string') 
-    main_data = get_main_data(location_name, conn_string, time1, time2)  #[tt,gint,dint,seq]
+   
+    main_data = get_main_data(location_name, time1, time2)  #[tt,gint,dint,seq]
     
     
     lane_by_det = det_name.split('_')[0] #Split det_name by '_', obtain the first part.
     
-    det_dict = get_det_config_in_one_sg(location_name, sg_name,conn_string) 
-    sg_pairs = get_sg_config_in_one(location_name, conn_string)
+    det_dict = get_det_config_in_one_sg(location_name, sg_name) 
+    sg_pairs = get_sg_config_in_one(location_name)
     for idx, name in list(sg_pairs.items()):
         if name == sg_name:
             sg_index = idx
@@ -757,14 +754,19 @@ def get_volume_lanes(location_name,conn_string, sg_name,det_name,time_interval,t
     
     return getBufferImage(fig)
 
-def get_compared_arrival_on_green_ratio(location_name,conn_string,det_name_list,time_interval,time1,time2):
-    conn_string = get_config_string('config.cfg','Section1','conn_string') 
-    main_data = get_main_data(location_name, conn_string, time1, time2) # tt,grint,dint,seq
+def get_compared_arrival_on_green_ratio(location_name,det_name_list,time_interval,time1,time2,performance):
+   
+    
+    main_data = get_main_data(location_name, time1, time2) # tt,grint,dint,seq
     interval = convert_time_interval_str_to_timedelta(time_interval)
     
     f = open("traffic/static/traffic/result.csv","w+") #create a csv file to save data in.
-    writer = csv.DictWriter(f, fieldnames = ["start_time","name of vehicle in green","volume","arrival_on_green"], delimiter = ';')
-    writer.writeheader()           
+    writer = csv.DictWriter(f, fieldnames = ["det_name","start_time","name of vehicle in green","volume","arrival_on_green"], delimiter = ';')
+    writer.writeheader()   
+    
+    fig =plt.figure(figsize=(10,6),facecolor='#99CCFF')  #figsize argument is for resizing the figure.
+    ax =fig.add_subplot(111) #fig.add_subplot equivalent to fig.add_subplot(1,1,1), means subplot(nrows.,ncols, plot_number)    
+  
     
     for det_name in det_name_list:
         green_on = False 
@@ -776,12 +778,14 @@ def get_compared_arrival_on_green_ratio(location_name,conn_string,det_name_list,
         number_vehicle_in_sum_list = []
         start_time_list = []
         number_vehicles_in_green_list = []         
-        row = get_sg_and_det_index_by_det_name(location_name, conn_string, det_name)
+        row = get_sg_and_det_index_by_det_name(location_name, det_name)
         sg_index = row[0]
         det_index = row[1] 
         for r in main_data: 
             sg_state =r[1][sg_index]
             det_state = r[2][det_index]
+            time_in_row = r[0]
+
             
             if r[0] < start_time + interval:
                 if not green_on and sg_state in green_state_list:
@@ -813,22 +817,44 @@ def get_compared_arrival_on_green_ratio(location_name,conn_string,det_name_list,
                     start_time_list.append(start_time)
                         
                     number_vehicle_in_sum_list.append(number_vehicle_in_sum)
-                    f.write("{} {} {} {}\n".format(start_time,number_vehicles_in_green, number_vehicle_in_sum,arrival_on_green))
+                    f.write("{} {} {} {} {}\n".format(det_name,start_time,number_vehicles_in_green, number_vehicle_in_sum,arrival_on_green))
                 number_vehicles_in_green = 0
                 number_vehicles_in_red = 0 
-                start_time= start_time + interval               
-        fig =plt.figure(figsize=(10,6),facecolor='#99CCFF')  #figsize argument is for resizing the figure.
+                start_time= start_time + interval    
+                
+        if performance =="Comparison_volume" or performance =="Comparison_arrival_on_green ":
 
-        plt.scatter(number_vehicle_in_sum_list,number_vehicles_in_green_list,marker ='o',label = "detector"+det_name)
-
+        
+            #x values are times of a day and using a Formatter to formate them.
+            #For avioding crowding the x axis with labels, using a Locator.
+            helsinkiTimezone = timezone('Europe/Helsinki')
+            fmt = mdates.DateFormatter('%m-%d %H:%M:%S', tz=helsinkiTimezone)
+            ax.xaxis.set_major_formatter(fmt) 
+            ax.xaxis_date() 
+            plt.setp( plt.gca().get_xticklabels(), rotation=45, horizontalalignment='right')
+            plt.tick_params(labelsize=6)             
+            if performance =="Comparison_volume":
+                ax.plot(start_time_list,number_vehicle_in_sum_list,marker ='o',linestyle=':', label= det_name)
+                ylabel('Volume per' + time_interval +"minutes")
+                xlabel('Time')
+                title("Comparison of volumes in different locations")            
+            elif performance =="Comparison_arrival_on_green":    
+                ax.plot(start_time_list,arrival_on_green_percent_format_list, marker ='d',linestyle='--',label=det_name)
+                ylabel('Percentage of arrival on green')
+                xlabel('Times') 
+                title('Comparison of arrival on green percentage in different locations ')
+        elif performance =="Comparison_arrival_on_green_ratio":
+                        
+            ax.plot(number_vehicle_in_sum_list,arrival_on_green_percent_format_list,marker ='o', linestyle ='.', label = det_name)
+            ylabel('number of vehicles arriving on green')
+            xlabel('volume')
+      
         #Linear regression
         #fit = np.polyfit(number_vehicle_in_sum_list,number_vehicles_in_green_list,1)
         #fit_fn = np.poly1d(fit)
         #plt.plot(number_vehicle_in_sum_list,number_vehicles_in_green_list,'yo',number_vehicle_in_sum_list,fit_fn(number_vehicle_in_sum_list),'--k')       
+    ax.legend(bbox_to_anchor=(1, 1), loc=2, borderaxespad=0.)
 
-    ylabel('Vehicles arriving on green')
-    xlabel('All the vehicles arriving in time interval ' +time_interval+' minutes')
-    title("Ratio of vehicles arrived intersection " + location_name + " during green in signalGroup via detector " + det_name )
     return getBufferImage(fig)          
         
         
