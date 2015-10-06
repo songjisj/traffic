@@ -766,7 +766,7 @@ def get_compared_arrival_on_green_ratio(location_name,det_name_list,time_interva
     
     fig =plt.figure(figsize=(10,6),facecolor='#99CCFF')  #figsize argument is for resizing the figure.
     ax =fig.add_subplot(111) #fig.add_subplot equivalent to fig.add_subplot(1,1,1), means subplot(nrows.,ncols, plot_number)    
-  
+    plt.subplots_adjust(left=0.07, bottom=0.1, right=0.85, top=0.9, wspace=None, hspace=None)
     
     for det_name in det_name_list:
         green_on = False 
@@ -778,7 +778,7 @@ def get_compared_arrival_on_green_ratio(location_name,det_name_list,time_interva
         number_vehicle_in_sum_list = []
         start_time_list = []
         number_vehicles_in_green_list = []         
-        row = get_sg_and_det_index_by_det_name(location_name, det_name)
+        row = get_sg_and_det_index_by_det_name(location_name, det_name) 
         sg_index = row[0]
         det_index = row[1] 
         for r in main_data: 
@@ -845,9 +845,10 @@ def get_compared_arrival_on_green_ratio(location_name,det_name_list,time_interva
                 title('Comparison of arrival on green percentage in different locations ')
         elif performance =="Comparison_arrival_on_green_ratio":
                         
-            ax.plot(number_vehicle_in_sum_list,arrival_on_green_percent_format_list,marker ='o', linestyle ='.', label = det_name)
+            ax.plot(number_vehicle_in_sum_list,number_vehicles_in_green_list,marker ='o', linestyle ='.', label = det_name)
             ylabel('number of vehicles arriving on green')
             xlabel('volume')
+            title('Comparison of arrival on green ratio in different locations per ' + time_interval +' minutes at ' + location_name )
       
         #Linear regression
         #fit = np.polyfit(number_vehicle_in_sum_list,number_vehicles_in_green_list,1)
