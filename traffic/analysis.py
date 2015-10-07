@@ -498,7 +498,10 @@ def get_maxCapacity(location_name,sg_name,det_name,time_interval,time1,time2):
     width = 0.0005 
     green_end_time = None 
     sum_green = 0 
-    start_time = sg_status[0][0] # start time of each time interval 
+    try:
+        start_time = sg_status[0][0] 
+    except:
+        start_time = "10/07/2015 19:00" 
     
     
     f = open("traffic/static/traffic/result.csv","w+") #create a csv file to save data in.
@@ -564,7 +567,10 @@ def get_arrival_on_green(location_name, sg_name,det_name,time_interval,time1,tim
     detector_occupied = False
     number_vehicles_in_green = 0 
     number_vehicles_in_red = 0
-    start_time = sg_det_status[0][0] 
+    try:
+        start_time = sg_det_status[0][0] 
+    except:
+        start_time = "10/07/2015 19:00" 
     arrival_on_green_percent_format_list = []
     number_vehicle_in_sum_list = []
     start_time_list = []
@@ -654,10 +660,12 @@ def get_arrival_on_green(location_name, sg_name,det_name,time_interval,time1,tim
         plt.scatter(number_vehicle_in_sum_list,number_vehicles_in_green_list)
         
         #Linear regression
-        fit = np.polyfit(number_vehicle_in_sum_list,number_vehicles_in_green_list,1)
-        fit_fn = np.poly1d(fit)
-        plt.plot(number_vehicle_in_sum_list,number_vehicles_in_green_list,'yo',number_vehicle_in_sum_list,fit_fn(number_vehicle_in_sum_list),'--k')       
-        
+        try:
+            fit = np.polyfit(number_vehicle_in_sum_list,number_vehicles_in_green_list,1)
+            fit_fn = np.poly1d(fit)
+            plt.plot(number_vehicle_in_sum_list,number_vehicles_in_green_list,'yo',number_vehicle_in_sum_list,fit_fn(number_vehicle_in_sum_list),'--k')       
+        except: 
+            pass 
         ylabel('Vehicles arriving on green')
         xlabel('All the vehicles arriving in time interval ' +time_interval+' minutes')
         title("Ratio of vehicles arrived intersection " + location_name + " during green in signalGroup " + sg_name +" via detector " + det_name )
@@ -700,7 +708,10 @@ def get_volume_lanes(location_name, sg_name,det_name,time_interval,time1,time2):
         det_name = det_dict[det_id]
         
         detector_occupied = False
-        start_time = main_data[0][0]
+        try:
+            start_time = main_data[0][0] 
+        except:
+            start_time = "10/07/2015 19:00"
         volume = 0 
         volume_list=[]
         start_time_list= []
@@ -749,9 +760,10 @@ def get_volume_lanes(location_name, sg_name,det_name,time_interval,time1,time2):
     xlabel("time")
     ylabel("Amount of vehicles")
     title("Traffic volume for "+ sg_name +" at " + location_name)  
-    legend((x[0] for x in p),
-           labels)
-    
+    try:
+        legend((x[0] for x in p),labels)
+    except:
+        pass
     return getBufferImage(fig)
 
 def get_compared_arrival_on_green_ratio(location_name,det_name_list,time_interval,time1,time2,performance):
@@ -773,7 +785,11 @@ def get_compared_arrival_on_green_ratio(location_name,det_name_list,time_interva
         detector_occupied = False
         number_vehicles_in_green = 0 
         number_vehicles_in_red = 0
-        start_time = main_data[0][0] 
+        try:
+            start_time = main_data[0][0] 
+        except:
+            start_time = "10/07/2015 19:00"
+            
         arrival_on_green_percent_format_list = []
         number_vehicle_in_sum_list = []
         start_time_list = []
@@ -822,38 +838,49 @@ def get_compared_arrival_on_green_ratio(location_name,det_name_list,time_interva
                 number_vehicles_in_red = 0 
                 start_time= start_time + interval    
                 
-        if performance =="Comparison_volume" or performance =="Comparison_arrival_on_green ":
+        if performance =="Comparison_volume" or performance =="Comparison_arrival_on_green":
 
         
             #x values are times of a day and using a Formatter to formate them.
             #For avioding crowding the x axis with labels, using a Locator.
-            helsinkiTimezone = timezone('Europe/Helsinki')
-            fmt = mdates.DateFormatter('%m-%d %H:%M:%S', tz=helsinkiTimezone)
-            ax.xaxis.set_major_formatter(fmt) 
-            ax.xaxis_date() 
-            plt.setp( plt.gca().get_xticklabels(), rotation=45, horizontalalignment='right')
-            plt.tick_params(labelsize=6)             
+            
             if performance =="Comparison_volume":
+                helsinkiTimezone = timezone('Europe/Helsinki')
+                fmt = mdates.DateFormatter('%m-%d %H:%M:%S', tz=helsinkiTimezone)
+                ax.xaxis.set_major_formatter(fmt) 
+                ax.xaxis_date() 
+                plt.setp( plt.gca().get_xticklabels(), rotation=45, horizontalalignment='right')
+                plt.tick_params(labelsize=6)                 
                 ax.plot(start_time_list,number_vehicle_in_sum_list,marker ='o',linestyle=':', label= det_name)
                 ylabel('Volume per' + time_interval +"minutes")
                 xlabel('Time')
-                title("Comparison of volumes in different locations")            
-            elif performance =="Comparison_arrival_on_green":    
-                ax.plot(start_time_list,arrival_on_green_percent_format_list, marker ='d',linestyle='--',label=det_name)
+                title("Comparison of volumes in multiple directions at intersection " + location_name + " per " + time_interval +" minutes")            
+            else:   
+                helsinkiTimezone = timezone('Europe/Helsinki')
+                fmt = mdates.DateFormatter('%m-%d %H:%M:%S', tz=helsinkiTimezone)
+                ax.xaxis.set_major_formatter(fmt) 
+                ax.xaxis_date() 
+                plt.setp( plt.gca().get_xticklabels(), rotation=45, horizontalalignment='right')
+                plt.tick_params(labelsize=6)                 
+                ax.plot(start_time_list,arrival_on_green_percent_format_list, marker ='*',linestyle='-',label=det_name)
                 ylabel('Percentage of arrival on green')
                 xlabel('Times') 
-                title('Comparison of arrival on green percentage in different locations ')
+                title('Comparison of arrival on green percentage in multiple directions at ' + location_name + " per " + time_interval +" minutes")
         elif performance =="Comparison_arrival_on_green_ratio":
                         
             ax.plot(number_vehicle_in_sum_list,number_vehicles_in_green_list,marker ='o', linestyle ='.', label = det_name)
+            #Linear regression
+            #try:
+                #fit = np.polyfit(number_vehicle_in_sum_list,number_vehicles_in_green_list,1)
+                #fit_fn = np.poly1d(fit)
+                #plt.plot(number_vehicle_in_sum_list,number_vehicles_in_green_list,'yo',number_vehicle_in_sum_list,fit_fn(number_vehicle_in_sum_list),'--k')  
+            #except:
+                #pass 
             ylabel('number of vehicles arriving on green')
             xlabel('volume')
             title('Comparison of arrival on green ratio in different locations per ' + time_interval +' minutes at ' + location_name )
       
-        #Linear regression
-        #fit = np.polyfit(number_vehicle_in_sum_list,number_vehicles_in_green_list,1)
-        #fit_fn = np.poly1d(fit)
-        #plt.plot(number_vehicle_in_sum_list,number_vehicles_in_green_list,'yo',number_vehicle_in_sum_list,fit_fn(number_vehicle_in_sum_list),'--k')       
+      
     ax.legend(bbox_to_anchor=(1, 1), loc=2, borderaxespad=0.)
 
     return getBufferImage(fig)          

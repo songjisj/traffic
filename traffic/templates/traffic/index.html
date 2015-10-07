@@ -65,12 +65,13 @@
 	    }
 	    
 	    var detectorNotNeededArray = ["Green_duration","Percent_of_green_duration","Active_green","Saturation_flow_rate",
-	    "Comparison_volume","Comparison_arrival_on_green"];
+	    "Comparison_volume","Comparison_arrival_on_green","Comparison_arrival_on_green_ratio"];
 	    var detectorHidden = (detectorNotNeededArray.indexOf(selectedPerformance) > -1);
     
 	    elementDisplay(detectorHidden,'detectorLabelId','detectorSelectionId')
 	   
-	    var signalGroupNotNeededArray = ["Green_duration","Percent_of_green_duration"];
+	    var signalGroupNotNeededArray = ["Green_duration","Percent_of_green_duration",
+	    "Comparison_arrival_on_green","Comparison_arrival_on_green_ratio","Comparison_volume"];
 	    var signalGroupHidden = (signalGroupNotNeededArray.indexOf(selectedPerformance) > -1);
 	    
 	    elementDisplay(signalGroupHidden,'signalGroupLabelId','signalGroupSelectionId')
@@ -80,7 +81,8 @@
 	    
 	    elementDisplay(timeIntervalHidden,'timeIntervalLabelId', 'timeIntervalSelectionId')
 	    
-	    var multipleDetectorsNotNeededArray = ["Green_duration","Percent_of_green_duration","Active_green","Saturation_flow_rate"];
+	    var multipleDetectorsNotNeededArray = ["Green_duration","Percent_of_green_duration","Active_green","Saturation_flow_rate",
+	    "Arrival_on_green_ratio","Volume","Maximum_capacity"];
 	    var multipleDetectorsHidden = (multipleDetectorsNotNeededArray.indexOf(selectedPerformance) > -1);
 	                                  
 	    elementDisplay(multipleDetectorsHidden,'detectorMultipleLabelId', 'detectorMultipleSelectionId')

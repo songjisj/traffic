@@ -205,10 +205,10 @@ at the place with 60-meter distance to intersection stop line from 18:00 to 20:0
 
 <h3>Explanation</h3>
 
-<p style="font-size:18px">The percentage of arrival during green is the value that number of vehicles arriving on green divides the traffic volume 
-detected by a particular detector in a time period (5 minutes, 10 minutes and 1 hour etc.). 
-It is a useful traffic performance to indicate the efficiency of traffic signal control and deduce the density of traffic flow. As to the plot on this measurement,
-the x-axis is the start date and time of every interval, and y-axis shows the percentage. </p>
+<p style="font-size:18px">The percentage of arrival during green is the value that number of vehicles arriving on green divides the traffic volume detected 
+by a particular detector in a time period (5 minutes, 10 minutes and 1 hour etc.). It is a useful traffic performance to indicate the efficiency of traffic signal
+control and deduce the density of traffic flow. As to the plot on this measurement, the x-axis is the start date and time of every interval, and y-axis shows the percentage. 
+Two functions support this feature: Arrival on green by single detector and Comparison of arrival on green by multiple detectors. </p>
 
 <h3>Illustration</h3>
 
@@ -217,6 +217,33 @@ in Tampere from 6:00 to 18:00 on 10th, July. The time interval for counting vehi
 
 {% load staticfiles %}
 <img src="{% static "traffic/illustration/arrivalongreenpercent.png" %}"/> 
+
+<br></br>
+<p style="font-size:18px">The second image shows the result of comparison based on customized choice.  </p>
+
+{% load staticfiles %}
+<img src="{% static "traffic/illustration/comparisonarrivalongreen.png" %}"/> 
+<br></br>
+
+<h2>Comparison of arrival during green ratio </h2>
+
+<h3>Definition</h3>
+
+<p style="font-size:18px">Arrival during green is defined as vehicles arriving at intersection stop bar during green time. 
+The ratio is another measure from different dimensions related to arrival during green.</p>
+
+<h3>Explanation</h3>
+
+<p style="font-size:18px">The ratio of arrival during green is used to mine the relation between volume and arrival on green performance without time factor.
+As to the plot on this measurement, the x-axis is number of volume and y-axis shows the number of vehicle on green.
+The function can compare the performance in different directions. The color of dots indicate the value in different place.  </p>
+
+<h3>Illustration</h3>
+
+<p style="font-size:18px">The following image is the comparison of arrival during green ratio from different places by 10 minutes interval From 14:00 to 18:00 on 10, July, 2015. </p>
+
+{% load staticfiles %}
+<img src="{% static "traffic/illustration/comparisonarrivalongreenratio.png" %}"/> 
 
 <br></br>
 
