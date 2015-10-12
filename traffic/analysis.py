@@ -243,13 +243,14 @@ def get_queue_length(location_name,sg_name,det_name,time1,time2):
                 detector_occupied = False
         elif not green_on and s[2] in green_state_list:
             green_on = True
-            discharge_queue_time = s[0]
-            count_vehicle_in_queue_dict[discharge_queue_time] = count_vehicle_in_queue
-            queue_length = count_vehicle_in_queue * average_length_per_vehicle
-            f.write("{} {} {}\n".format(discharge_queue_time,count_vehicle_in_queue,queue_length))             
+        
             count_vehicle_in_queue = 0 
         elif green_on and s[2] not in green_state_list:
             green_on =False 
+            discharge_queue_time = s[0]
+            count_vehicle_in_queue_dict[discharge_queue_time] = count_vehicle_in_queue
+            queue_length = count_vehicle_in_queue * average_length_per_vehicle
+            f.write("{} {} {}\n".format(discharge_queue_time,count_vehicle_in_queue,queue_length))                 
     f.close() 
     shutil.copyfile("traffic/static/traffic/result.csv", "traffic/static/traffic/result.txt")
     
@@ -334,9 +335,7 @@ def get_green_time_2(location_name, time1,time2,performance):
     ax.xaxis_date()
     plt.setp( plt.gca().get_xticklabels(), rotation=45, horizontalalignment='right')
     plt.tick_params(labelsize=6)    
-    xlabel('Time')
-    ylabel('Green duration(s) per cycle' )
-    title('Signalgroup Green Duration in '+location_name)    
+
     
     for sg_index in list(sg_dict.keys()):
         sg_name = sg_dict[sg_index] 
@@ -374,8 +373,14 @@ def get_green_time_2(location_name, time1,time2,performance):
             
         if performance == "Green_duration":
             ax.plot(start_green_time_list, minimum_green_list, marker='o', linestyle='-', label = "sg"+sg_name) 
+            xlabel('Time')
+            ylabel('Green duration(seconds) per cycle' )
+            title('Signalgroup Green Duration in '+location_name)                
         if performance == "Percent_of_green_duration":
             ax.plot(start_cycle_time_list, percent_green_list, marker='o', linestyle='-', label = "sg"+sg_name) 
+            xlabel('Time')
+            ylabel('The percent of green duration per cycle' )
+            title('The percentage of green Duration in '+location_name)                
     ax.legend(bbox_to_anchor=(1, 1), loc=2, borderaxespad=0.)
     f.close() 
     
@@ -501,7 +506,7 @@ def get_maxCapacity(location_name,sg_name,det_name,time_interval,time1,time2):
     try:
         start_time = sg_status[0][0] 
     except:
-        start_time = "10/07/2015 19:00" 
+        start_time = "10/07/2015 19:00:00" 
     
     
     f = open("traffic/static/traffic/result.csv","w+") #create a csv file to save data in.
@@ -838,7 +843,7 @@ def get_compared_arrival_on_green_ratio(location_name,det_name_list,time_interva
                 number_vehicles_in_red = 0 
                 start_time= start_time + interval    
                 
-        if performance =="Comparison_volume" or performance =="Comparison_arrival_on_green":
+        if performance =="Comparison_volume" or performance =="Comparison_arrival_on_green": 
 
         
             #x values are times of a day and using a Formatter to formate them.

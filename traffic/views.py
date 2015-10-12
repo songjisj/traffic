@@ -132,7 +132,7 @@ def index(request):
         elif selectedPerformance == "Active_green":
             image = get_green_time(selectedLocation, selectedSgName, startTimeStringTimeZone, endTimeStringTimeZone)
         elif selectedPerformance =="Maximum_capacity":
-            image = get_maxCapacity(selectedLocation,selectedSgName,selectedDetector,"",selectedTimeInterval,startTimeStringTimeZone,endTimeStringTimeZone)
+            image = get_maxCapacity(selectedLocation,selectedSgName,selectedDetector,selectedTimeInterval,startTimeStringTimeZone,endTimeStringTimeZone)
         elif selectedPerformance =="Arrival_on_green_percent":
             image = get_arrival_on_green(selectedLocation,selectedSgName,selectedDetector,selectedTimeInterval,startTimeStringTimeZone,endTimeStringTimeZone,selectedPerformance)
         elif selectedPerformance =="Volume":
