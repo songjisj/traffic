@@ -259,7 +259,7 @@ def convert_time_interval_str_to_timedelta(time_interval):
 
 
 def addCapacityInList(start_time_list, start_time, sum_green, max_capacity_list):
-    default_saturation_flow_rate = 1500 
+    default_saturation_flow_rate = 1200 
     start_time_list.append(start_time)
     max_capacity = default_saturation_flow_rate*(sum_green/3600)
     max_capacity_list.append(max_capacity)  

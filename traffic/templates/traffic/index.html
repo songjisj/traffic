@@ -110,7 +110,9 @@
     <script type="text/javascript">
 	$(function () {
 	    $('#datetimepicker1').datetimepicker({
-		format: 'DD/MM/YYYY HH:mm'
+		format: 'DD/MM/YYYY HH:mm',
+		
+		
 	    });
 	    $('#datetimepicker2').datetimepicker({
 		format: 'DD/MM/YYYY HH:mm',
@@ -289,7 +291,7 @@
 		{% if startTimeString %}
 		    <input type='text' class="form-control" name="starttime" value={{startTimeString}}/>
 		{% else %}
-		    <input type='text' class="form-control" name="starttime" value="10/07/2015 18:00"/>
+		    <input type='text' class="form-control" name="starttime" value={{current_datetime}}/>
 		{% endif %}
 		    <span class="input-group-addon">
 			<span class="glyphicon glyphicon-calendar"></span>
@@ -302,7 +304,7 @@
 		    {% if endTimeString %}
 			<input type='text' class="form-control" name="endtime" value={{endTimeString}} />
 		    {% else %}
-			<input type='text' class="form-control" name="endtime" value="10/07/2015 19:00"/>
+			<input type='text' class="form-control" name="endtime" value={{current_datetime}}/>
 		    {% endif %}
 		    <span class="input-group-addon">
 			<span class="glyphicon glyphicon-calendar"></span>

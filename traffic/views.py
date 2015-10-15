@@ -96,14 +96,19 @@ def index(request):
             selectedTimeInterval = timeIntervalList[0]
  
     form = ContactForm(request.POST)
-     
+    
+
+
     # select start and end time   
     startTimeString = request.POST.get('starttime',"")
     endTimeString = request.POST.get('endtime',"")
-    print(startTimeString)
-    print(endTimeString)
+    #print(startTimeString)
+    #print(endTimeString)
     helsinkiTimezone = timezone('Europe/Helsinki')
     timeZone = datetime.datetime.now(helsinkiTimezone).strftime('%z')
+    #get current datetime
+    current_datetime = datetime.datetime.now(helsinkiTimezone).strftime('%d-%m-%Y %H:%M')  
+    print((current_datetime)) 
     
     measuresList = ["Saturation_flow_rate","Percent_of_green_duration","Green_duration","Queue_length","Active_green",
                     "Maximum_capacity","Arrival_on_green_percent","Volume","Arrival_on_green_ratio","Comparison_volume",
@@ -159,6 +164,7 @@ def index(request):
                'selectedDetectorList':selectedDetectorList, 
                'startTimeString':startTimeString,
                'endTimeString':endTimeString,
+               'current_datetime':current_datetime,
                'fileReader':fileReader,
                'lineNum':lineNum,
                'form':form,
