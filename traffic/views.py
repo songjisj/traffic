@@ -37,7 +37,7 @@ def index(request):
     selectedDetectorList = []
     selectedDetector = ""
     startTimeString =""
-    timeIntervalList =["5","10","20","30","60"] 
+    timeIntervalList =["5","10","15","30","60","120"] 
     #Select performance 
     try:
         selectedPerformance = request.POST['performance']
@@ -110,9 +110,9 @@ def index(request):
     current_datetime = datetime.datetime.now(helsinkiTimezone).strftime('%d-%m-%Y %H:%M')  
     print((current_datetime)) 
     
-    measuresList = ["Saturation_flow_rate","Percent_of_green_duration","Green_duration","Queue_length","Active_green",
+    measuresList =sorted(["Saturation_flow_rate","Percent_of_green_duration","Green_duration","Queue_length","Active_green",
                     "Maximum_capacity","Arrival_on_green_percent","Volume","Arrival_on_green_ratio","Comparison_volume",
-                    "Comparison_arrival_on_green","Comparison_arrival_on_green_ratio","Green_time_in_interval"] 
+                    "Comparison_arrival_on_green","Comparison_arrival_on_green_ratio","Green_time_in_interval"] )
     
     
     #display csv file 

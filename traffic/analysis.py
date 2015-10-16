@@ -338,6 +338,8 @@ def get_green_time_2(location_name, time1,time2,performance):
 
     
     for sg_index in list(sg_dict.keys()):
+        colors = ['skyblue', 'blue', 'c', 'purple','red','green','black','#330099','#FF33FF',
+                  '#CC9966','#669900','#663333','#006600','#FF9999','#99FFFF','#006666','#c0c0c0','#666666']         
         sg_name = sg_dict[sg_index] 
         minimum_green_list = []
         start_green_time_list =[]
@@ -372,12 +374,12 @@ def get_green_time_2(location_name, time1,time2,performance):
 
             
         if performance == "Green_duration":
-            ax.plot(start_green_time_list, minimum_green_list, marker='o', linestyle='-', label = "sg"+sg_name) 
+            ax.plot(start_green_time_list, minimum_green_list, marker='o', linestyle='-', label = "sg"+sg_name, color=colors[sg_index]) 
             xlabel('Time')
             ylabel('Green duration(seconds) per cycle' )
             title('Signalgroup Green Duration in '+location_name)                
         if performance == "Percent_of_green_duration":
-            ax.plot(start_cycle_time_list, percent_green_list, marker='o', linestyle='-', label = "sg"+sg_name) 
+            ax.plot(start_cycle_time_list, percent_green_list, marker='o', linestyle='-', label = "sg"+sg_name,color=colors[sg_index]) 
             xlabel('Time')
             ylabel('The percent of green duration per cycle' )
             title('The percentage of green Duration in '+location_name)                
@@ -903,11 +905,7 @@ def get_green_time_in_interval(location_name, time_interval,time1,time2):
     sg_dict = get_sg_config_in_one(location_name)
     
     print(sg_dict) 
-    
-    try:
-        start_time = main_data[0][0] 
-    except:
-        start_time = "10/07/2015 19:00"    
+  
         
     f = open("traffic/static/traffic/result.csv","w+") #create a csv file to save data in.
         
@@ -927,13 +925,18 @@ def get_green_time_in_interval(location_name, time_interval,time1,time2):
 
     for sg_index in list(sg_dict.keys()):
         
+        try:
+            start_time = main_data[0][0] 
+        except:
+            start_time = "10/07/2015 19:00"          
         sg_name = sg_dict[sg_index] 
         minimum_green_list = []
         start_green_time_list =[]
         green_on = False
         start_interval_time_list =[]
         green_time_in_interval_list = []
-        
+        colors = ['skyblue', 'blue', 'c', 'purple','red','green','black','#330099','#FF33FF',
+                  '#CC9966','#669900','#663333','#006600','#FF9999','#99FFFF','#006666','#c0c0c0','#666666'] 
         for r in main_data:
             if r[0] < start_time + interval:
                 if not green_on and r[1][sg_index] in green_state_list:
@@ -957,11 +960,14 @@ def get_green_time_in_interval(location_name, time_interval,time1,time2):
         ax.xaxis_date()
         plt.setp( plt.gca().get_xticklabels(), rotation=45, horizontalalignment='right')
         plt.tick_params(labelsize=6)                   
-        ax.plot(start_interval_time_list,green_time_in_interval_list,marker = 'o', linestyle = '--',label = sg_name)
+        ax.plot(start_interval_time_list,green_time_in_interval_list,marker = 'o', linestyle = '--',label = "sg "+sg_name,color=colors[sg_index])
         print(sg_name)
         
             
     ax.legend(bbox_to_anchor=(1, 1), loc=2, borderaxespad=0.)
+    xlabel("time")
+    ylabel("Green time in seconds ")
+    title("Green time of signals  at " + location_name +" by " + str(time_interval) + " minutes")      
     f.close() 
     
     shutil.copyfile("traffic/static/traffic/result.csv", "traffic/static/traffic/result.txt")
