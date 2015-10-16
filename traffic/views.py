@@ -112,7 +112,7 @@ def index(request):
     
     measuresList = ["Saturation_flow_rate","Percent_of_green_duration","Green_duration","Queue_length","Active_green",
                     "Maximum_capacity","Arrival_on_green_percent","Volume","Arrival_on_green_ratio","Comparison_volume",
-                    "Comparison_arrival_on_green","Comparison_arrival_on_green_ratio"] 
+                    "Comparison_arrival_on_green","Comparison_arrival_on_green_ratio","Green_time_in_interval"] 
     
     
     #display csv file 
@@ -149,7 +149,11 @@ def index(request):
         elif selectedPerformance =="Comparison_arrival_on_green":
             image = get_compared_arrival_on_green_ratio(selectedLocation, selectedDetectorList,selectedTimeInterval,startTimeStringTimeZone,endTimeStringTimeZone,selectedPerformance)
         elif selectedPerformance =="Comparison_arrival_on_green_ratio":
-            image = get_compared_arrival_on_green_ratio(selectedLocation, selectedDetectorList,selectedTimeInterval,startTimeStringTimeZone,endTimeStringTimeZone,selectedPerformance)        
+            image = get_compared_arrival_on_green_ratio(selectedLocation, selectedDetectorList,selectedTimeInterval,startTimeStringTimeZone,endTimeStringTimeZone,selectedPerformance) 
+        elif selectedPerformance == "Green_time_in_interval":
+            image = get_green_time_in_interval(selectedLocation, selectedTimeInterval, 
+                                              startTimeStringTimeZone, 
+                                              endTimeStringTimeZone)
     context = {'locationNameList':locationNameList, 
                'selectedPerformance':selectedPerformance,
                'measuresList':measuresList,

@@ -890,5 +890,80 @@ def get_compared_arrival_on_green_ratio(location_name,det_name_list,time_interva
 
     return getBufferImage(fig)          
         
+def get_green_time_in_interval(location_name, time_interval,time1,time2): 
+    
+    green_on = False
+
+    start_green_time = None    
+    
+    interval = convert_time_interval_str_to_timedelta(time_interval)
+    
+    main_data = get_main_data(location_name, time1, time2) #main_data[tt,grint,dint,seq] 
+    
+    sg_dict = get_sg_config_in_one(location_name)
+    
+    print(sg_dict) 
+    
+    try:
+        start_time = main_data[0][0] 
+    except:
+        start_time = "10/07/2015 19:00"    
         
+    f = open("traffic/static/traffic/result.csv","w+") #create a csv file to save data in.
         
+    writer = csv.DictWriter(f, fieldnames = ["sg_name","start_interval_time","green_duration(seconds)_in_interval"], delimiter = ';')
+    writer.writeheader()       
+    
+    fig =plt.figure(figsize=(10,6),facecolor='#8FBC8F')  #figsize argument is for resizing the figure.
+    ax =fig.add_subplot(111) #fig.add_subplot equivalent to fig.add_subplot(1,1,1), means subplot(nrows.,ncols, plot_number)
+    
+    plt.subplots_adjust(left=0.07, bottom=0.1, right=0.85, top=0.9, wspace=None, hspace=None)
+    
+    #x values are times of a day and using a Formatter to formate them.
+    #For avioding crowding the x axis with labels, using a Locator.
+    helsinkiTimezone = timezone('Europe/Helsinki')
+    fmt = mdates.DateFormatter('%m-%d %H:%M:%S', tz=helsinkiTimezone) 
+ 
+
+    for sg_index in list(sg_dict.keys()):
+        
+        sg_name = sg_dict[sg_index] 
+        minimum_green_list = []
+        start_green_time_list =[]
+        green_on = False
+        start_interval_time_list =[]
+        green_time_in_interval_list = []
+        
+        for r in main_data:
+            if r[0] < start_time + interval:
+                if not green_on and r[1][sg_index] in green_state_list:
+                    start_green_time = r[0]
+                    green_on = True
+                    
+                elif green_on and r[1][sg_index] not in green_state_list:
+                    minimum_green = timedelta.total_seconds(r[0]-start_green_time)
+                    green_on = False 
+                    minimum_green_list.append(minimum_green)
+                    
+            else: 
+                green_time_in_interval = sum(minimum_green_list)  
+                start_interval_time_list.append(start_time) 
+                green_time_in_interval_list.append(green_time_in_interval) 
+                
+                f.write("{} {} {}  \n".format(sg_name,start_time,green_time_in_interval)) 
+                minimum_green_list = []
+                start_time = start_time + interval 
+        ax.xaxis.set_major_formatter(fmt)   
+        ax.xaxis_date()
+        plt.setp( plt.gca().get_xticklabels(), rotation=45, horizontalalignment='right')
+        plt.tick_params(labelsize=6)                   
+        ax.plot(start_interval_time_list,green_time_in_interval_list,marker = 'o', linestyle = '--',label = sg_name)
+        print(sg_name)
+        
+            
+    ax.legend(bbox_to_anchor=(1, 1), loc=2, borderaxespad=0.)
+    f.close() 
+    
+    shutil.copyfile("traffic/static/traffic/result.csv", "traffic/static/traffic/result.txt")
+    
+    return getBufferImage(fig)
