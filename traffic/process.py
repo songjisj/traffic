@@ -7,6 +7,9 @@ import psycopg2.extras
 from operator import itemgetter
 from datetime import timedelta
 import base64
+import csv
+from pytz import timezone
+
 
 conn_string = "host='localhost' dbname='tfg-db' user='postgres' password='4097' port='5432'"
 
@@ -142,25 +145,39 @@ def get_det_config_in_one_sg(location_name, sg_name):
     disconnect_db(conn)
     return detectors
 
-#Function get_main_data returns raw data whose columns are timestamp, grint, dint
-#Parameters: location_name, conn_string, the selected start time and end time.
-def get_main_data(location_name, time1,time2):
+
+def get_main_data(location_name, time1, time2):
+    """ Function get_main_data returns raw data whose columns are timestamp, grint, dint.
+    :param location_name: Location name = well known intersection name
+    :param time1: Time of oldest raw data entry to retrieve, inclusive
+    :param time2: Time of latest raw data entry
+    :return: Sorted list of raw data
+    """
     conn = connect_db()
     location_id = get_location_id(location_name)
-    cursor = conn.cursor('cursor_unique_name', cursor_factory = psycopg2.extras.DictCursor)
-    cursor.execute("SELECT tt, grint, dint,seq FROM tf_raw WHERE fk_cid = '" + str(location_id) + "' AND tt >= '" + str(time1) + "' AND tt < '" + str(time2)+"'")
-    print(str(time1))
-    print(str(time2))
-    rows =cursor.fetchall()
+    cursor = conn.cursor('cursor_unique_name', cursor_factory=psycopg2.extras.DictCursor)
+    cursor.execute("SELECT tt, grint, dint,seq FROM tf_raw WHERE fk_cid =  %s AND tt >= %s AND tt < %s", (location_id, time1, time2))
+    rows = cursor.fetchall()
     main_data = []
     for i in range(len(rows)):
         rows[i][0].strftime("%Y-%m-%d %H:%M:%S")
         main_data.append(rows[i])
-    main_data = sorted(main_data,key=itemgetter(3,0))
-    
-    disconnect_db(conn)
-    return main_data 
+    main_data = sorted(main_data, key=itemgetter(3, 0))
 
+    disconnect_db(conn)
+    return main_data
+
+def get_location_name_list():
+    conn = connect_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT distinct cid,  cname FROM controller")
+    rows =cursor.fetchall()
+    location_name_list =[]
+    for i in range(len(rows)):
+        location_name_list.append(rows[i][1])
+    disconnect_db(conn)
+    return location_name_list
+    
 
 #This function is used to filter the status of single signalgroup with timestamp.
 #Parameters:
@@ -340,3 +357,28 @@ def count_volume_and_arrival_on_green(sg_state,det_state,interval,start_time,tim
         number_vehicles_in_red = 0 
         start_time= start_time + interval 
     return(start_time_list,number_vehicle_in_sum_list,arrival_on_green_percent_format_list) 
+
+def open_csv_file(headers_list):
+    file = open("traffic/static/traffic/result.csv","w+")
+    writer = csv.DictWriter(file, fieldnames = headers_list, delimiter = ';')
+    writer.writeheader()       
+    return file 
+
+def get_one_plot_figure():
+    fig =plt.figure(figsize=(10,6),facecolor='#99CCFF')  #figsize argument is for resizing the figure.
+    #ax =fig.add_subplot(111) #fig.add_subplot equivalent to fig.add_subplot(1,1,1), means subplot(nrows.,ncols, plot_number)    
+    #plt.subplots_adjust(left=0.07, bottom=0.1, right=0.85, top=0.9, wspace=None, hspace=None)
+    grid(True)
+    return fig
+
+def format_axis_date():
+    #x values are times of a day and using a Formatter to formate them.
+    #For avioding crowding the x axis with labels, using a Locator.    
+    helsinkiTimezone = timezone('Europe/Helsinki')
+    fmt = mdates.DateFormatter('%m-%d %H:%M:%S', tz=helsinkiTimezone)
+    return fmt 
+
+def file_close_and_copy(file):
+    import shutil
+    file.close()
+    shutil.copyfile("traffic/static/traffic/result.csv", "traffic/static/traffic/result.txt")      

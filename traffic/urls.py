@@ -3,7 +3,6 @@ from traffic.views import *
 
 urlpatterns = patterns('',
     url(r'^$', home, name='home'),
-    url(r'^questions/$', questions, name='questions'),
     url(r'^index/$', index, name='index'),
     url(r'^measuresinfo', measuresinfo,name='measuresinfo'),
     url(r'^maps', maps,name='maps'),

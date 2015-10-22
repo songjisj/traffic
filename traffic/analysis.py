@@ -7,7 +7,6 @@ from pytz import timezone
 from dateutil import parser
 import shutil
 import numpy as np
-
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
@@ -15,12 +14,15 @@ GREEN = "GREEN"
 AMBER = "AMBER"
 RED = "RED"
 UNKNOWN = "UNKNOWN"
-green_state_list = ["0", "1", "3", "4", "5", "6", "7", "8", ":"]
+green_state_list = [ "1", "3", "4", "5", "6", "7", "8", ":"]
 conn_string = "host='localhost' dbname='tfg-db' user='postgres' password='4097' port='5432'"
 
-#active green
+
 def get_green_time(location_name,sg_name,time1,time2):
-   
+    """get_green_time is the function to visulize active green and passive green for a single selected signal group. 
+       The parameters are the name of location, the name of the signal group , the start time and end time. 
+       The plot has two sub plots based on two different definition of active and passive green.
+    """   
     activate_green_state_list = ["0","1","3","5","6","7","8",":"] 
     passive_green_state_list = ["4"]
     
@@ -40,11 +42,8 @@ def get_green_time(location_name,sg_name,time1,time2):
     total_passive_green_state_time = 0
     active_green_state_time =0
     
-    f = open("traffic/static/traffic/result.csv","w+") #create a csv file to save data in.
-    
-    writer = csv.DictWriter(f, fieldnames = ["start_green_time","active_green_duration(seconds)","passive_green_duration(seconds)","active_green_duration_from_grint","passive_green_from_grint"], delimiter = ';')
-    writer.writeheader()    
-    
+    f = open_csv_file(["start_green_time","active_green_duration(seconds)","passive_green_duration(seconds)","active_green_duration_from_grint","passive_green_from_grint"])
+
     for s in sg_status:
         
         # start to be green
@@ -86,19 +85,12 @@ def get_green_time(location_name,sg_name,time1,time2):
             useless_green_list.append(useless_green)
             f.write("{} {} {} {} {}\n".format(start_green_time,active_green,useless_green,active_green_state_time,total_passive_green_state_time)) 
             total_passive_green_state_time = 0
-            
-    f.close() #close the file after saving.
-    shutil.copyfile("traffic/static/traffic/result.csv", "traffic/static/traffic/result.txt")
+    file_close_and_copy(f)
     
-    fig =plt.figure(figsize=(10,6),facecolor='#FFFFCC')  #figsize argument is for resizing the figure.
+    fig =get_one_plot_figure()
     fig.suptitle('Signalgroup Green Duration: sg '+ sg_name+ ' in '+location_name, fontsize=14, fontweight='bold')
-    
 
     ax =fig.add_subplot(211) #fig.add_subplot equivalent to fig.add_subplot(1,1,1), means subplot(nrows.,ncols, plot_number)
-    
-    
-    #x values are times of a day and using a Formatter to formate them.
-    #For avioding crowding the x axis with labels, using a Locator.
     helsinkiTimezone = timezone('Europe/Helsinki')
     fmt = mdates.DateFormatter('%m-%d %H:%M:%S', tz=helsinkiTimezone)
     fmt2 = mdates.DateFormatter('%H:%M:%S', tz=helsinkiTimezone)
@@ -126,95 +118,15 @@ def get_green_time(location_name,sg_name,time1,time2):
     return getBufferImage(fig)    
 
 
-def get_capacity(location_name,sg_name,det_name,time1,time2):   
-    
-    sg_det_status = get_sg_det_status(location_name,sg_name,det_name,time1,time2) #sg_det_status[time,seq,grint,dint]
-     
-    green_on = False
-     
-    detector_occupied = False 
-     
-    detector_occupied_time = None
-     
-    count_vehicle = 0 
-     
-    detector_occupied_time_list_on_green = []
-     
-    successive_vehicle_end_index = 6
-     
-    successive_vehicle_start_index =2
-     
-    time_diff = 0
-    
-    time_diff_list = []
-     
-    start_green_time = None
-     
-    start_green_time_list = [] 
-     
-    saturation_flow_rate = 0 
-     
-    saturation_flow_rate_list = []
-    
-    saturation_flow_rate_pair_list = []
-    
-    sum_green_duration = 0 
-     
-    for s in sg_det_status:
-        if not green_on and s[2] in green_state_list:
-            green_on =True
-            start_green_time = s[0]
-            start_green_time_list.append(start_green_time)
-        elif green_on and s[2] in green_state_list:
-            if not detector_occupied and s[3]=="1":
-                detector_occupied_time = s[0]
-                detector_occupied = True
-                detector_occupied_time_list_on_green.append(detector_occupied_time) 
-                count_vehicle = count_vehicle+1
-                 
-            elif detector_occupied and s[3]=="0":
-                detector_occupied = False 
-        elif green_on and s[2] not in green_state_list:
-            green_on =False 
-            sum_green_duration = timedelta.total_seconds(s[0]-start_green_time) + sum_green_duration 
-
-            if len(detector_occupied_time_list_on_green) > 10: 
-                time_diff=(detector_occupied_time_list_on_green[successive_vehicle_end_index]-detector_occupied_time_list_on_green[successive_vehicle_start_index])/4
-                saturation_flow_rate = 3600/time_diff.total_seconds()  
-                time_diff_list.append(time_diff.total_seconds())
-                saturation_flow_rate_pair = [saturation_flow_rate,detector_occupied_time_list_on_green[1]]
-                saturation_flow_rate_pair_list.append(saturation_flow_rate_pair) 
-                saturation_flow_rate_list.append(saturation_flow_rate)
-            detector_occupied_time_list_on_green = []
-            count_vehicle = 0 
-    mean_saturation = mean_in_list(saturation_flow_rate_list)
-    headway = mean_in_list(time_diff_list)
-    maximum_capacity = mean_saturation * sum_green_duration / (parser.parse(time2) - parser.parse(time1)).total_seconds()
-
-    
-    #write csv file
-    f = open("traffic/static/traffic/result.csv","w+") #create a csv file to save data in.
-    f.writelines(["headway", str(headway),'\n'])
-    f.writelines(["saturation_flow_rate", str(mean_saturation),'\n'])
-    f.writelines(["maximum_capacity", str(round(maximum_capacity)),'\n'])
-    f.close 
-    
-    #plot 
-    
-    y = [mean_saturation,maximum_capacity]
-    x = list(range(len(y)))
-    plt.bar(x,y,width=0.1,color = "blue")
-    
-    return getBufferImage(plt.gcf())
-
 def get_queue_length(location_name,sg_name,det_name,time1,time2): 
-    
-        
+    """Function get_queue_length is used to calculate that until the end of red, the number of vehicles in the queue and the length of queue in meters.
+       The parameters of the function include location name, signal name, detector name, the start time and end time.
+       The plot is a bar chart with dual y-axis.
+    """    
     
     sg_det_status = get_sg_det_status(location_name,sg_name,det_name,time1,time2) #sg_det_status[time,seq,grint,dint]
     
     green_on = True
-    
     
     discharge_queue_time = None
     
@@ -225,14 +137,9 @@ def get_queue_length(location_name,sg_name,det_name,time1,time2):
     count_vehicle_in_queue_dict = {}
     
     average_length_per_vehicle = 8 
-    
-    # "w+" means empty the file before starting writing.
-    f = open("traffic/static/traffic/result.csv","w+")
-    
-    #Write header
-    writer = csv.DictWriter(f, fieldnames = ["discharge_queue_time","number of vehicles","The length of queue(meters)"], delimiter = ';')
-    writer.writeheader()        
-    
+
+    f = open_csv_file(["discharge_queue_time","number of vehicles","The length of queue(meters)"])
+
     for s in sg_det_status:
         
         if not green_on and s[2] not in green_state_list:
@@ -244,23 +151,19 @@ def get_queue_length(location_name,sg_name,det_name,time1,time2):
         elif not green_on and s[2] in green_state_list:
             green_on = True
         
-            count_vehicle_in_queue = 0 
+            
         elif green_on and s[2] not in green_state_list:
             green_on =False 
             discharge_queue_time = s[0]
             count_vehicle_in_queue_dict[discharge_queue_time] = count_vehicle_in_queue
             queue_length = count_vehicle_in_queue * average_length_per_vehicle
-            f.write("{} {} {}\n".format(discharge_queue_time,count_vehicle_in_queue,queue_length))                 
-    f.close() 
-    shutil.copyfile("traffic/static/traffic/result.csv", "traffic/static/traffic/result.txt")
+            f.write("{} {} {}\n".format(discharge_queue_time,count_vehicle_in_queue,queue_length))        
+            count_vehicle_in_queue = 0 
+    file_close_and_copy(f)
     
-    fig =plt.figure(figsize=(10,6),facecolor='#669999')  #figsize argument is for resizing the figure.
+    fig=get_one_plot_figure()
     ax =fig.add_subplot(111) #fig.add_subplot equivalent to fig.add_subplot(1,1,1), means subplot(nrows.,ncols, plot_number)
-    
-    
-    #The following segment codes is for formatting xaxis and show the correct time in Helsinki timezone.
-    helsinkiTimezone = timezone('Europe/Helsinki')
-    fmt = mdates.DateFormatter('%m-%d %H:%M:%S', tz=helsinkiTimezone)
+    fmt=format_axis_date()
     ax.xaxis.set_major_formatter(fmt) 
     ax.xaxis_date()
     plt.setp( plt.gca().get_xticklabels(), rotation=45, horizontalalignment='right')
@@ -301,42 +204,33 @@ def get_queue_length(location_name,sg_name,det_name,time1,time2):
     # The second parameter of title is for not overlapping title with yaxis on the top. Title has x and y arguments.
     title('Queue length: sg '+ sg_name+ ' in '+location_name + 'detected by' + det_name, y =1.05)  
     
-    
-    
     return getBufferImage(fig)
 
+
+
 def get_green_time_2(location_name, time1,time2,performance): 
-    
+    """Function get_green_time_2 is the function that shows the green duration of all the signals in a selected location.
+       The parameters include location name, the start time and end time and performance. Especially, performance is the string of the selected performance. 
+       Based on the selected performance, the plot shows the green duration of all the signal groups in seconds or in percentage.
+    """    
     green_on = False
 
     start_green_time = None    
-    
     
     main_data = get_main_data(location_name, time1, time2) #main_data[tt,grint,dint,seq] 
     
     sg_dict = get_sg_config_in_one(location_name)
     
+    f = open_csv_file(["sg_name","start_green_time","green_duration(seconds)","cycle_duration","percent_of_green"]) 
     
-    f = open("traffic/static/traffic/result.csv","w+") #create a csv file to save data in.
-    
-    writer = csv.DictWriter(f, fieldnames = ["sg_name","start_green_time","green_duration(seconds)","cycle_duration","percent_of_green"], delimiter = ';')
-    writer.writeheader()   
-    
-    fig =plt.figure(figsize=(10,6),facecolor='#8FBC8F')  #figsize argument is for resizing the figure.
+    fig=get_one_plot_figure()
     ax =fig.add_subplot(111) #fig.add_subplot equivalent to fig.add_subplot(1,1,1), means subplot(nrows.,ncols, plot_number)
-    
-    plt.subplots_adjust(left=0.07, bottom=0.1, right=0.85, top=0.9, wspace=None, hspace=None)
-    
-    #x values are times of a day and using a Formatter to formate them.
-    #For avioding crowding the x axis with labels, using a Locator.
-    helsinkiTimezone = timezone('Europe/Helsinki')
-    fmt = mdates.DateFormatter('%m-%d %H:%M:%S', tz=helsinkiTimezone) 
+    fmt=format_axis_date()
     ax.xaxis.set_major_formatter(fmt)   
     ax.xaxis_date()
     plt.setp( plt.gca().get_xticklabels(), rotation=45, horizontalalignment='right')
     plt.tick_params(labelsize=6)    
-
-    
+  
     for sg_index in list(sg_dict.keys()):
         colors = ['skyblue', 'blue', 'c', 'purple','red','green','black','#330099','#FF33FF',
                   '#CC9966','#669900','#663333','#006600','#FF9999','#99FFFF','#006666','#c0c0c0','#666666']         
@@ -354,8 +248,7 @@ def get_green_time_2(location_name, time1,time2,performance):
             if not green_on and r[1][sg_index] in green_state_list:
                 start_green_time = r[0]
                 green_on = True
-                
-                
+                   
             elif green_on and r[1][sg_index] not in green_state_list:
                 count = count +1 
                 if count>1:
@@ -371,8 +264,7 @@ def get_green_time_2(location_name, time1,time2,performance):
                 minimum_green_list.append(minimum_green)
                 green_end_time = r[0] 
                 f.write("{} {} {} {} {}\n".format(sg_name,start_green_time,minimum_green,cycle_duration,percent_green)) 
-
-            
+                
         if performance == "Green_duration":
             ax.plot(start_green_time_list, minimum_green_list, marker='o', linestyle='-', label = "sg"+sg_name, color=colors[sg_index]) 
             xlabel('Time')
@@ -384,26 +276,23 @@ def get_green_time_2(location_name, time1,time2,performance):
             ylabel('The percent of green duration per cycle' )
             title('The percentage of green Duration in '+location_name)                
     ax.legend(bbox_to_anchor=(1, 1), loc=2, borderaxespad=0.)
-    f.close() 
-    
-    shutil.copyfile("traffic/static/traffic/result.csv", "traffic/static/traffic/result.txt")
+    file_close_and_copy(f)
     
     return getBufferImage(fig)
 
 
-#Saturation flow rate crossing a signalized stop line is define as the number of vechiles per hour that could cross the line if the signal remained green all of the time 
-#The time of passage of the third and last third vehicles over several cycles to determine this value in this function. 
-#The first few vehicles and the last vehicles are excluded because of starting up the queue or represent the arrival rate.  
-def get_saturation_flow_rate(location_name,sg_name,time1,time2):
-    
-    main_data = get_main_data(location_name,  time1, time2)  #[tt,gint,dint,seq]
+def get_saturation_flow_rate(location_name, sg_name, time1, time2):
+    """Saturation flow rate crossing a signalized stop line is define as the number of vechiles per hour that could cross the line if the signal remained green all of the time 
+       The time of passage of the third and last third vehicles over several cycles to determine this value in this function. 
+       The first few vehicles and the last vehicles are excluded because of starting up the queue or represent the arrival rate.
+    """ 
+    main_data = get_main_data(location_name, time1, time2)  # [tt,gint,dint,seq]
     sg_pairs = get_sg_config_in_one(location_name)
     for idx, name in list(sg_pairs.items()):
         if name == sg_name:
             sg_index = idx
             break      
     det_dict = get_det_config_in_one_sg(location_name, sg_name)
-
 
     required_vehicle_number = 8
     
@@ -412,10 +301,7 @@ def get_saturation_flow_rate(location_name,sg_name,time1,time2):
     mean_saturation_by_det_list = []
     xlabel_list = []
     
-    f = open("traffic/static/traffic/result.csv","w+") #create a csv file to save data in.
-    
-    writer = csv.DictWriter(f, fieldnames = ["det_name","saturation_flow_rate"], delimiter = ';')
-    writer.writeheader()    
+    f = open_csv_file(["det_name","saturation_flow_rate"]) 
     
     for det_index in list(det_dict.keys()):
         det_name = det_dict[det_index]
@@ -476,9 +362,7 @@ def get_saturation_flow_rate(location_name,sg_name,time1,time2):
         mean_saturation_by_det_list.append(mean_saturation_by_det) 
         xlabel_list.append(det_name)
         f.write("{} {}\n".format(det_name, mean_saturation_by_det)) 
-    f.close()
-    shutil.copyfile("traffic/static/traffic/result.csv", "traffic/static/traffic/result.txt")  
-    
+    file_close_and_copy(f)
     
     plt.bar(list(range(len(mean_saturation_by_det_list))),mean_saturation_by_det_list,width=0.009,color = "r", align='center')
     plt.xticks(list(range(len(mean_saturation_by_det_list))),xlabel_list)
@@ -489,13 +373,13 @@ def get_saturation_flow_rate(location_name,sg_name,time1,time2):
     return getBufferImage(plt.gcf())
 
 
-def get_maxCapacity(location_name,sg_name,det_name,time_interval,time1,time2):
+def get_maxCapacity(location_name,sg_name,det_name,time_interval,time1,time2):   
+    """The function get_maxCapacity is used to calculate the maximum number of vehicle discharging at some lane during the green time in some interval.
+       Its parameters are location name, sg name, detector name, time interval, the start time and the end time.
+       The plot is a curve line chart with diamond markers representing values of maximum capacity.
+    """    
     
-
-    
-    time_interval_in_seconds = convert_time_interval_str_to_timedelta(time_interval)
-    
-    
+    time_interval_in_seconds = convert_time_interval_str_to_timedelta(time_interval)  
     sg_status= get_sg_status(location_name, sg_name, time1, time2) #[time,grint,seq,dint] 
     green_on = False
     sum_green_list = []
@@ -509,12 +393,8 @@ def get_maxCapacity(location_name,sg_name,det_name,time_interval,time1,time2):
         start_time = sg_status[0][0] 
     except:
         start_time = "10/07/2015 19:00:00" 
-    
-    
-    f = open("traffic/static/traffic/result.csv","w+") #create a csv file to save data in.
-    
-    writer = csv.DictWriter(f, fieldnames = ["start_time","max_capacity","green in total(seconds)"], delimiter = ';')
-    writer.writeheader()   
+        
+    f=open_csv_file(["start_time","max_capacity","green in total(seconds)"]) 
     
     # the sum of green time in a time interval 
     for s in sg_status:
@@ -535,18 +415,11 @@ def get_maxCapacity(location_name,sg_name,det_name,time_interval,time1,time2):
     addCapacityInList(start_time_list, start_time, sum_green, 
                      max_capacity_list)
     f.write("{} {} {}\n".format(start_time_list[-1],max_capacity_list[-1],sum_green))
-    f.close()
-    shutil.copyfile("traffic/static/traffic/result.csv", "traffic/static/traffic/result.txt")  
+    file_close_and_copy(f)
     
-    fig =plt.figure(figsize=(10,6),facecolor='#FFFF99')  #figsize argument is for resizing the figure.
+    fig =get_one_plot_figure()
     ax =fig.add_subplot(111) #fig.add_subplot equivalent to fig.add_subplot(1,1,1), means subplot(nrows.,ncols, plot_number)
-    
-    
-    
-    #x values are times of a day and using a Formatter to formate them.
-    #For avioding crowding the x axis with labels, using a Locator.
-    helsinkiTimezone = timezone('Europe/Helsinki')
-    fmt = mdates.DateFormatter('%m-%d %H:%M:%S', tz=helsinkiTimezone)
+    fmt=format_axis_date()
     ax.xaxis.set_major_formatter(fmt)
     ax.xaxis_date() 
     plt.setp( plt.gca().get_xticklabels(), rotation=45, horizontalalignment='right')
@@ -554,7 +427,6 @@ def get_maxCapacity(location_name,sg_name,det_name,time_interval,time1,time2):
    
     ax.plot(start_time_list,max_capacity_list,marker='D',linestyle='--',color='g')
 
-    
     xlabel('Time')
     ylabel('maximum capacity(unit:number of vehicles)' )
     title('Maximum capacity for sg '+ sg_name+ ' via '+ det_name +' in '+location_name)
@@ -565,7 +437,10 @@ def get_maxCapacity(location_name,sg_name,det_name,time_interval,time1,time2):
 
 
 def get_arrival_on_green(location_name, sg_name,det_name,time_interval,time1,time2,performance):
-
+    """The function get_arrival_on_green is used to count the percentage of vehicles arriving the intersection during green time.
+    The parameters include location name, signal name, detector name, time interval, the start time and end time and performance. 
+    When the string of performance is "Arrival_on_green_percent", the plot is a bar chart to display the percentage of arrival on green.
+    """
     interval = convert_time_interval_str_to_timedelta(time_interval)
     
     sg_det_status = get_sg_det_status(location_name,sg_name, det_name, time1, time2) #[time,seq,sg_stauts, det_status]
@@ -583,10 +458,7 @@ def get_arrival_on_green(location_name, sg_name,det_name,time_interval,time1,tim
     start_time_list = []
     number_vehicles_in_green_list = []
 
-    
-    f = open("traffic/static/traffic/result.csv","w+") #create a csv file to save data in.
-    writer = csv.DictWriter(f, fieldnames = ["start_time","vehicles arrived during green","vehicles in total","arrival on green(%)"], delimiter = ';')
-    writer.writeheader()     
+    f=open_csv_file(["start_time","vehicles arrived during green","vehicles in total","arrival on green(%)"])   
     
     for s in sg_det_status:
         if s[0] < start_time + interval:
@@ -632,18 +504,12 @@ def get_arrival_on_green(location_name, sg_name,det_name,time_interval,time1,tim
         number_vehicles_in_green_list.append(number_vehicles_in_green)
         number_vehicle_in_sum_list.append(number_vehicle_in_sum)
         f.write("{} {} {} {}\n".format(start_time,number_vehicles_in_green, number_vehicle_in_sum,arrival_on_green))
-
-    f.close()   
-    shutil.copyfile("traffic/static/traffic/result.csv", "traffic/static/traffic/result.txt")  
+    file_close_and_copy(f)
     
     if performance =="Arrival_on_green_percent" or performance == "volume":
-        fig =plt.figure(figsize=(10,6),facecolor='#99CCFF')  #figsize argument is for resizing the figure.
+        fig =get_one_plot_figure()
         ax =fig.add_subplot(111) #fig.add_subplot equivalent to fig.add_subplot(1,1,1), means subplot(nrows.,ncols, plot_number)
-        
-        #x values are times of a day and using a Formatter to formate them.
-        #For avioding crowding the x axis with labels, using a Locator.
-        helsinkiTimezone = timezone('Europe/Helsinki')
-        fmt = mdates.DateFormatter('%m-%d %H:%M:%S', tz=helsinkiTimezone)
+        fmt=format_axis_date()
         ax.xaxis.set_major_formatter(fmt) 
         ax.xaxis_date() 
         plt.setp( plt.gca().get_xticklabels(), rotation=45, horizontalalignment='right')
@@ -677,17 +543,24 @@ def get_arrival_on_green(location_name, sg_name,det_name,time_interval,time1,tim
         xlabel('All the vehicles arriving in time interval ' +time_interval+' minutes')
         title("Ratio of vehicles arrived intersection " + location_name + " during green in signalGroup " + sg_name +" via detector " + det_name )
         return getBufferImage(fig)  
-        
+
+
+
+   
 def get_volume_lanes(location_name, sg_name,det_name,time_interval,time1,time2):
-    
+    """The function get_volume_lanes is used to calculate the volume by the selected detector.
+       The parameters include location name, signal group name, detector name, time interval, the start time and end time.
+       The plot displays the volume at the selected detector, and if there is paralleled lanes, the volume counted by the paralleled detector will also be shown in the stack bar.
+    """         
     green_on = False 
     
     number_vehicle_in_sum_list = []
     
     number_vehicles_in_green_list = []
+    
     det_paralleled_dict = {}
-    volume_by_lane_dict ={}
-      
+    
+    volume_by_lane_dict ={}  
     
     interval = convert_time_interval_str_to_timedelta(time_interval)
    
@@ -706,10 +579,8 @@ def get_volume_lanes(location_name, sg_name,det_name,time_interval,time1,time2):
     for det_id, det_name in list(det_dict.items()):
         if det_name.startswith(lane_by_det):
             det_paralleled_dict[det_id]=det_name 
-    
-    f = open("traffic/static/traffic/result.csv","w+") #create a csv file to save data in.
-    writer = csv.DictWriter(f, fieldnames = ["start_time","name of detector","volume"], delimiter = ';')
-    writer.writeheader()     
+            
+    f=open_csv_file(["start_time","name of detector","volume"])   
     
     for det_id in list(det_paralleled_dict.keys()):
         det_name = det_dict[det_id]
@@ -736,12 +607,10 @@ def get_volume_lanes(location_name, sg_name,det_name,time_interval,time1,time2):
                 f.write("{} {} {}\n".format(start_time,det_name, volume)) 
                 volume = 0 
         volume_by_lane_dict[det_name]=volume_list  
-    f.close()
-    shutil.copyfile("traffic/static/traffic/result.csv", "traffic/static/traffic/result.txt")     
-    
-    fig =plt.figure(figsize=(10,6),facecolor='#99CCFF')  #figsize argument is for resizing the figure.
+ 
+    file_close_and_copy(f)
+    fig = get_one_plot_figure()
     ax =fig.add_subplot(111) #fig.add_subplot equivalent to fig.add_subplot(1,1,1), means subplot(nrows.,ncols, plot_number)
-     
     helsinkiTimezone = timezone('Europe/Helsinki')
     fmt = mdates.DateFormatter('%m-%d %H:%M:%S', tz=helsinkiTimezone)
     ax.xaxis.set_major_formatter(fmt)     
@@ -773,19 +642,19 @@ def get_volume_lanes(location_name, sg_name,det_name,time_interval,time1,time2):
         pass
     return getBufferImage(fig)
 
+
 def get_compared_arrival_on_green_ratio(location_name,det_name_list,time_interval,time1,time2,performance):
-   
+    """This function is used to visualize the arrival on green and volume for multiple detectors.
+       The parameters are the string of location name, a list of selected detectors names, string of time interva, the start time, the end time and the string of selected performance.
+    """    
     
     main_data = get_main_data(location_name, time1, time2) # tt,grint,dint,seq
     interval = convert_time_interval_str_to_timedelta(time_interval)
-    
-    f = open("traffic/static/traffic/result.csv","w+") #create a csv file to save data in.
-    writer = csv.DictWriter(f, fieldnames = ["det_name","start_time","name of vehicle in green","volume","arrival_on_green"], delimiter = ';')
-    writer.writeheader()   
-    
-    fig =plt.figure(figsize=(10,6),facecolor='#99CCFF')  #figsize argument is for resizing the figure.
+    f = open_csv_file(["det_name","start_time","name of vehicle in green","volume","arrival_on_green"])   
+    fig = get_one_plot_figure()
     ax =fig.add_subplot(111) #fig.add_subplot equivalent to fig.add_subplot(1,1,1), means subplot(nrows.,ncols, plot_number)    
     plt.subplots_adjust(left=0.07, bottom=0.1, right=0.85, top=0.9, wspace=None, hspace=None)
+   
     
     for det_name in det_name_list:
         green_on = False 
@@ -831,20 +700,21 @@ def get_compared_arrival_on_green_ratio(location_name,det_name_list,time_interva
                        
             else:
                 number_vehicle_in_sum = number_vehicles_in_green + number_vehicles_in_red
-                    
+                
+                middle_time = start_time + interval/2
                 if number_vehicle_in_sum > 0:
                     number_vehicles_in_green_list.append(number_vehicles_in_green)
                     arrival_on_green = (float(number_vehicles_in_green)/(number_vehicle_in_sum))*100
                         #arrival_on_green_percent_format = "{:.0%}".format(arrival_on_green)
                     arrival_on_green_percent_format_list.append(arrival_on_green)
-                    start_time_list.append(start_time)
+                    start_time_list.append(middle_time)
                         
                     number_vehicle_in_sum_list.append(number_vehicle_in_sum)
-                    f.write("{} {} {} {} {}\n".format(det_name,start_time,number_vehicles_in_green, number_vehicle_in_sum,arrival_on_green))
+                    f.write("{} {} {} {} {}\n".format(det_name,start_time+interval,number_vehicles_in_green, number_vehicle_in_sum,arrival_on_green))
                 number_vehicles_in_green = 0
                 number_vehicles_in_red = 0 
-                start_time= start_time + interval    
-                
+                start_time= start_time + interval 
+              
         if performance =="Comparison_volume" or performance =="Comparison_arrival_on_green": 
 
         
@@ -852,12 +722,11 @@ def get_compared_arrival_on_green_ratio(location_name,det_name_list,time_interva
             #For avioding crowding the x axis with labels, using a Locator.
             
             if performance =="Comparison_volume":
-                helsinkiTimezone = timezone('Europe/Helsinki')
-                fmt = mdates.DateFormatter('%m-%d %H:%M:%S', tz=helsinkiTimezone)
-                ax.xaxis.set_major_formatter(fmt) 
+                ax.xaxis.set_major_formatter(format_axis_date()) 
                 ax.xaxis_date() 
                 plt.setp( plt.gca().get_xticklabels(), rotation=45, horizontalalignment='right')
-                plt.tick_params(labelsize=6)                 
+                plt.tick_params(labelsize=6)  
+                
                 ax.plot(start_time_list,number_vehicle_in_sum_list,marker ='o',linestyle=':', label= det_name)
                 ylabel('Volume per' + time_interval +"minutes")
                 xlabel('Time')
@@ -876,24 +745,23 @@ def get_compared_arrival_on_green_ratio(location_name,det_name_list,time_interva
         elif performance =="Comparison_arrival_on_green_ratio":
                         
             ax.plot(number_vehicle_in_sum_list,number_vehicles_in_green_list,marker ='o', linestyle ='.', label = det_name)
-            #Linear regression
-            #try:
-                #fit = np.polyfit(number_vehicle_in_sum_list,number_vehicles_in_green_list,1)
-                #fit_fn = np.poly1d(fit)
-                #plt.plot(number_vehicle_in_sum_list,number_vehicles_in_green_list,'yo',number_vehicle_in_sum_list,fit_fn(number_vehicle_in_sum_list),'--k')  
-            #except:
-                #pass 
             ylabel('number of vehicles arriving on green')
             xlabel('volume')
             title('Comparison of arrival on green ratio in different locations per ' + time_interval +' minutes at ' + location_name )
       
       
     ax.legend(bbox_to_anchor=(1, 1), loc=2, borderaxespad=0.)
+    f.close()  
+    shutil.copyfile("traffic/static/traffic/result.csv", "traffic/static/traffic/result.txt")
 
     return getBufferImage(fig)          
-        
+
+
 def get_green_time_in_interval(location_name, time_interval,time1,time2): 
     
+    """The function get_green_time_in_interval counts the sum of green time in a time peroid for all the signal groups in a selected location.
+       The parameters include location name, time interval and the start time and the end time.
+    """    
     green_on = False
 
     start_green_time = None    
@@ -906,23 +774,16 @@ def get_green_time_in_interval(location_name, time_interval,time1,time2):
     
     print(sg_dict) 
   
-        
-    f = open("traffic/static/traffic/result.csv","w+") #create a csv file to save data in.
-        
-    writer = csv.DictWriter(f, fieldnames = ["sg_name","start_interval_time","green_duration(seconds)_in_interval"], delimiter = ';')
-    writer.writeheader()       
+    f=open_csv_file( ["sg_name","end_interval_time","green_duration(seconds)_in_interval","percent"])      
     
-    fig =plt.figure(figsize=(10,6),facecolor='#8FBC8F')  #figsize argument is for resizing the figure.
-    ax =fig.add_subplot(111) #fig.add_subplot equivalent to fig.add_subplot(1,1,1), means subplot(nrows.,ncols, plot_number)
+    fig = get_one_plot_figure()
+    
+    ax =fig.add_subplot(111) #fig.add_subplot equivalent to fig.add_subplot(1,1,1), means subplot(nrows.,ncols, plot_number) 
     
     plt.subplots_adjust(left=0.07, bottom=0.1, right=0.85, top=0.9, wspace=None, hspace=None)
     
-    #x values are times of a day and using a Formatter to formate them.
-    #For avioding crowding the x axis with labels, using a Locator.
-    helsinkiTimezone = timezone('Europe/Helsinki')
-    fmt = mdates.DateFormatter('%m-%d %H:%M:%S', tz=helsinkiTimezone) 
- 
-
+    fmt = format_axis_date()
+    
     for sg_index in list(sg_dict.keys()):
         
         try:
@@ -935,6 +796,7 @@ def get_green_time_in_interval(location_name, time_interval,time1,time2):
         green_on = False
         start_interval_time_list =[]
         green_time_in_interval_list = []
+        green_time_percent_in_interval_list =[]
         colors = ['skyblue', 'blue', 'c', 'purple','red','green','black','#330099','#FF33FF',
                   '#CC9966','#669900','#663333','#006600','#FF9999','#99FFFF','#006666','#c0c0c0','#666666'] 
         for r in main_data:
@@ -946,16 +808,18 @@ def get_green_time_in_interval(location_name, time_interval,time1,time2):
                 elif green_on and r[1][sg_index] not in green_state_list:
                     minimum_green = timedelta.total_seconds(r[0]-start_green_time)
                     green_on = False 
-                    minimum_green_list.append(minimum_green)
+                    minimum_green_list.append(minimum_green)  
                     
             else: 
                 green_time_in_interval = sum(minimum_green_list)  
-                start_interval_time_list.append(start_time) 
+                start_interval_time_list.append(start_time+interval) 
                 green_time_in_interval_list.append(green_time_in_interval) 
-                
-                f.write("{} {} {}  \n".format(sg_name,start_time,green_time_in_interval)) 
-                minimum_green_list = []
                 start_time = start_time + interval 
+                green_time_percent =green_time_in_interval/(int(time_interval)*60)
+                green_time_percent_in_interval_list.append(green_time_percent)
+                f.write("{} {} {} {} \n".format(sg_name,start_time,green_time_in_interval,green_time_percent)) 
+                minimum_green_list = []
+                
         ax.xaxis.set_major_formatter(fmt)   
         ax.xaxis_date()
         plt.setp( plt.gca().get_xticklabels(), rotation=45, horizontalalignment='right')
@@ -973,3 +837,4 @@ def get_green_time_in_interval(location_name, time_interval,time1,time2):
     shutil.copyfile("traffic/static/traffic/result.csv", "traffic/static/traffic/result.txt")
     
     return getBufferImage(fig)
+

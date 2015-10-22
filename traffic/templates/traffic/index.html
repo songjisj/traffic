@@ -1,25 +1,19 @@
+<!DOCTYPE html>
 <html>
 
     <head>
 	<meta charset="utf-8">
 	<link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
-	<!--<link href="/twitter-bootstrap/twitter-bootstrap-v2/docs/assets/css/bootstrap.css" rel="stylesheet">-->
-	
-        <!--<script src="/twitter-bootstrap/twitter-bootstrap-v2/js/bootstrap-tooltip.js"></script>  -->
-        <!--<script src="/twitter-bootstrap/twitter-bootstrap-v2/js/bootstrap-popover.js"></script>-->
-		
+	<link rel="stylesheet" type="text/css" href="/static/jquery.datetimepicker.css"/>
 	<link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
-	
-	<!--<link href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.2/css/bootstrap-combined.min.css" rel="stylesheet">-->
-	
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.37/css/bootstrap-datetimepicker.min.css" />
-     
+
 	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.js"></script>
-	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.6/moment.js"></script>
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.6/moment.js" async></script>
 	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery.transit/0.9.12/jquery.transit.js"></script>
 	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery.collapsible/1.2/jquery.collapsible.js"></script>
 	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/js/bootstrap.min.js"></script>
-	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.37/js/bootstrap-datetimepicker.min.js"></script>
+	<script type="text/javascript" src="/static/jquery.noty.packaged.min.js"></script>
+	<script type="text/javascript" src="/static/jquery.noty.theme.js"></script>
 	
     </head>
 
@@ -42,10 +36,33 @@
 	function alertEmptyList(){
 	    alert("")    
 	}
-    
+
+    // Array used as error collection
+    var errors = [];
+
+    // Validation configuration
+    conf = {
+      onElementValidate : function(valid, $el, $form, errorMess) {
+         if( !valid ) {
+          // gather up the failed validations
+          errors.push({el: $el, error: errorMess});
+         }
+      }
+    };
+
+    // Optional language object
+    lang = {};
+
 	function submitToPlot() {
 	    document.getElementById("refreshTypeId").value = "Plot";
-	    document.getElementById("locationFormId").submit();	
+        // reset error array
+        errors = [];
+        if( !$(this).isValid(lang, conf, false) ) {
+            displayErrors( errors );
+        } else {
+            // The form is valid
+            document.getElementById("locationFormId").submit();
+	    }	
 	}
 	
 	function performanceChanged() {
@@ -102,31 +119,11 @@
     </script> 
     <script>
         $(document).ready(function(){
-            $('[data-toggle="popover"]').popover();   
-	});
+            $('[data-toggle="popover"]').popover();
+            var n = noty({type:'warning', text: 'Welcome!', dismissQueue: true});
+	   });
     </script>
-    
-    
-    <script type="text/javascript">
-	$(function () {
-	    $('#datetimepicker1').datetimepicker({
-		format: 'DD/MM/YYYY HH:mm',
-		
-		
-	    });
-	    $('#datetimepicker2').datetimepicker({
-		format: 'DD/MM/YYYY HH:mm',
-		useCurrent: false
-	    });	
-	    $("#datetimepicker1").on("dp.change", function (e) {
-		$('#datetimepicker2').data("DateTimePicker").minDate(e.date);
-	    });
-	    $("#datetimepicker2").on("dp.change", function (e) {
-		$('#datetimepicker1').data("DateTimePicker").maxDate(e.date);
-	    });		
-	});
-    </script>
-    
+
     <body onload="performanceChanged()">
     {# Navigate bar and a header #}
     <nav id="myNavbar" class="navbar navbar-default navbar-inverse navbar-fixed-top" role="navigation">
@@ -144,7 +141,6 @@
 	    <!-- Collect the nav links, forms, and other content for toggling -->
 	    <div class="collapse navbar-collapse" id="navbarCollapse">
 		<ul class="nav navbar-nav">
-		    <!--<li class="active"><a href="http://www.tutorialrepublic.com" target="_blank">Instruction</a></li>-->
 		    <li><a href="http://www.peekfinland.fi/" target="_blank">About</a></li>
 		    <li><a href="http://imtech.com/EN/Contacts-Nordic.html" target="_blank">Contact</a></li>
 		</ul>
@@ -174,10 +170,10 @@
 	<label for="performance">Performance measure </label> 
 	<a href="{% url 'traffic:measuresinfo' %}"> 
 	<i class='glyphicon glyphicon-book'></i></a>
-	<a href="#" id="timezonetip"  data-toggle="popover" data-trigger="hover" title="" data-content="Saturation flow rate is the number of vehicles being able to cross the stop line;
+	<a href="#" id="timezonetip-link"  data-toggle="popover" data-trigger="hover" title="" data-content="Saturation flow rate is the number of vehicles being able to cross the stop line;
 	Green duration is green timing length per cycle for all signal groups; Queue length estimates the length of queue; Active green count the percent of active and passive green;
 	Maximum capacity calculates the amount of vehicle being able to cross during total green time in a period; Arrival on green is on how many vehicles pass the stop line duration green timing;
-	Volume counts the amount of vehicles passing over in a period." >
+	Volume counts the amount of vehicles passing over in a period.">
 	<i class='glyphicon glyphicon-info-sign'></i>
 	</a>   
 	
@@ -287,11 +283,15 @@
 	<br>
 	<div class="form-group">
 	    <label> Start datetime </label>
-		<div class='input-group date' id='datetimepicker1'> 
+		<div class='input-group date'>
 		{% if startTimeString %}
-		    <input type='text' class="form-control" name="starttime" value={{startTimeString}}/>
+		    <input id="startdatetimepicker" type='text' class="form-control" name="starttime" value="{{startTimeString}}" required="required"
+            data-validation="length" data-validation-length="16"
+            data-validation-error-msg="Please give the date in valid format 'd.m.Y H:i'."/>
 		{% else %}
-		    <input type='text' class="form-control" name="starttime" value={{current_datetime}}/>
+		    <input id="startdatetimepicker" type='text' class="form-control" name="starttime" required="required"
+		    data-validation="length" data-validation-length="16"
+            data-validation-error-msg="Please give the date in valid format 'd.m.Y H:i'."/>
 		{% endif %}
 		    <span class="input-group-addon">
 			<span class="glyphicon glyphicon-calendar"></span>
@@ -300,78 +300,53 @@
 	</div>
 	<div class="form-group">
 	    <label> End datetime </label>
-		<div class='input-group date' id='datetimepicker2'>
+		<div class='input-group date'>
 		    {% if endTimeString %}
-			<input type='text' class="form-control" name="endtime" value={{endTimeString}} />
+			<input id="enddatetimepicker" type='text' class="form-control" name="endtime" value="{{endTimeString}}" required="required"
+            data-validation="length" data-validation-length="16"
+            data-validation-error-msg="Please give the date in valid format 'd.m.Y H:i'."/>
 		    {% else %}
-			<input type='text' class="form-control" name="endtime" value={{current_datetime}}/>
+            <input id="enddatetimepicker" type='text' class="form-control" name="endtime" required="required"
+            data-validation="length" data-validation-length="16"
+            data-validation-error-msg="Please give the date in valid format 'd.m.Y H:i'."/>
 		    {% endif %}
 		    <span class="input-group-addon">
 			<span class="glyphicon glyphicon-calendar"></span>
 		    </span>
 		</div>
 	</div> 
-	
-    
-	<!--<p> <label> Start datetime </label>-->
-	    <!--{% if startTimeString %}-->
-		<!--<input type="datetime-local" name="starttime" value={{startTimeString}}> -->
-	    <!--{% else %}-->
-		<!--<input type="datetime-local" name="starttime" value="2015-07-10T18:00:00"> </p>-->
-	    <!--{% endif %}-->
-	<!--</p>	-->
-	
-	<!--<p><label> End datetime </label>-->
-	<!--{% if endTimeString %}-->
-	    <!--{% if endTimeString > startTimeString %}-->
-	        <!--<input type="datetime-local" name="endtime" value={{endTimeString}}{{endTimeString|time:"H:i"}}> </p>-->
-	    <!--{% else %}-->
-	        <!--<input type="datetime-local" name="endtime" value="2015-07-10T19:00:00"></p>-->
-		
-	        <!--<div class="alert alert-danger" role="alert">-->
-                  <!--<span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>-->
-                  <!--<span class="sr-only">Error:</span>-->
-                   <!--Enter end time later then start time -->
-		<!--</div>-->
-	    <!--{% endif %}-->
-	<!--{% else %}-->
-	    <!--<input type="datetime-local" name="endtime" value="2015-07-10T19:00:00"></p>-->
-	<!--{% endif %}-->
-	
-	
+
 	<p>
 	<a href="#" id="timezonetip"  data-toggle="popover" data-trigger="hover" title="" data-content="Please use timezone Europe/Helsinki" >
 	<i class='glyphicon glyphicon-info-sign'></i>
 	</a>   
 	</p>
-	<!--<p>Date: <input type="text" name="startdate" id="datepicker"></p>-->
-	
-	
+
 	{# submit button #}
 	<br>
 	<button onclick="submitToPlot()" class="btn btn-primary">
 	{% bootstrap_icon "star" %} Submit
 	</button>
-	
+
 	<input id="refreshTypeId" type="hidden" name="refreshType" value="">
-	
+
     </form>
     </div>
-    
+
     {# Plot result #}
     <div class="col-sm-6">
 	{% load staticfiles %}
 	<img src="data:image/png;base64,{{ image }}">    
-	<br></br>
+	<br>
 	Analysis result <a href="{% static "traffic/result.csv" %}">Download CSV File</a>   
 
     </div>
     </div>
-    
+
     <div class="row">
     <div class="col-sm-4">
     </div>
-    
+
     {# show csv file of result #}
     <div class="col-sm-5">
     {% load staticfiles %}
@@ -387,6 +362,76 @@
 	<img src="{% static "traffic/"|add:selectedLocation|add:".png" %}">
 	</div>
     </div>
-    
+
+    <script src="/static/jquery.datetimepicker.full.js"></script>
+    <script>
+$('#startdatetimepicker').datetimepicker({
+    dayOfWeekStart : 1,
+    lang:'en',
+    format:'d.m.Y H:i',
+    formatDate:'d.m.Y H:i',
+    step:15,
+    weeks:true,
+    onShow:function( ct ){
+        this.setOptions({
+            maxDate:$('#enddatetimepicker').val()?$('#enddatetimepicker').val():false
+        })
+    },
+});
+$('#enddatetimepicker').datetimepicker({
+    dayOfWeekStart : 1,
+    lang:'en',
+    format:'d.m.Y H:i',
+    formatDate:'d.m.Y H:i',
+    step:15,
+    weeks:true,
+    onShow:function( ct ) {
+        this.setOptions({
+            minDate:$('#startdatetimepicker').val()?$('#startdatetimepicker').val():false
+        })
+    },
+});
+    </script>
+
+    <script src="/static/form-validator/jquery.form-validator.min.js"></script>
+    <script>
+$.validate({
+    onError : function($form) {
+    },
+    onSuccess : function($form) {
+    },
+});
+    </script>
+
+    <script>
+$.noty.defaults = {
+    layout: 'top',
+    theme: 'imtech', // or 'defaultTheme' or 'relax' or 'bootstrapTheme'
+    type: 'alert',
+    text: '', // can be html or string
+    dismissQueue: true, // If you want to use queue feature set this true
+    template: '<div class="noty_message"><span class="noty_text"></span><div class="noty_close"></div></div>',
+    animation: {
+        open: {height: 'toggle'},
+        close: {height: 'toggle'},
+        easing: 'swing',
+        speed: 500 // opening &amp; closing animation speed
+    },
+    timeout: 5000, // delay for closing event. Set false for sticky notifications
+    force: false, // adds notification to the beginning of queue when set to true
+    modal: false,
+    maxVisible: 5, // you can set max visible notification for dismissQueue true option,
+    killer: false, // for close all notifications before show
+    closeWith: ['click'], // ['click', 'button', 'hover', 'backdrop'] // backdrop click will close all notifications
+    callback: {
+        onShow: function() {},
+        afterShow: function() {},
+        onClose: function() {},
+        afterClose: function() {},
+        onCloseClick: function() {},
+    },
+    buttons: false // an array of buttons
+};
+    </script>
     </body>
 </html>

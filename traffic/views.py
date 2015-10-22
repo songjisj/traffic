@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.http import HttpResponse
-from .models import TfRaw,Controller,ControllerConfigDet,ControllerConfigSg
+#from .models import TfRaw,Controller,ControllerConfigDet,ControllerConfigSg
 
 from traffic.analysis import *
 from .forms import ControlForm
@@ -9,6 +9,8 @@ import dateutil.parser
 from pytz import timezone
 import datetime
 import csv
+
+import logging
 
 
 # Create your views here.
@@ -22,22 +24,22 @@ def home(request):
         </form>
     ''')
 
-def questions(request):
-    trafficDataList = TfRaw.objects.order_by('-row_id')[:2]
-    output = ', '.join([p.grint for p in trafficDataList])
-    return HttpResponse(output)
+
+
 
 def index(request):
     selectedPerformance = ""
     locationNameList = []
     selectedLocation = ""
-    sgNameList = [] 
+    sgNameList = []
     selectedSgName = ""
     detectorList = []
     selectedDetectorList = []
     selectedDetector = ""
-    startTimeString =""
-    timeIntervalList =["5","10","15","30","60","120"] 
+    timeIntervalList = ["5", "10", "15", "30", "60", "120"]
+
+    defaultTimezone = timezone('Europe/Helsinki')
+
     #Select performance 
     try:
         selectedPerformance = request.POST['performance']
@@ -45,10 +47,7 @@ def index(request):
         selectedPerformance = "greenDuration"  
         
     #Select location
-    locationObjectList = Controller.objects.all() 
-    for location in locationObjectList:
-        locationNameList.append(location.cname)
-    locationNameList = sorted(locationNameList)
+    locationNameList = sorted(get_location_name_list())
     
     try:
         selectedLocation = request.POST['location']   
@@ -94,66 +93,70 @@ def index(request):
     except(KeyError):
         if timeIntervalList:
             selectedTimeInterval = timeIntervalList[0]
- 
+
     form = ContactForm(request.POST)
-    
 
+    # select start and end time
+    startTimeString = request.POST.get('starttime', "")
+    endTimeString = request.POST.get('endtime', "")
+    if not startTimeString:
+        startTime = datetime.datetime.now(defaultTimezone)
+    else:
+        try:
+            startTimeString = startTimeString + datetime.datetime.now(defaultTimezone).strftime(' %z')
+            startTime = datetime.datetime.strptime(startTimeString, '%d.%m.%Y %H:%M %z')
+        except(ValueError):
+            startTime = datetime.datetime.now(defaultTimezone)
+            logging.warning('Failed to parse start time! Lack of user input validation - check it!')
+    if not endTimeString:
+        endTime = datetime.datetime.now(defaultTimezone)
+    else:
+        try:
+            endTimeString = endTimeString + datetime.datetime.now(defaultTimezone).strftime(' %z')
+            endTime = datetime.datetime.strptime(endTimeString, '%d.%m.%Y %H:%M %z')
+        except(ValueError):
+            endTime = datetime.datetime.now(defaultTimezone)
+            logging.warning('Failed to parse end time! Lack of user input validation - check it!')
 
-    # select start and end time   
-    startTimeString = request.POST.get('starttime',"")
-    endTimeString = request.POST.get('endtime',"")
-    #print(startTimeString)
-    #print(endTimeString)
-    helsinkiTimezone = timezone('Europe/Helsinki')
-    timeZone = datetime.datetime.now(helsinkiTimezone).strftime('%z')
-    #get current datetime
-    current_datetime = datetime.datetime.now(helsinkiTimezone).strftime('%d-%m-%Y %H:%M')  
-    print((current_datetime)) 
-    
-    measuresList =sorted(["Saturation_flow_rate","Percent_of_green_duration","Green_duration","Queue_length","Active_green",
-                    "Maximum_capacity","Arrival_on_green_percent","Volume","Arrival_on_green_ratio","Comparison_volume",
-                    "Comparison_arrival_on_green","Comparison_arrival_on_green_ratio","Green_time_in_interval"] )
-    
-    
-    #display csv file 
+    measuresList = sorted(["Saturation_flow_rate", "Percent_of_green_duration", "Green_duration", "Queue_length", "Active_green",
+                           "Maximum_capacity", "Arrival_on_green_percent", "Volume", "Arrival_on_green_ratio", "Comparison_volume",
+                           "Comparison_arrival_on_green", "Comparison_arrival_on_green_ratio", "Green_time_in_interval"])
+
+    # display CSV file
     fileReader = csv.reader("traffic/static/traffic/result.csv", delimiter=',')
-    lineNum = 0  #initialize linenumber
-    
-    
-    
-    refreshType = request.POST.get('refreshType',"")
+    lineNum = 0  # initialize line number
+
+    refreshType = request.POST.get('refreshType', "")
     image = ""
-    if refreshType == "Plot" and startTimeString and endTimeString :
-        startTimeStringTimeZone = startTimeString + timeZone
-        endTimeStringTimeZone = endTimeString + timeZone 
+    if refreshType == "Plot" and startTimeString and endTimeString:
         if selectedPerformance == "Green_duration":
-            image = get_green_time_2(selectedLocation,startTimeStringTimeZone, endTimeStringTimeZone,selectedPerformance)   
+            image = get_green_time_2(selectedLocation, startTime, endTime, selectedPerformance)
         elif selectedPerformance == "Percent_of_green_duration":
-            image = get_green_time_2(selectedLocation,startTimeStringTimeZone, endTimeStringTimeZone,selectedPerformance)           
-        elif selectedPerformance =="Saturation_flow_rate":
-            image = get_saturation_flow_rate(selectedLocation,selectedSgName,startTimeStringTimeZone,endTimeStringTimeZone)
+            image = get_green_time_2(selectedLocation, startTime, endTime, selectedPerformance)
+        elif selectedPerformance == "Saturation_flow_rate":
+            image = get_saturation_flow_rate(selectedLocation, selectedSgName, startTime, endTime)
         elif selectedPerformance == "Queue_length":
-            image = get_queue_length(selectedLocation,selectedSgName,selectedDetector,startTimeStringTimeZone,endTimeStringTimeZone)
+            image = get_queue_length(selectedLocation, selectedSgName, selectedDetector, startTime, endTime)
         elif selectedPerformance == "Active_green":
-            image = get_green_time(selectedLocation, selectedSgName, startTimeStringTimeZone, endTimeStringTimeZone)
-        elif selectedPerformance =="Maximum_capacity":
-            image = get_maxCapacity(selectedLocation,selectedSgName,selectedDetector,selectedTimeInterval,startTimeStringTimeZone,endTimeStringTimeZone)
-        elif selectedPerformance =="Arrival_on_green_percent":
-            image = get_arrival_on_green(selectedLocation,selectedSgName,selectedDetector,selectedTimeInterval,startTimeStringTimeZone,endTimeStringTimeZone,selectedPerformance)
-        elif selectedPerformance =="Volume":
-            image = get_volume_lanes(selectedLocation,selectedSgName,selectedDetector,selectedTimeInterval,startTimeStringTimeZone,endTimeStringTimeZone)
-        elif selectedPerformance =="Arrival_on_green_ratio":
-            image = get_arrival_on_green(selectedLocation,selectedSgName,selectedDetector,selectedTimeInterval,startTimeStringTimeZone,endTimeStringTimeZone,selectedPerformance)        
-        elif selectedPerformance =="Comparison_volume":
-            image = get_compared_arrival_on_green_ratio(selectedLocation, selectedDetectorList,selectedTimeInterval,startTimeStringTimeZone,endTimeStringTimeZone,selectedPerformance)
-        elif selectedPerformance =="Comparison_arrival_on_green":
-            image = get_compared_arrival_on_green_ratio(selectedLocation, selectedDetectorList,selectedTimeInterval,startTimeStringTimeZone,endTimeStringTimeZone,selectedPerformance)
-        elif selectedPerformance =="Comparison_arrival_on_green_ratio":
-            image = get_compared_arrival_on_green_ratio(selectedLocation, selectedDetectorList,selectedTimeInterval,startTimeStringTimeZone,endTimeStringTimeZone,selectedPerformance) 
+            image = get_green_time(selectedLocation, selectedSgName, startTime, endTime)
+        elif selectedPerformance == "Maximum_capacity":
+            image = get_maxCapacity(selectedLocation, selectedSgName, selectedDetector, selectedTimeInterval, startTime, endTime)
+        elif selectedPerformance == "Arrival_on_green_percent":
+            image = get_arrival_on_green(selectedLocation, selectedSgName, selectedDetector, selectedTimeInterval, startTime, endTime, selectedPerformance)
+        elif selectedPerformance == "Volume":
+            image = get_volume_lanes(selectedLocation, selectedSgName, selectedDetector, selectedTimeInterval, startTime, endTime)
+        elif selectedPerformance == "Arrival_on_green_ratio":
+            image = get_arrival_on_green(selectedLocation, selectedSgName, selectedDetector, selectedTimeInterval, startTime, endTime, selectedPerformance)
+        elif selectedPerformance == "Comparison_volume":
+            image = get_compared_arrival_on_green_ratio(selectedLocation, selectedDetectorList, selectedTimeInterval, startTime, endTime, selectedPerformance)
+        elif selectedPerformance == "Comparison_arrival_on_green":
+            image = get_compared_arrival_on_green_ratio(selectedLocation, selectedDetectorList, selectedTimeInterval, startTime, endTime, selectedPerformance)
+        elif selectedPerformance == "Comparison_arrival_on_green_ratio":
+            image = get_compared_arrival_on_green_ratio(selectedLocation, selectedDetectorList, selectedTimeInterval, startTime, endTime, selectedPerformance)
         elif selectedPerformance == "Green_time_in_interval":
-            image = get_green_time_in_interval(selectedLocation, selectedTimeInterval, 
-                                              startTimeStringTimeZone, 
-                                              endTimeStringTimeZone)
+            image = get_green_time_in_interval(selectedLocation, selectedTimeInterval,
+                                               startTime,
+                                               endTime)
     context = {'locationNameList':locationNameList, 
                'selectedPerformance':selectedPerformance,
                'measuresList':measuresList,
@@ -166,9 +169,8 @@ def index(request):
                'detectorListInSelectedLocation':detectorListInSelectedLocation,
                'selectedDetector':selectedDetector,
                'selectedDetectorList':selectedDetectorList, 
-               'startTimeString':startTimeString,
-               'endTimeString':endTimeString,
-               'current_datetime':current_datetime,
+               'startTimeString': startTime.strftime('%d.%m.%Y %H:%M'),
+               'endTimeString': endTime.strftime('%d.%m.%Y %H:%M'),
                'fileReader':fileReader,
                'lineNum':lineNum,
                'form':form,
