@@ -50,6 +50,8 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    # custom middleware
+    'mysite.middleware.allowedIpMiddleware.AllowedIpMiddleware',
 )
 
 ROOT_URLCONF = 'mysite.urls'
@@ -108,3 +110,8 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 TEMPLATE_DEBUG = True
+
+INTERNAL_IPS = ('111.222.333.444',
+                '^127\.0\.0\.([0-9]|[1-9][0-9]|1([0-9][0-9])|2([0-4][0-9]|5[0-5]))$',
+                '122.0.0.1',
+)
