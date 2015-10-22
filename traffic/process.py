@@ -84,6 +84,12 @@ def get_sg_and_det_index_by_det_name(location_name,det_name):
     disconnect_db(conn)
     return row
     
+def dictfetchall(cursor): 
+    "Returns all rows from a cursor as a dict" 
+    desc = cursor.description 
+    
+    dictrow = dict(zip([row[0] for row in cursor.fetchall()], (row[1] for row in cursor.fetchall()))) 
+    return dictrow 
 
 #Function to get a dictionary that all signals' indexes are keys and names are values when input location_name   
 def get_sg_config_in_one(location_name):

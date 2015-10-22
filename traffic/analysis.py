@@ -15,6 +15,8 @@ AMBER = "AMBER"
 RED = "RED"
 UNKNOWN = "UNKNOWN"
 green_state_list = [ "1", "3", "4", "5", "6", "7", "8", ":"]
+colors = ['skyblue', 'blue', 'c', 'purple','red','#890303','black','#ECE51C','#FF33FF','#CC9966',
+          '#669900','#915C0B','#006600','#DBFF86','#99FFFF','#006666','#c0c0c0','#666666'] 
 conn_string = "host='localhost' dbname='tfg-db' user='postgres' password='4097' port='5432'"
 
 
@@ -727,7 +729,7 @@ def get_compared_arrival_on_green_ratio(location_name,det_name_list,time_interva
                 plt.setp( plt.gca().get_xticklabels(), rotation=45, horizontalalignment='right')
                 plt.tick_params(labelsize=6)  
                 
-                ax.plot(start_time_list,number_vehicle_in_sum_list,marker ='o',linestyle=':', label= det_name)
+                ax.plot(start_time_list,number_vehicle_in_sum_list,marker ='o',linestyle=':', label= det_name,color = colors[det_index])
                 ylabel('Volume per' + time_interval +"minutes")
                 xlabel('Time')
                 title("Comparison of volumes in multiple directions at intersection " + location_name + " per " + time_interval +" minutes")            
@@ -738,21 +740,20 @@ def get_compared_arrival_on_green_ratio(location_name,det_name_list,time_interva
                 ax.xaxis_date() 
                 plt.setp( plt.gca().get_xticklabels(), rotation=45, horizontalalignment='right')
                 plt.tick_params(labelsize=6)                 
-                ax.plot(start_time_list,arrival_on_green_percent_format_list, marker ='*',linestyle='-',label=det_name)
+                ax.plot(start_time_list,arrival_on_green_percent_format_list, marker ='o',linestyle='-',label=det_name,color = colors[det_index])
                 ylabel('Percentage of arrival on green')
                 xlabel('Times') 
                 title('Comparison of arrival on green percentage in multiple directions at ' + location_name + " per " + time_interval +" minutes")
         elif performance =="Comparison_arrival_on_green_ratio":
                         
-            ax.plot(number_vehicle_in_sum_list,number_vehicles_in_green_list,marker ='o', linestyle ='.', label = det_name)
+            ax.plot(number_vehicle_in_sum_list,number_vehicles_in_green_list,marker ='o', linestyle ='.', label = det_name,color = colors[det_index])
             ylabel('number of vehicles arriving on green')
             xlabel('volume')
             title('Comparison of arrival on green ratio in different locations per ' + time_interval +' minutes at ' + location_name )
       
       
     ax.legend(bbox_to_anchor=(1, 1), loc=2, borderaxespad=0.)
-    f.close()  
-    shutil.copyfile("traffic/static/traffic/result.csv", "traffic/static/traffic/result.txt")
+    file_close_and_copy(f)
 
     return getBufferImage(fig)          
 
@@ -797,8 +798,7 @@ def get_green_time_in_interval(location_name, time_interval,time1,time2):
         start_interval_time_list =[]
         green_time_in_interval_list = []
         green_time_percent_in_interval_list =[]
-        colors = ['skyblue', 'blue', 'c', 'purple','red','green','black','#330099','#FF33FF',
-                  '#CC9966','#669900','#663333','#006600','#FF9999','#99FFFF','#006666','#c0c0c0','#666666'] 
+
         for r in main_data:
             if r[0] < start_time + interval:
                 if not green_on and r[1][sg_index] in green_state_list:
