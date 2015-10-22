@@ -9,7 +9,7 @@ from datetime import timedelta
 import base64
 import csv
 from pytz import timezone
-
+from django.db import connection
 
 conn_string = "host='localhost' dbname='tfg-db' user='postgres' password='4097' port='5432'"
 
@@ -52,12 +52,13 @@ def getBufferImage(fig):
 
 #Function to connect to postgresql 
 def connect_db():
-    conn = psycopg2.connect(conn_string)
-    return conn
+    #conn = psycopg2.connect(conn_string)
+    return connection
     
 #Function to disconnect to database       
 def disconnect_db(conn): 
-    conn.close() 
+    #conn.close() 
+    return
 
 
 
@@ -83,13 +84,7 @@ def get_sg_and_det_index_by_det_name(location_name,det_name):
     row =cursor.fetchone()
     disconnect_db(conn)
     return row
-    
-def dictfetchall(cursor): 
-    "Returns all rows from a cursor as a dict" 
-    desc = cursor.description 
-    
-    dictrow = dict(zip([row[0] for row in cursor.fetchall()], (row[1] for row in cursor.fetchall()))) 
-    return dictrow 
+
 
 #Function to get a dictionary that all signals' indexes are keys and names are values when input location_name   
 def get_sg_config_in_one(location_name):
@@ -97,7 +92,7 @@ def get_sg_config_in_one(location_name):
     
     conn = connect_db()
     location_id = get_location_id(location_name)
-    cursor = conn.cursor('cursor_unique_name', cursor_factory = psycopg2.extras.DictCursor) 
+    cursor = conn.cursor() 
     cursor.execute("SELECT idx,name from controller_config_sg WHERE fk_cid = '" +str(location_id) +"'") 
     rows = cursor.fetchall()
     signals = {}
@@ -114,7 +109,7 @@ def get_det_in_one_location(location_name):
     
     conn = connect_db()
     location_id = get_location_id(location_name)
-    cursor = conn.cursor('cursor_unique_name', cursor_factory=psycopg2.extras.DictCursor)
+    cursor = conn.cursor()
     cursor.execute("SELECT idx,name from controller_config_det WHERE fk_cid = '" + str(location_id) + "'")
     rows = cursor.fetchall()
     detectors = {}
@@ -139,7 +134,7 @@ def get_det_config_in_one_sg(location_name, sg_name):
         if sg_dict[sg_key] == sg_name:
             sg_id = sg_key
 
-    cursor = conn.cursor('cursor_unique_name', cursor_factory=psycopg2.extras.DictCursor)
+    cursor = conn.cursor()
     rows = []
     if sg_id > -1:
         cursor.execute("SELECT idx,name FROM controller_config_det WHERE fk_cid = '" + str(location_id) + "' AND sgidx ='" + str(sg_id) + "'")
@@ -161,7 +156,7 @@ def get_main_data(location_name, time1, time2):
     """
     conn = connect_db()
     location_id = get_location_id(location_name)
-    cursor = conn.cursor('cursor_unique_name', cursor_factory=psycopg2.extras.DictCursor)
+    cursor = conn.cursor()
     cursor.execute("SELECT tt, grint, dint,seq FROM tf_raw WHERE fk_cid =  %s AND tt >= %s AND tt < %s", (location_id, time1, time2))
     rows = cursor.fetchall()
     main_data = []
@@ -297,7 +292,7 @@ def addCapacityInList(start_time_list, start_time, sum_green, max_capacity_list)
     
     #conn_string = config.get('Section1','conn_string') 
     #conn = psycopg2.connect()
-    #cursor = conn.cursor('cursor_unique_name', cursor_factory = psycopg2.extras.DictCursor)
+    #cursor = conn.cursor()
     #query = "SELECT fk_cid from controller_config_det"
     #cursor.execute(query)
     #rows = cursor.fetchall()     
@@ -308,7 +303,7 @@ def addCapacityInList(start_time_list, start_time, sum_green, max_capacity_list)
 def fetch_data(query): 
     conn = connect_db()
     #conn.cursor will return a cursor object, you can use the cursor to perfor queries
-    cursor = conn.cursor('cursor_unique_name', cursor_factory = psycopg2.extras.DictCursor)
+    cursor = conn.cursor()
     cursor.execute(query)
     rows = cursor.fetchall() 
     disconnect_db(conn)
