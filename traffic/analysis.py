@@ -1,4 +1,21 @@
-from .process import *
+# __________________
+# Imtech CONFIDENTIAL
+# __________________
+# 
+#  [2015] Imtech Traffic & Infra Oy
+#  All Rights Reserved.
+# 
+# NOTICE:  All information contained herein is, and remains
+# the property of Imtech Traffic & Infra Oy and its suppliers,
+# if any.  The intellectual and technical concepts contained
+# herein are proprietary to Imtech Traffic & Infra Oy
+# and its suppliers and may be covered by Finland and Foreign Patents,
+# patents in process, and are protected by trade secret or copyright law.
+# Dissemination of this information or reproduction of this material
+# is strictly forbidden unless prior written permission is obtained
+# from Imtech Traffic & Infra Oy.
+# __________________
+
 import matplotlib.dates as mdates
 from matplotlib import pylab
 from pylab import *
@@ -9,6 +26,7 @@ import shutil
 import numpy as np
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+from traffic.process import *
 
 GREEN = "GREEN"
 AMBER = "AMBER"
@@ -716,41 +734,46 @@ def get_compared_arrival_on_green_ratio(location_name,det_name_list,time_interva
                 number_vehicles_in_green = 0
                 number_vehicles_in_red = 0 
                 start_time= start_time + interval 
-              
-        if performance =="Comparison_volume" or performance =="Comparison_arrival_on_green": 
-
-        
-            #x values are times of a day and using a Formatter to formate them.
-            #For avioding crowding the x axis with labels, using a Locator.
+        if start_time_list and number_vehicles_in_green_list and number_vehicle_in_sum_list and arrival_on_green_percent_format_list:
             
-            if performance =="Comparison_volume":
-                ax.xaxis.set_major_formatter(format_axis_date()) 
-                ax.xaxis_date() 
-                plt.setp( plt.gca().get_xticklabels(), rotation=45, horizontalalignment='right')
-                plt.tick_params(labelsize=6)  
-                
-                ax.plot(start_time_list,number_vehicle_in_sum_list,marker ='o',linestyle=':', label= det_name,color = colors[det_index])
-                ylabel('Volume per' + time_interval +"minutes")
-                xlabel('Time')
-                title("Comparison of volumes in multiple directions at intersection " + location_name + " per " + time_interval +" minutes")            
-            else:   
-                helsinkiTimezone = timezone('Europe/Helsinki')
-                fmt = mdates.DateFormatter('%m-%d %H:%M:%S', tz=helsinkiTimezone)
-                ax.xaxis.set_major_formatter(fmt) 
-                ax.xaxis_date() 
-                plt.setp( plt.gca().get_xticklabels(), rotation=45, horizontalalignment='right')
-                plt.tick_params(labelsize=6)                 
-                ax.plot(start_time_list,arrival_on_green_percent_format_list, marker ='o',linestyle='-',label=det_name,color = colors[det_index])
-                ylabel('Percentage of arrival on green')
-                xlabel('Times') 
-                title('Comparison of arrival on green percentage in multiple directions at ' + location_name + " per " + time_interval +" minutes")
-        elif performance =="Comparison_arrival_on_green_ratio":
+                if performance =="Comparison_volume" or performance =="Comparison_arrival_on_green": 
+            
+            
+                    #x values are times of a day and using a Formatter to formate them.
+                    #For avioding crowding the x axis with labels, using a Locator.
+            
+                    if performance =="Comparison_volume":
+                        ax.xaxis.set_major_formatter(format_axis_date()) 
+                        ax.xaxis_date() 
+                        plt.setp( plt.gca().get_xticklabels(), rotation=45, horizontalalignment='right')
+                        plt.tick_params(labelsize=6)  
                         
-            ax.plot(number_vehicle_in_sum_list,number_vehicles_in_green_list,marker ='o', linestyle ='.', label = det_name,color = colors[det_index])
-            ylabel('number of vehicles arriving on green')
-            xlabel('volume')
-            title('Comparison of arrival on green ratio in different locations per ' + time_interval +' minutes at ' + location_name )
-      
+                        if len(start_time_list)==len(number_vehicle_in_sum_list):
+                            ax.plot(start_time_list,number_vehicle_in_sum_list,marker ='o',linestyle=':', label= det_name,color = colors[det_index])
+                            ylabel('Volume per' + time_interval +"minutes")
+                            xlabel('Time')
+                            title("Comparison of volumes in multiple directions at intersection " + location_name + " per " + time_interval +" minutes")                               
+         
+                    else:   
+                        helsinkiTimezone = timezone('Europe/Helsinki')
+                        fmt = mdates.DateFormatter('%m-%d %H:%M:%S', tz=helsinkiTimezone)
+                        ax.xaxis.set_major_formatter(fmt) 
+                        ax.xaxis_date() 
+                        plt.setp( plt.gca().get_xticklabels(), rotation=45, horizontalalignment='right')
+                        plt.tick_params(labelsize=6)                 
+                        ax.plot(start_time_list,arrival_on_green_percent_format_list, marker ='o',linestyle='-',label=det_name,color = colors[det_index])
+                        ylabel('Percentage of arrival on green')
+                        xlabel('Times') 
+                        title('Comparison of arrival on green percentage in multiple directions at ' + location_name + " per " + time_interval +" minutes")
+                        
+                elif performance =="Comparison_arrival_on_green_ratio":
+                    if len(number_vehicles_in_green_list) == len(number_vehicle_in_sum_list) and len(
+                                                                                                    number_vehicles_in_green_list) != 0:
+                        ax.plot(number_vehicle_in_sum_list,number_vehicles_in_green_list,marker ='o', linestyle ='.', label = det_name,color = colors[det_index])
+                        ylabel('number of vehicles arriving on green')
+                        xlabel('volume')
+                        title('Comparison of arrival on green ratio in different locations per ' + time_interval +' minutes at ' + location_name )            
+                        
       
     ax.legend(bbox_to_anchor=(1, 1), loc=2, borderaxespad=0.)
     file_close_and_copy(f)

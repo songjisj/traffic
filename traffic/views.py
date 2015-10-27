@@ -1,7 +1,24 @@
+# __________________
+# Imtech CONFIDENTIAL
+# __________________
+# 
+#  [2015] Imtech Traffic & Infra Oy
+#  All Rights Reserved.
+# 
+# NOTICE:  All information contained herein is, and remains
+# the property of Imtech Traffic & Infra Oy and its suppliers,
+# if any.  The intellectual and technical concepts contained
+# herein are proprietary to Imtech Traffic & Infra Oy
+# and its suppliers and may be covered by Finland and Foreign Patents,
+# patents in process, and are protected by trade secret or copyright law.
+# Dissemination of this information or reproduction of this material
+# is strictly forbidden unless prior written permission is obtained
+# from Imtech Traffic & Infra Oy.
+# __________________
+
 from django.shortcuts import render
 from django.http import HttpResponse
-#from .models import TfRaw,Controller,ControllerConfigDet,ControllerConfigSg
-
+from django.conf import settings
 from traffic.analysis import *
 from .forms import ControlForm
 from .forms import ContactForm
@@ -9,7 +26,7 @@ import dateutil.parser
 from pytz import timezone
 import datetime
 import csv
-
+import netaddr
 import logging
 
 
@@ -29,6 +46,7 @@ def home(request):
 
 def index(request):
     selectedPerformance = ""
+    locationNameListAll=[]
     locationNameList = []
     selectedLocation = ""
     sgNameList = []
@@ -44,50 +62,72 @@ def index(request):
     try:
         selectedPerformance = request.POST['performance']
     except(KeyError):
-        selectedPerformance = "greenDuration"  
-        
+        selectedPerformance = "greenDuration"
+
     #Select location
-    locationNameList = sorted(get_location_name_list())
+    locationNameListAll = sorted(get_location_name_list()) 
     
+    locationInTampereList = [i for i in locationNameListAll if i.lower().startswith('tre')] 
+    
+    locationInOuluList = [i for i in locationNameListAll if i.lower().startswith('oulu')] 
+    
+    locationUndefinedList = [i for i in locationNameListAll if not i.lower().startswith('tre') and not i.lower().startswith('oulu')]
+    
+    if locationUndefinedList:
+        print( locationUndefinedList)
+    else:
+        print('no uncleared naming of locations')
+       
+    
+    userIp = request.META['REMOTE_ADDR'] 
+    userIp = netaddr.IPSet([netaddr.IPAddress(userIp)]) 
+    print (userIp)
+    
+    if userIp in settings.TampereIpRange: 
+        locationNameList = locationInTampereList
+    elif userIp in settings.OuluIpRange:
+        locationNameList = locationInOuluList
+    
+
     try:
-        selectedLocation = request.POST['location']   
+        selectedLocation = request.POST['location']
     except(KeyError):
-        selectedLocation = "TRE303"
-        
+        selectedLocation = "TRE303" 
+
     #Select signalGroup
     if selectedLocation:
-        sgNameDict = get_sg_config_in_one(selectedLocation)  
+        sgNameDict = get_sg_config_in_one(selectedLocation)
         sgNameList = list(sgNameDict.values())
-    
+
     try:
         selectedSgName = request.POST['signalGroup']
     except(KeyError):
-        if sgNameList :
+        if sgNameList:
             selectedSgName = sgNameList[0]
-    
+
     #Select detector
-    if selectedSgName and selectedLocation :
-        detectorDict = get_det_config_in_one_sg(selectedLocation, selectedSgName) 
+    if selectedSgName and selectedLocation:
+        detectorDict = get_det_config_in_one_sg(selectedLocation, selectedSgName)
         detectorList = sorted(list(detectorDict.values()))
-    
-    try: 
-        selectedDetector = request.POST['detector']
-    except(KeyError):
-        if detectorList :
-            selectedDetector = detectorList[0]
-    
-    # Select multiple detectors  
-    if selectedLocation:
-        detectorDictInSelectedLocation = get_det_in_one_location(selectedLocation)
-        detectorListInSelectedLocation = sorted(list(detectorDictInSelectedLocation.values())) 
 
     try:
-        selectedDetectorList = request.POST.getlist('detectors[]')  
+        selectedDetector = request.POST['detector']
     except(KeyError):
-        if detectorListInSelectedLocation :
-            selectedDetectorList =detectorListInSelectedLocation[0:1] 
-     
-    # Select time interval         
+        if detectorList:
+            selectedDetector = detectorList[0]
+
+    # Select multiple detectors
+    if selectedLocation:
+        detectorDictInSelectedLocation = get_det_in_one_location(selectedLocation)
+        detectorListInSelectedLocation = sorted(list(detectorDictInSelectedLocation.values()))
+
+    try:
+        selectedDetectorList = request.POST.getlist('detectors[]')
+    except(KeyError):
+        if detectorListInSelectedLocation:
+            selectedDetectorList = detectorListInSelectedLocation[0:1]
+
+    # Select time interval
     try:
         selectedTimeInterval = request.POST['timeInterval']
     except(KeyError):
@@ -157,55 +197,54 @@ def index(request):
             image = get_green_time_in_interval(selectedLocation, selectedTimeInterval,
                                                startTime,
                                                endTime)
-    context = {'locationNameList':locationNameList, 
-               'selectedPerformance':selectedPerformance,
-               'measuresList':measuresList,
-               'timeIntervalList':timeIntervalList,
-               'selectedTimeInterval':selectedTimeInterval,
-               'selectedLocation':selectedLocation,               
-               'sgNameList':sgNameList,
-               'selectedSgName':selectedSgName,
-               'detectorList':detectorList,
-               'detectorListInSelectedLocation':detectorListInSelectedLocation,
-               'selectedDetector':selectedDetector,
-               'selectedDetectorList':selectedDetectorList, 
+    context = {'locationNameList': locationNameList,
+               'selectedPerformance': selectedPerformance,
+               'measuresList': measuresList,
+               'timeIntervalList': timeIntervalList,
+               'selectedTimeInterval': selectedTimeInterval,
+               'selectedLocation': selectedLocation,
+               'sgNameList': sgNameList,
+               'selectedSgName': selectedSgName,
+               'detectorList': detectorList,
+               'detectorListInSelectedLocation': detectorListInSelectedLocation,
+               'selectedDetector': selectedDetector,
+               'selectedDetectorList': selectedDetectorList,
                'startTimeString': startTime.strftime('%d.%m.%Y %H:%M'),
                'endTimeString': endTime.strftime('%d.%m.%Y %H:%M'),
-               'fileReader':fileReader,
-               'lineNum':lineNum,
-               'form':form,
-               'image':image}    
+               'fileReader': fileReader,
+               'lineNum': lineNum,
+               'form': form,
+               'image': image}
     #return HttpResponse(green_example, content_type="image/png")
-     
+
     return render(request, 'traffic/index.html', context)
 
 def data(request):
     control_form = ControlForm(request.POST)
     if control_form.is_valid():
-        
-        return render(request, 'data.html',{'control_form':control_form}) 
+
+        return render(request, 'data.html', {'control_form': control_form})
 
 def measuresinfo(request):
-    
-    return render(request,'traffic/measuresinfo.html',"")
+
+    return render(request, 'traffic/measuresinfo.html', "")
 
 def maps(request):
-    selectedLocation = request.POST.get('selectedLocatioForMap',"TRE303")
-    context = {'selectedLocation':selectedLocation}
+    selectedLocation = request.POST.get('selectedLocatioForMap', "TRE303")
+    context = {'selectedLocation': selectedLocation}
     return render(request, 'traffic/maps.html', context)
 
 def download_data_file(request):
-    import os,tempfile,zipfile
+    import os, tempfile, zipfile
     from django.core.servers.basehttp import FileWrapper
     from django.conf import settings
     import mimetypes
-    
+
     filename = "traffic/static/traffic/result.csv"
     download_name = "result.csv"
     wrapper = FileWrapper(open(filename))
     content_type = mimetypes.guess_type(filename)[0]
-    response = Httpresponse(wrapper,content_type=content_type)
+    response = Httpresponse(wrapper, content_type=content_type)
     response['Content-length'] = os.path.getsize(filename)
-    response['Content-Disposition'] ="attachment;filename=%s"%download_name
-    return response 
-
+    response['Content-Disposition'] = "attachment;filename=%s" % download_name
+    return response
