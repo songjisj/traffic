@@ -1,4 +1,3 @@
-
 # __________________
 # Imtech CONFIDENTIAL
 # __________________
@@ -29,10 +28,16 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.8/ref/settings/
 """
 
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
 import psycopg2  # @UnusedImport
 from netaddr import IPSet
+
+__author__ = "Imtech Traffic & Infra Oy "
+__copyright__ = "Copyright (C) 2015 Imtech Traffic & Infra Oy"
+__license__ = "Proprietary software"
+__version__ = "1.0"
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -132,5 +137,6 @@ STATIC_URL = '/static/'
 ALLOWED_NETWORKS = [IPSet(['127.0.0.0/8']),      # loopback addresses
                     IPSet(['172.18.169.0/24'])   # Office network
                     ]
+
 TampereIpRange =IPSet(['127.0.0.0/4']) # Fake value is just for testing
 OuluIpRange =IPSet(['127.0.0.5/8'])  
