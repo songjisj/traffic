@@ -20,6 +20,7 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from django.conf import settings
 from traffic.analysis import *
+from traffic.process import isIpAllowed
 from .forms import ControlForm
 from .forms import ContactForm
 import dateutil.parser
@@ -40,9 +41,6 @@ def home(request):
             <input type="submit" value="Authenticate With OpenID">
         </form>
     ''')
-
-
-
 
 def index(request):
     selectedPerformance = ""
@@ -80,13 +78,13 @@ def index(request):
        
     
     userIp = request.META['REMOTE_ADDR'] 
-    userIp = netaddr.IPSet([netaddr.IPAddress(userIp)]) 
-    print (userIp)
-    
-    if userIp in settings.TampereIpRange: 
+    print(userIp)
+    if isIpAllowed(userIp, settings.TAMPERE_IP_RANGE):
         locationNameList = locationInTampereList
-    elif userIp in settings.OuluIpRange:
+        print(locationInOuluList)
+    elif isIpAllowed(userIp, settings.OULU_IP_RANGE):
         locationNameList = locationInOuluList
+        print(locationInTampereList)
     
 
     try:

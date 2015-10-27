@@ -132,5 +132,5 @@ STATIC_URL = '/static/'
 ALLOWED_NETWORKS = [IPSet(['127.0.0.0/8']),      # loopback addresses
                     IPSet(['172.18.169.0/24'])   # Office network
                     ]
-TampereIpRange =IPSet(['127.0.0.0/4']) # Fake value is just for testing
-OuluIpRange =IPSet(['127.0.0.5/8'])  
+TAMPERE_IP_RANGE = [IPSet(['128.0.0.3/4']),] # Fake value is just for testing
+OULU_IP_RANGE = [IPSet(['127.0.0.0/2']),]

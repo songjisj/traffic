@@ -28,8 +28,18 @@ import base64
 import csv
 from pytz import timezone
 from django.db import connection
+from django.conf import settings
+import netaddr
 
 conn_string = "host='localhost' dbname='tfg-db' user='postgres' password='4097' port='5432'"
+
+def isIpAllowed(ip, ipRange):
+    ip = netaddr.IPSet([netaddr.IPAddress(ip)])
+    for allowedIpSet in ipRange:
+        if ip.issubset(allowedIpSet):
+            return True
+
+    return False
 
 def create_plot_define_format(backgroud_color): 
     matplotlib.use('Agg')

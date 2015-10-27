@@ -18,26 +18,16 @@
 
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
-
-import netaddr
-
+from traffic.process import isIpAllowed
 
 class AllowedIpMiddleware(object):
 
     def process_request(self, request):
+        if settings.DEBUG:
+            return None        
         userIp = request.META['REMOTE_ADDR']
-        if self.isIpAllowed(userIp):
+        if isIpAllowed(userIp, settings.ALLOWED_NETWORKS):
             return None
         else:
             raise PermissionDenied 
 
-    def isIpAllowed(self, ip):
-        if settings.DEBUG:
-            return True
-
-        ip = netaddr.IPSet([netaddr.IPAddress(ip)])
-        for allowedIpSet in settings.ALLOWED_NETWORKS:
-            if ip.issubset(allowedIpSet):
-                return True
-
-        return False
