@@ -24,18 +24,22 @@ from pytz import timezone
 from dateutil import parser
 import shutil
 import numpy as np
+
+from .process import *
+
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-from traffic.process import *
+plt.switch_backend('Agg')
 
 GREEN = "GREEN"
 AMBER = "AMBER"
 RED = "RED"
 UNKNOWN = "UNKNOWN"
-green_state_list = [ "1", "3", "4", "5", "6", "7", "8", ":"]
-colors = ['skyblue', 'blue', 'c', 'purple','red','#890303','black','#ECE51C','#FF33FF','#CC9966',
-          '#669900','#915C0B','#006600','#DBFF86','#99FFFF','#006666','#c0c0c0','#666666'] 
-conn_string = "host='localhost' dbname='tfg-db' user='postgres' password='4097' port='5432'"
+
+green_state_list = ["1", "3", "4", "5", "6", "7", "8", ":"]
+
+colors = ['skyblue', 'blue', 'c', 'purple', 'red', '#890303', 'black', '#ECE51C', '#FF33FF', '#CC9966',
+          '#669900', '#915C0B', '#006600', '#DBFF86', '#99FFFF', '#006666', '#c0c0c0', '#666666']
 
 
 def get_green_time(location_name,sg_name,time1,time2):
@@ -62,7 +66,8 @@ def get_green_time(location_name,sg_name,time1,time2):
     total_passive_green_state_time = 0
     active_green_state_time =0
     
-    f = open_csv_file(["start_green_time","active_green_duration(seconds)","passive_green_duration(seconds)","active_green_duration_from_grint","passive_green_from_grint"])
+    f = open_csv_file(["start_green_time","active_green_duration(seconds)","passive_green_duration(seconds)",
+                       "active_green_duration_from_grint","passive_green_from_grint"])
 
     for s in sg_status:
         
@@ -139,7 +144,8 @@ def get_green_time(location_name,sg_name,time1,time2):
 
 
 def get_queue_length(location_name,sg_name,det_name,time1,time2): 
-    """Function get_queue_length is used to calculate that until the end of red, the number of vehicles in the queue and the length of queue in meters.
+    """Function get_queue_length is used to calculate that until the end of red,
+       the number of vehicles in the queue and the length of queue in meters.
        The parameters of the function include location name, signal name, detector name, the start time and end time.
        The plot is a bar chart with dual y-axis.
     """    
@@ -189,7 +195,7 @@ def get_queue_length(location_name,sg_name,det_name,time1,time2):
     plt.setp( plt.gca().get_xticklabels(), rotation=45, horizontalalignment='right')
     plt.tick_params(labelsize=6)    
     #The segment codes is for marking dual units(dual axis) using matplotlib
-    ax.bar(list(count_vehicle_in_queue_dict.keys()),list(count_vehicle_in_queue_dict.values()),width = 0.0005, color='purple')
+    ax.bar(list(count_vehicle_in_queue_dict.keys()), list(count_vehicle_in_queue_dict.values()), width = 0.0005, color='purple')
     xlabel('Times')
     ylabel('Number of vehicles in queue' )
     
@@ -230,7 +236,8 @@ def get_queue_length(location_name,sg_name,det_name,time1,time2):
 
 def get_green_time_2(location_name, time1,time2,performance): 
     """Function get_green_time_2 is the function that shows the green duration of all the signals in a selected location.
-       The parameters include location name, the start time and end time and performance. Especially, performance is the string of the selected performance. 
+       The parameters include location name, the start time and end time and performance. 
+       Especially, performance is the string of the selected performance. 
        Based on the selected performance, the plot shows the green duration of all the signal groups in seconds or in percentage.
     """    
     green_on = False
@@ -370,7 +377,9 @@ def get_saturation_flow_rate(location_name, sg_name, time1, time2):
                 green_on = False
                 #sum_green_duration = timedelta.total_seconds(r[0]-start_green_time) + sum_green_duration
                 if len(detector_occupied_time_list_on_green) > required_vehicle_number:
-                    time_diff = (detector_occupied_time_list_on_green[successive_vehicle_end_index] - detector_occupied_time_list_on_green[successive_vehicle_start_index])/(successive_vehicle_end_index - successive_vehicle_start_index)
+                    time_diff = (detector_occupied_time_list_on_green[successive_vehicle_end_index] - 
+                                 detector_occupied_time_list_on_green[successive_vehicle_start_index])/(successive_vehicle_end_index - successive_vehicle_start_index)
+                    
                     saturation_flow_rate = one_hour_in_second/time_diff.total_seconds()
                     #saturation_flow_rate_pair =[saturation_flow_rate, detector_occupied_time_list_on_green[0]]
                     #saturation_flow_rate_pair_list.append(saturation_flow_rate_pair)
@@ -457,6 +466,7 @@ def get_maxCapacity(location_name,sg_name,det_name,time_interval,time1,time2):
 
 
 def get_arrival_on_green(location_name, sg_name,det_name,time_interval,time1,time2,performance):
+    
     """The function get_arrival_on_green is used to count the percentage of vehicles arriving the intersection during green time.
     The parameters include location name, signal name, detector name, time interval, the start time and end time and performance. 
     When the string of performance is "Arrival_on_green_percent", the plot is a bar chart to display the percentage of arrival on green.
@@ -618,7 +628,7 @@ def get_volume_lanes(location_name, sg_name,det_name,time_interval,time1,time2):
                 if s[2][det_id] =='1' and not detector_occupied:
                     detector_occupied = True                  
                 elif s[2][det_id] =='0' and detector_occupied:
-                    volume =volume +1
+                    volume =volume + 1
                     detector_occupied = False
             else:
                 volume_list.append(volume) 
@@ -730,7 +740,10 @@ def get_compared_arrival_on_green_ratio(location_name,det_name_list,time_interva
                     start_time_list.append(middle_time)
                         
                     number_vehicle_in_sum_list.append(number_vehicle_in_sum)
-                    f.write("{} {} {} {} {}\n".format(det_name,start_time+interval,number_vehicles_in_green, number_vehicle_in_sum,arrival_on_green))
+                    
+                    f.write("{} {} {} {} {}\n".format(det_name, start_time+interval, number_vehicles_in_green,
+                                                      number_vehicle_in_sum, arrival_on_green))
+                    
                 number_vehicles_in_green = 0
                 number_vehicles_in_red = 0 
                 start_time= start_time + interval 
@@ -749,10 +762,13 @@ def get_compared_arrival_on_green_ratio(location_name,det_name_list,time_interva
                         plt.tick_params(labelsize=6)  
                         
                         if len(start_time_list)==len(number_vehicle_in_sum_list):
-                            ax.plot(start_time_list,number_vehicle_in_sum_list,marker ='o',linestyle=':', label= det_name,color = colors[det_index])
+                            ax.plot(start_time_list,number_vehicle_in_sum_list,marker ='o',linestyle=':', 
+                                    label= det_name,color = colors[det_index])
+                            
                             ylabel('Volume per' + time_interval +"minutes")
                             xlabel('Time')
-                            title("Comparison of volumes in multiple directions at intersection " + location_name + " per " + time_interval +" minutes")                               
+                            title("Comparison of volumes in multiple directions at intersection " + 
+                                  location_name + " per " + time_interval +" minutes")                               
          
                     else:   
                         helsinkiTimezone = timezone('Europe/Helsinki')
@@ -761,18 +777,23 @@ def get_compared_arrival_on_green_ratio(location_name,det_name_list,time_interva
                         ax.xaxis_date() 
                         plt.setp( plt.gca().get_xticklabels(), rotation=45, horizontalalignment='right')
                         plt.tick_params(labelsize=6)                 
-                        ax.plot(start_time_list,arrival_on_green_percent_format_list, marker ='o',linestyle='-',label=det_name,color = colors[det_index])
+                        ax.plot(start_time_list, arrival_on_green_percent_format_list, marker ='o',linestyle='-', 
+                                label=det_name, color = colors[det_index])
+                        
                         ylabel('Percentage of arrival on green')
                         xlabel('Times') 
-                        title('Comparison of arrival on green percentage in multiple directions at ' + location_name + " per " + time_interval +" minutes")
+                        title('Comparison of arrival on green percentage in multiple directions at ' +
+                              location_name + " per " + time_interval + " minutes")
                         
                 elif performance =="Comparison_arrival_on_green_ratio":
-                    if len(number_vehicles_in_green_list) == len(number_vehicle_in_sum_list) and len(
-                                                                                                    number_vehicles_in_green_list) != 0:
-                        ax.plot(number_vehicle_in_sum_list,number_vehicles_in_green_list,marker ='o', linestyle ='.', label = det_name,color = colors[det_index])
+                    if len(number_vehicles_in_green_list) == len(number_vehicle_in_sum_list) and len(number_vehicles_in_green_list) != 0:
+                        
+                        ax.plot(number_vehicle_in_sum_list,number_vehicles_in_green_list,marker ='o', linestyle ='.', 
+                                label = det_name,color = colors[det_index])
                         ylabel('number of vehicles arriving on green')
                         xlabel('volume')
-                        title('Comparison of arrival on green ratio in different locations per ' + time_interval +' minutes at ' + location_name )            
+                        title('Comparison of arrival on green ratio in different locations per ' + 
+                              time_interval +' minutes at ' + location_name )            
                         
       
     ax.legend(bbox_to_anchor=(1, 1), loc=2, borderaxespad=0.)
@@ -847,7 +868,7 @@ def get_green_time_in_interval(location_name, time_interval,time1,time2):
         ax.xaxis_date()
         plt.setp( plt.gca().get_xticklabels(), rotation=45, horizontalalignment='right')
         plt.tick_params(labelsize=6)                   
-        ax.plot(start_interval_time_list,green_time_in_interval_list,marker = 'o', linestyle = '--',label = "sg "+sg_name,color=colors[sg_index])
+        ax.plot(start_interval_time_list, green_time_in_interval_list,marker = 'o', linestyle = '--', label = "sg "+sg_name,color=colors[sg_index])
         print(sg_name)
         
             

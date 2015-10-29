@@ -1,0 +1,17 @@
+[Unit]
+Description=uWSGI Emperor
+After=syslog.target
+
+[Service]
+#ExecStart=/usr/local/miniconda3/envs/ImAnalyst/bin/uwsgi --ini /etc/uwsgi/emperor.ini --emperor-nofollow --enable-threads --logto=/var/log/uwsgi-service-%n.log
+ExecStart=/usr/local/miniconda3/envs/ImAnalyst/bin/uwsgi --ini /opt/vassals/ImAnalyst.ini.runAsSelf
+Environment="PYTHONHOME=/usr/local/miniconda3/envs/ImAnalyst"
+Restart=always
+KillSignal=SIGQUIT
+Type=notify
+#StandardError=syslog
+NotifyAccess=all
+
+[Install]
+WantedBy=multi-user.target
+

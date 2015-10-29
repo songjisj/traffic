@@ -1,20 +1,22 @@
 name: ImAnalyst
 dependencies:
+- astroid=1.3.4=py34_0
 - django=1.8.4=py34_0
-- matplotlib=1.4.3=np19py34_1
-- numpy=1.9.3=py34_0
-- pillow=2.9.0=py34_0
+- logilab-common=0.63.2=py34_0
+- matplotlib=1.4.3=np110py34_1
+- numpy=1.10.1=py34_0
+- pillow=3.0.0=py34_0
 - pip=7.1.2=py34_0
+- pylint=1.4.2=py34_0
 - pyparsing=2.0.3=py34_0
 - pyqt=4.10.4=py34_1
 - python=3.4.3=0
 - python-dateutil=2.4.2=py34_0
 - pytz=2015.6=py34_0
-- setuptools=18.1=py34_0
-- six=1.9.0=py34_0
-- wheel=0.26.0=py34_0
+- setuptools=18.4=py34_0
+- six=1.10.0=py34_0
+- wheel=0.26.0=py34_1
 - pip:
   - django-bootstrap3==6.2.2
-  - nose==1.3.4
   - psycopg2==2.6.1
 

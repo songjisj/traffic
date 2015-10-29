@@ -53,6 +53,7 @@ def index(request):
     selectedDetectorList = []
     selectedDetector = ""
     timeIntervalList = ["5", "10", "15", "30", "60", "120"]
+    version_number = settings.VERSION
 
     defaultTimezone = timezone('Europe/Helsinki')
 
@@ -65,26 +66,25 @@ def index(request):
     #Select location
     locationNameListAll = sorted(get_location_name_list()) 
     
-    locationInTampereList = [i for i in locationNameListAll if i.lower().startswith('tre')] 
-    
-    locationInOuluList = [i for i in locationNameListAll if i.lower().startswith('oulu')] 
-    
-    locationUndefinedList = [i for i in locationNameListAll if not i.lower().startswith('tre') and not i.lower().startswith('oulu')]
+    locationUndefinedList = [i for i in locationNameListAll if not i.lower().startswith('tre') 
+                             and not i.lower().startswith('oulu')]
     
     if locationUndefinedList:
         print( locationUndefinedList)
+        logging.warning("There is unclassified intersections")
     else:
         print('no uncleared naming of locations')
        
     
-    userIp = request.META['REMOTE_ADDR'] 
+    userIp = request.META['REMOTE_ADDR']  
     print(userIp)
-    if isIpAllowed(userIp, settings.TAMPERE_IP_RANGE):
-        locationNameList = locationInTampereList
-        print(locationInOuluList)
-    elif isIpAllowed(userIp, settings.OULU_IP_RANGE):
-        locationNameList = locationInOuluList
-        print(locationInTampereList)
+    
+    for key in settings.IP_RANGE_DICT.keys():
+        if isIpAllowed(userIp, settings.IP_RANGE_DICT[key]):
+            locationNameList =[i for i in locationNameListAll if i.lower().startswith(key)]  
+            
+        return locationNameList 
+
     
 
     try:
@@ -156,8 +156,9 @@ def index(request):
             endTime = datetime.datetime.now(defaultTimezone)
             logging.warning('Failed to parse end time! Lack of user input validation - check it!')
 
-    measuresList = sorted(["Saturation_flow_rate", "Percent_of_green_duration", "Green_duration", "Queue_length", "Active_green",
-                           "Maximum_capacity", "Arrival_on_green_percent", "Volume", "Arrival_on_green_ratio", "Comparison_volume",
+    measuresList = sorted(["Saturation_flow_rate", "Percent_of_green_duration", "Green_duration",
+                           "Queue_length", "Active_green", "Maximum_capacity", 
+                           "Arrival_on_green_percent", "Volume", "Arrival_on_green_ratio", "Comparison_volume",
                            "Comparison_arrival_on_green", "Comparison_arrival_on_green_ratio", "Green_time_in_interval"])
 
     # display CSV file
@@ -212,7 +213,8 @@ def index(request):
                'fileReader': fileReader,
                'lineNum': lineNum,
                'form': form,
-               'image': image}
+               'image': image,
+               'version_number' : version_number}
     #return HttpResponse(green_example, content_type="image/png")
 
     return render(request, 'traffic/index.html', context)

@@ -1,0 +1,15 @@
+[uwsgi]
+chdir = /opt/vassals/%n
+env = DJANGO_SETTINGS_MODULE=mysite.settings_production
+wsgi-file = mysite/wsgi.py
+
+socket = /tmp/vassal-%n.sock
+
+master = true
+uid = uwsgi
+gid = uwsgi
+
+catch-exceptions = true
+logto = /tmp/vassal-%n.log
+
+#route = /static/(.*) static:/opt/vassals/%n/static/$1

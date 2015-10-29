@@ -38,8 +38,9 @@ __author__ = "Imtech Traffic & Infra Oy "
 __copyright__ = "Copyright (C) 2015 Imtech Traffic & Infra Oy"
 __license__ = "Proprietary software"
 __version__ = "1.0"
+VERSION = __version__
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 # Quick-start development settings - unsuitable for production
@@ -108,7 +109,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'tfg-db',
         'USER': 'postgres',
-        'PASSWORD': '4097',
+        'PASSWORD': 'template_please_override',
         'HOST': 'localhost',
         'PORT': '5432',
     }
@@ -133,10 +134,13 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
 
 STATIC_URL = '/static/'
+STATICFILES_DIRS = (
+    os.path.join(BASE_DIR, "static"),
+)
 
 ALLOWED_NETWORKS = [IPSet(['127.0.0.0/8']),      # loopback addresses
                     IPSet(['172.18.169.0/24'])   # Office network
                     ]
 
-TampereIpRange =IPSet(['127.0.0.0/4']) # Fake value is just for testing
-OuluIpRange =IPSet(['127.0.0.5/8'])  
+TAMPERE_IP_RANGE = [IPSet(['128.0.0.3/4']),] # Fake value is just for testing
+OULU_IP_RANGE = [IPSet(['127.0.0.0/2']),]

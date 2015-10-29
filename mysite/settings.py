@@ -34,6 +34,12 @@ import os
 import psycopg2  # @UnusedImport
 from netaddr import IPSet
 
+__author__ = "Imtech Traffic & Infra Oy "
+__copyright__ = "Copyright (C) 2015 Imtech Traffic & Infra Oy"
+__license__ = "Proprietary software"
+__version__ = "1.0"
+VERSION =__version__
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
@@ -132,5 +138,8 @@ STATIC_URL = '/static/'
 ALLOWED_NETWORKS = [IPSet(['127.0.0.0/8']),      # loopback addresses
                     IPSet(['172.18.169.0/24'])   # Office network
                     ]
-TAMPERE_IP_RANGE = [IPSet(['128.0.0.3/4']),] # Fake value is just for testing
-OULU_IP_RANGE = [IPSet(['127.0.0.0/2']),]
+TAMPERE_IP_RANGE = [IPSet(['127.0.0.0/2']),] # Fake value is just for testing
+OULU_IP_RANGE = [IPSet(['127.0.0.3/4']),]
+
+IP_RANGE_DICT = {'tre':[IPSet(['128.0.0.0/8']),],
+                 'oulu':[IPSet(['127.0.0.0/8']),]}

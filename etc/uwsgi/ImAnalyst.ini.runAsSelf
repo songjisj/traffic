@@ -1,0 +1,31 @@
+[uwsgi]
+
+chdir = /opt/vassals/ImAnalyst
+home = /usr/local/miniconda3/envs/ImAnalyst
+virtualenv = /usr/local/miniconda3/envs/ImAnalyst
+
+env = DJANGO_SETTINGS_MODULE=mysite.settings_production
+wsgi-file = mysite/wsgi.py
+
+route = /static/(.*) static:/opt/vassals/ImAnalyst/static/$1
+
+uid = uwsgi
+gid = uwsgi
+
+enable-threads = true
+processes = 4
+threads = 20
+master = true
+pidfile = /tmp/ImAnalyst-master.pid
+
+socket = /tmp/uwsgi.sock
+http = 0.0.0.0:8000
+chmod-socket = 664
+
+enable-metrics = true
+catch-exceptions = true
+logto = /tmp/vassal-ImAnalyst.log
+#daemonize = /tmp/uwsgi-ImAnalyst.log
+
+# clear environment on exit
+vacuum = true

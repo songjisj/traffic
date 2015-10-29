@@ -1,35 +1,23 @@
-<!-- Imtech CONFIDENTIAL
-__________________
- 
- [2015] Imtech Traffic & Infra Oy
-  All Rights Reserved.
- 
- NOTICE:  All information contained herein is, and remains
- the property of Imtech Traffic & Infra Oy and its suppliers,
- if any.  The intellectual and technical concepts contained
- herein are proprietary to Imtech Traffic & Infra Oy
- and its suppliers and may be covered by Finland and Foreign Patents,
- patents in process, and are protected by trade secret or copyright law.
- Dissemination of this information or reproduction of this material
- is strictly forbidden unless prior written permission is obtained
- from Imtech Traffic & Infra Oy. -->
+
 
 <!DOCTYPE html>
 <html>
 
-    <head>
-	<meta charset="utf-8">
-	<link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
-	<link rel="stylesheet" type="text/css" href="/static/jquery.datetimepicker.css"/>
-	<link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+    {% load staticfiles %}
 
-	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.js"></script>
-	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.6/moment.js" async></script>
-	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery.transit/0.9.12/jquery.transit.js"></script>
-	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery.collapsible/1.2/jquery.collapsible.js"></script>
-	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/js/bootstrap.min.js"></script>
-	<script type="text/javascript" src="/static/jquery.noty.packaged.min.js"></script>
-	<script type="text/javascript" src="/static/jquery.noty.theme.js"></script>
+    <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
+    <link rel="stylesheet" type="text/css" href="{% static "jquery.datetimepicker.css" %}"/>
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.6/moment.js" async></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery.transit/0.9.12/jquery.transit.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery.collapsible/1.2/jquery.collapsible.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="{% static "jquery.noty.packaged.min.js" %}"></script>
+    <script type="text/javascript" src="{% static "jquery.noty.theme.js" %}"></script>
 	
     </head>
 
@@ -167,6 +155,7 @@ __________________
     <div class="jumbotron">
 	<div class="container-fluid">
 	    <h1>Traffic Signal Analysis</h1>
+	    <p>Software version: {{version_number}} </p>
 	</div>
     </div>
     
@@ -351,7 +340,6 @@ __________________
 
     {# Plot result #}
     <div class="col-sm-6">
-	{% load staticfiles %}
 	<img src="data:image/png;base64,{{ image }}">    
 	<br>
 	Analysis result <a href="{% static "traffic/result.csv" %}">Download CSV File</a>   
@@ -365,7 +353,6 @@ __________________
 
     {# show csv file of result #}
     <div class="col-sm-5">
-    {% load staticfiles %}
     <iframe style = "width:600px;" src="{% static "traffic/result.txt" %}"></iframe> 
     </div>
     </div>
@@ -374,12 +361,11 @@ __________________
     {# display the map of the intersection #}
     <div class="row">
 	<div class="col-sm-8">
-	{% load staticfiles %}
 	<img src="{% static "traffic/"|add:selectedLocation|add:".png" %}">
 	</div>
     </div>
 
-    <script src="/static/jquery.datetimepicker.full.js"></script>
+    <script src="{% static "jquery.datetimepicker.full.js" %}"></script>
     <script>
 $('#startdatetimepicker').datetimepicker({
     dayOfWeekStart : 1,
@@ -409,7 +395,7 @@ $('#enddatetimepicker').datetimepicker({
 });
     </script>
 
-    <script src="/static/form-validator/jquery.form-validator.min.js"></script>
+    <script src="{% static "form-validator/jquery.form-validator.min.js" %}"></script>
     <script>
 $.validate({
     onError : function($form) {
