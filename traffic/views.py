@@ -82,10 +82,7 @@ def index(request):
     for key in settings.IP_RANGE_DICT.keys():
         if isIpAllowed(userIp, settings.IP_RANGE_DICT[key]):
             locationNameList =[i for i in locationNameListAll if i.lower().startswith(key)]  
-            
-        return locationNameList 
 
-    
 
     try:
         selectedLocation = request.POST['location']
