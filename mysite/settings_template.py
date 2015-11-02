@@ -134,6 +134,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
 
 STATIC_URL = '/static/'
+
 STATICFILES_DIRS = (
     os.path.join(BASE_DIR, "static"),
 )
@@ -142,5 +143,6 @@ ALLOWED_NETWORKS = [IPSet(['127.0.0.0/8']),      # loopback addresses
                     IPSet(['172.18.169.0/24'])   # Office network
                     ]
 
-TAMPERE_IP_RANGE = [IPSet(['128.0.0.3/4']),] # Fake value is just for testing
-OULU_IP_RANGE = [IPSet(['127.0.0.0/2']),]
+
+IP_RANGE_DICT = {'tre':[IPSet(['128.0.0.0/8']),],
+                 'oulu':[IPSet(['127.0.0.0/8']),]}

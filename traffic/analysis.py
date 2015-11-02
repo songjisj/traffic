@@ -112,7 +112,7 @@ def get_green_time(location_name,sg_name,time1,time2):
             total_passive_green_state_time = 0
     file_close_and_copy(f)
     
-    fig =get_one_plot_figure()
+    fig =plt.figure(figsize=(10,6),facecolor='#99CCFF')
     fig.suptitle('Signalgroup Green Duration: sg '+ sg_name+ ' in '+location_name, fontsize=14, fontweight='bold')
 
     ax =fig.add_subplot(211) #fig.add_subplot equivalent to fig.add_subplot(1,1,1), means subplot(nrows.,ncols, plot_number)
@@ -703,6 +703,9 @@ def get_compared_arrival_on_green_ratio(location_name,det_name_list,time_interva
         row = get_sg_and_det_index_by_det_name(location_name, det_name) 
         sg_index = row[0]
         det_index = row[1] 
+        det_index_in_selected_list = det_name_list.index(det_name)
+        color_index = det_index_in_selected_list % len(colors)
+        
         for r in main_data: 
             sg_state =r[1][sg_index]
             det_state = r[2][det_index]
@@ -763,7 +766,7 @@ def get_compared_arrival_on_green_ratio(location_name,det_name_list,time_interva
                         
                         if len(start_time_list)==len(number_vehicle_in_sum_list):
                             ax.plot(start_time_list,number_vehicle_in_sum_list,marker ='o',linestyle=':', 
-                                    label= det_name,color = colors[det_index])
+                                    label= det_name,color = colors[color_index])
                             
                             ylabel('Volume per' + time_interval +"minutes")
                             xlabel('Time')
@@ -778,7 +781,7 @@ def get_compared_arrival_on_green_ratio(location_name,det_name_list,time_interva
                         plt.setp( plt.gca().get_xticklabels(), rotation=45, horizontalalignment='right')
                         plt.tick_params(labelsize=6)                 
                         ax.plot(start_time_list, arrival_on_green_percent_format_list, marker ='o',linestyle='-', 
-                                label=det_name, color = colors[det_index])
+                                label=det_name, color = colors[color_index])
                         
                         ylabel('Percentage of arrival on green')
                         xlabel('Times') 
@@ -789,7 +792,7 @@ def get_compared_arrival_on_green_ratio(location_name,det_name_list,time_interva
                     if len(number_vehicles_in_green_list) == len(number_vehicle_in_sum_list) and len(number_vehicles_in_green_list) != 0:
                         
                         ax.plot(number_vehicle_in_sum_list,number_vehicles_in_green_list,marker ='o', linestyle ='.', 
-                                label = det_name,color = colors[det_index])
+                                label = det_name, color = colors[color_index])
                         ylabel('number of vehicles arriving on green')
                         xlabel('volume')
                         title('Comparison of arrival on green ratio in different locations per ' + 

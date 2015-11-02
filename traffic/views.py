@@ -20,7 +20,7 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from django.conf import settings
 from traffic.analysis import *
-from traffic.process import isIpAllowed
+from traffic.utility import IPFilter
 from .forms import ControlForm
 from .forms import ContactForm
 import dateutil.parser
@@ -66,31 +66,32 @@ def index(request):
     #Select location
     locationNameListAll = sorted(get_location_name_list()) 
     
+    locationInTampereList = [i for i in locationNameListAll if i.lower().startswith('tre')] 
+    
+    locationInOuluList = [i for i in locationNameListAll if i.lower().startswith('oulu')] 
+    
     locationUndefinedList = [i for i in locationNameListAll if not i.lower().startswith('tre') 
                              and not i.lower().startswith('oulu')]
     
     if locationUndefinedList:
         print( locationUndefinedList)
-        logging.warning("There is unclassified intersections")
     else:
         print('no uncleared naming of locations')
        
     
     userIp = request.META['REMOTE_ADDR']  
-    print(userIp)
-    
+        
     for key in settings.IP_RANGE_DICT.keys():
-        if isIpAllowed(userIp, settings.IP_RANGE_DICT[key]):
+        if IPFilter.isIPAllowed(userIp, settings.IP_RANGE_DICT[key]):
             locationNameList =[i for i in locationNameListAll if i.lower().startswith(key)]  
             
-        return locationNameList 
-
-    
+                
 
     try:
         selectedLocation = request.POST['location']
     except(KeyError):
-        selectedLocation = "TRE303" 
+        if locationNameList:
+            selectedLocation = locationNameList[0]
 
     #Select signalGroup
     if selectedLocation:
@@ -235,16 +236,10 @@ def maps(request):
     return render(request, 'traffic/maps.html', context)
 
 def download_data_file(request):
-    import os, tempfile, zipfile
-    from django.core.servers.basehttp import FileWrapper
-    from django.conf import settings
-    import mimetypes
+    download_file("traffic/static/traffic/result.csv", "result.csv")
 
-    filename = "traffic/static/traffic/result.csv"
-    download_name = "result.csv"
-    wrapper = FileWrapper(open(filename))
-    content_type = mimetypes.guess_type(filename)[0]
-    response = Httpresponse(wrapper, content_type=content_type)
-    response['Content-length'] = os.path.getsize(filename)
-    response['Content-Disposition'] = "attachment;filename=%s" % download_name
-    return response
+
+def download_user_manual(request):
+    download_file("traffic/static/traffic/UserManual.pdf", "UserManual.pdf") 
+    
+    

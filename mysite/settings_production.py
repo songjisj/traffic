@@ -17,6 +17,7 @@ DATABASES = {
 }
 
 STATIC_URL = '/imanalyst/static/'
+
 STATICFILES_DIRS = (
     os.path.join(BASE_DIR, "static"),
     '/opt/vassals/ImAnalyst/traffic/static/',

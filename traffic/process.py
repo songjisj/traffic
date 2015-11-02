@@ -29,17 +29,9 @@ import csv
 from pytz import timezone
 from django.db import connection
 from django.conf import settings
-import netaddr
 
-conn_string = "host='localhost' dbname='tfg-db' user='postgres' password='4097' port='5432'"
 
-def isIpAllowed(ip, ipRange):
-    ip = netaddr.IPSet([netaddr.IPAddress(ip)])
-    for allowedIpSet in ipRange:
-        if ip.issubset(allowedIpSet):
-            return True
 
-    return False
 
 def create_plot_define_format(backgroud_color): 
     matplotlib.use('Agg')
@@ -411,3 +403,17 @@ def file_close_and_copy(file):
     import shutil
     file.close()
     shutil.copyfile("traffic/static/traffic/result.csv", "traffic/static/traffic/result.txt")      
+    
+def download_file(file_name, file_download_name):
+    import os, tempfile, zipfile
+    from django.core.servers.basehttp import FileWrapper
+    from django.conf import settings
+    import mimetypes
+    file_name = file_name
+    download_name = file_download_name
+    wrapper = FileWrapper(open(filename))
+    content_type = mimetypes.guess_type(filename)[0]
+    response = Httpresponse(wrapper, content_type=content_type)
+    response['Content-length'] = os.path.getsize(filename)
+    response['Content-Disposition'] = "attachment;filename=%s" % download_name
+    return response    
