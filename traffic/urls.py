@@ -1,10 +1,10 @@
 # __________________
 # Imtech CONFIDENTIAL
 # __________________
-# 
+#
 #  [2015] Imtech Traffic & Infra Oy
 #  All Rights Reserved.
-# 
+#
 # NOTICE:  All information contained herein is, and remains
 # the property of Imtech Traffic & Infra Oy and its suppliers,
 # if any.  The intellectual and technical concepts contained
@@ -21,14 +21,11 @@ from traffic.views import *
 
 
 urlpatterns = patterns('',
-    url(r'^$', home, name='home'),
-    url(r'^index/$', index, name='index'),
-    url(r'^measuresinfo', measuresinfo,name='measuresinfo'),
-    url(r'^maps', maps,name='maps'),
-    url(r'^data/$', data, name='data'),   
-    url(r'^../static/traffic/result.csv', download_data_file),
-    url(r'^../static/traffic/result.csv', download_user_manual), 
-)
-
-
-
+                       url(r'^$', home, name='home'),
+                       url(r'^index/$', index, name='index'),
+                       url(r'^measuresinfo', measuresinfo, name='measuresinfo'),
+                       url(r'^maps', maps, name='maps'),
+                       url(r'^data/$', data, name='data'),
+                       url(r'^../static/traffic/result.csv', download_data_file),
+                       url(r'^../static/traffic/result.csv', download_user_manual),
+                       )

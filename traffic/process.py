@@ -1,10 +1,10 @@
 # __________________
 # Imtech CONFIDENTIAL
 # __________________
-# 
+#
 #  [2015] Imtech Traffic & Infra Oy
 #  All Rights Reserved.
-# 
+#
 # NOTICE:  All information contained herein is, and remains
 # the property of Imtech Traffic & Infra Oy and its suppliers,
 # if any.  The intellectual and technical concepts contained
@@ -29,9 +29,12 @@ import csv
 from pytz import timezone
 from django.db import connection
 from django.conf import settings
+import uuid 
 
 
-
+user_filename = uuid.uuid4()
+csv_filename = str(user_filename)+ '.csv'
+csv_file_path ="traffic/static/traffic/" + csv_filename
 
 def create_plot_define_format(backgroud_color): 
     matplotlib.use('Agg')
@@ -380,13 +383,17 @@ def count_volume_and_arrival_on_green(sg_state,det_state,interval,start_time,tim
     return(start_time_list,number_vehicle_in_sum_list,arrival_on_green_percent_format_list) 
 
 def open_csv_file(headers_list):
-    file = open("traffic/static/traffic/result.csv","w+")
+
+    file = open(csv_file_path,"w+")
     writer = csv.DictWriter(file, fieldnames = headers_list, delimiter = ';')
     writer.writeheader()       
-    return file 
+    return file
 
+def write_row_csv(file,values):
+    writer = csv.writer(file, delimiter=';')
+    writer.writerow(values)
 def get_one_plot_figure():
-    fig =plt.figure(figsize=(10,6),facecolor='#99CCFF')  #figsize argument is for resizing the figure.
+    fig =plt.figure(figsize=(9,6),facecolor='#99CCFF')  #figsize argument is for resizing the figure.
     #ax =fig.add_subplot(111) #fig.add_subplot equivalent to fig.add_subplot(1,1,1), means subplot(nrows.,ncols, plot_number)    
     #plt.subplots_adjust(left=0.07, bottom=0.1, right=0.85, top=0.9, wspace=None, hspace=None)
     grid(True)
@@ -402,7 +409,7 @@ def format_axis_date():
 def file_close_and_copy(file):
     import shutil
     file.close()
-    shutil.copyfile("traffic/static/traffic/result.csv", "traffic/static/traffic/result.txt")      
+        
     
 def download_file(file_name, file_download_name):
     import os, tempfile, zipfile
@@ -417,3 +424,11 @@ def download_file(file_name, file_download_name):
     response['Content-length'] = os.path.getsize(filename)
     response['Content-Disposition'] = "attachment;filename=%s" % download_name
     return response    
+
+def set_xaxis_datetime_limit(ax,fmt,xlim1,xlim2):
+    ax.xaxis.set_major_formatter(fmt)    
+    ax.xaxis_date()
+    ax.set_xlim(xlim1,xlim2)     
+    
+def draw_bar_chart(ax, x_list, y_list, width, color):
+    ax.bar(x_list, y_list, width, color='g',edgecolor = "none")

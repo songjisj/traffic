@@ -1,10 +1,10 @@
 # __________________
 # Imtech CONFIDENTIAL
 # __________________
-# 
+#
 #  [2015] Imtech Traffic & Infra Oy
 #  All Rights Reserved.
-# 
+#
 # NOTICE:  All information contained herein is, and remains
 # the property of Imtech Traffic & Infra Oy and its suppliers,
 # if any.  The intellectual and technical concepts contained
@@ -18,16 +18,30 @@
 
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
-from traffic.process import isIpAllowed
+from traffic.utility import IpFilter
+import logging
+
 
 class AllowedIpMiddleware(object):
 
     def process_request(self, request):
         if settings.DEBUG:
-            return None        
+            return None
+
+        try:
+            real_ip = request.META['HTTP_X_FORWARDED_FOR']
+        except KeyError:
+            pass
+        else:
+            # HTTP_X_FORWARDED_FOR contains IPs collected from every proxy when
+            # request is bypassed.
+            # Can be comma-separated list of IP, take just the first one.
+            real_ip = real_ip.split(",")[0]
+            request.META['REMOTE_ADDR'] = real_ip
+
         userIp = request.META['REMOTE_ADDR']
-        if isIpAllowed(userIp, settings.ALLOWED_NETWORKS):
+        if IpFilter().isIpAllowed(userIp, settings.ALLOWED_NETWORKS):
             return None
         else:
-            raise PermissionDenied 
-
+            logging.warn('Permission denied. IP %s does not match to any allowed (configured) network.', userIp)
+            raise PermissionDenied

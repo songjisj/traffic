@@ -7,7 +7,7 @@ virtualenv = /usr/local/miniconda3/envs/ImAnalyst
 env = DJANGO_SETTINGS_MODULE=mysite.settings_production
 wsgi-file = mysite/wsgi.py
 
-route = /static/(.*) static:/opt/vassals/ImAnalyst/static/$1
+static-map = /static=/opt/vassals/ImAnalyst/traffic/static
 
 uid = uwsgi
 gid = uwsgi

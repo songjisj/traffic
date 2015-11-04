@@ -1,10 +1,10 @@
 # __________________
 # Imtech CONFIDENTIAL
 # __________________
-# 
+#
 #  [2015] Imtech Traffic & Infra Oy
 #  All Rights Reserved.
-# 
+#
 # NOTICE:  All information contained herein is, and remains
 # the property of Imtech Traffic & Infra Oy and its suppliers,
 # if any.  The intellectual and technical concepts contained
@@ -20,7 +20,7 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from django.conf import settings
 from traffic.analysis import *
-from traffic.utility import IPFilter
+from traffic.utility import IpFilter
 from .forms import ControlForm
 from .forms import ContactForm
 import dateutil.parser
@@ -29,6 +29,9 @@ import datetime
 import csv
 import netaddr
 import logging
+
+
+logger = logging.getLogger('traffic.views')
 
 
 # Create your views here.
@@ -42,9 +45,9 @@ def home(request):
         </form>
     ''')
 
+
 def index(request):
     selectedPerformance = ""
-    locationNameListAll=[]
     locationNameList = []
     selectedLocation = ""
     sgNameList = []
@@ -57,35 +60,54 @@ def index(request):
 
     defaultTimezone = timezone('Europe/Helsinki')
 
-    #Select performance 
+    # Select performance
     try:
         selectedPerformance = request.POST['performance']
     except(KeyError):
         selectedPerformance = "greenDuration"
 
-    #Select location
-    locationNameListAll = sorted(get_location_name_list()) 
-    
-    locationInTampereList = [i for i in locationNameListAll if i.lower().startswith('tre')] 
-    
-    locationInOuluList = [i for i in locationNameListAll if i.lower().startswith('oulu')] 
-    
-    locationUndefinedList = [i for i in locationNameListAll if not i.lower().startswith('tre') 
-                             and not i.lower().startswith('oulu')]
-    
-    if locationUndefinedList:
-        print( locationUndefinedList)
-    else:
-        print('no uncleared naming of locations')
-       
-    
-    userIp = request.META['REMOTE_ADDR']  
-        
+    # Simple complementary and explanation of measurements
+    infoMeasurementDict = {"Active_green": "In this plot, the distance between two adjacent bar of green phases represents the red and amber duration between them.",
+                           "Queue_length": "In this plot, the queue is recorded at the end of red both in number of vehicles and estimated meters.",
+                           "Arrival_on_green_ratio": "In this plot, the scattered points represent ratio of volume and number of vehicles during green, and the line is their regression linear",
+                           "Arrival_on_green_pecent": "In this plot, it records the percentage of vehicles arriving during green phases in the time interval.",
+                           "Comparison_arrival_on_green": "In this plot, it illustrates the measurement 'arrival_on_green' from multile detectors.",
+                           "Comparison_arrival_on_green_ratio": "In this plot, it shows 'arrival on green_ratio' from the multiple detectors you selected.",
+                           "Volume": "In the plot, it calculates the volume of vehicles arriving the intersection through a detector in the time interval",
+                           "Comparison_volume": "In the plot, it shows the volumes from multiple detectors.",
+                           "Maximum_capacity": "In the plot, it estimates the maximum number of vehicles being able to pass the intersection from a detector during the green timing of selected interval.",
+                           "Green_duration": "In this plot, it calculates the duration of every green phase.",
+                           "Green_time_in_interval": "In this plot, it calculates the total timing of green during every selected time interval.",
+                           "Percent_of_green_duration": "In this plot, it calculates the percentage of green phases in the cycle.",
+                           "Saturation_flow_rate": "In this plot, it estimates saturation flow rate through detectors."
+                           }
+    try:
+        selectedInfoMeasurement = infoMeasurementDict[selectedPerformance]
+    except(KeyError):
+        selectedInfoMeasurement = None
+
+    # Select location
+    locationNameListAll = sorted(get_location_name_list())
+
+    userIp = request.META['REMOTE_ADDR']
+
+    if 'logFilteredLocations' in request.GET:
+        locationDefinedList = []
+        for key in settings.IP_RANGE_DICT.keys():
+            if IpFilter().isIpAllowed(request.META['REMOTE_ADDR'], settings.IP_RANGE_DICT[key][0]):
+                for prefix in settings.IP_RANGE_DICT[key][1]:
+                    locationDefinedList += [i for i in locationNameListAll if
+                                            i.lower().startswith(prefix)]
+        locationUndefinedList = [x for x in locationNameListAll if x not in locationDefinedList]
+
+        if locationUndefinedList:
+            logger.info('Uncleared location names: %s', locationUndefinedList)
+
     for key in settings.IP_RANGE_DICT.keys():
-        if IPFilter.isIPAllowed(userIp, settings.IP_RANGE_DICT[key]):
-            locationNameList =[i for i in locationNameListAll if i.lower().startswith(key)]  
-            
-                
+        if IpFilter().isIpAllowed(userIp, settings.IP_RANGE_DICT[key][0]):
+            locationNameList = []
+            for prefix in settings.IP_RANGE_DICT[key][1]:
+                locationNameList = locationNameList + [i for i in locationNameListAll if i.lower().startswith(prefix)]
 
     try:
         selectedLocation = request.POST['location']
@@ -93,7 +115,7 @@ def index(request):
         if locationNameList:
             selectedLocation = locationNameList[0]
 
-    #Select signalGroup
+    # Select signalGroup
     if selectedLocation:
         sgNameDict = get_sg_config_in_one(selectedLocation)
         sgNameList = list(sgNameDict.values())
@@ -104,7 +126,7 @@ def index(request):
         if sgNameList:
             selectedSgName = sgNameList[0]
 
-    #Select detector
+    # Select detector
     if selectedSgName and selectedLocation:
         detectorDict = get_det_config_in_one_sg(selectedLocation, selectedSgName)
         detectorList = sorted(list(detectorDict.values()))
@@ -119,6 +141,8 @@ def index(request):
     if selectedLocation:
         detectorDictInSelectedLocation = get_det_in_one_location(selectedLocation)
         detectorListInSelectedLocation = sorted(list(detectorDictInSelectedLocation.values()))
+    else:
+        detectorListInSelectedLocation = []
 
     try:
         selectedDetectorList = request.POST.getlist('detectors[]')
@@ -146,7 +170,7 @@ def index(request):
             startTime = datetime.datetime.strptime(startTimeString, '%d.%m.%Y %H:%M %z')
         except(ValueError):
             startTime = datetime.datetime.now(defaultTimezone)
-            logging.warning('Failed to parse start time! Lack of user input validation - check it!')
+            logger.warning('Failed to parse start time! Lack of user input validation - check it!')
     if not endTimeString:
         endTime = datetime.datetime.now(defaultTimezone)
     else:
@@ -155,16 +179,16 @@ def index(request):
             endTime = datetime.datetime.strptime(endTimeString, '%d.%m.%Y %H:%M %z')
         except(ValueError):
             endTime = datetime.datetime.now(defaultTimezone)
-            logging.warning('Failed to parse end time! Lack of user input validation - check it!')
+            logger.warning('Failed to parse end time! Lack of user input validation - check it!')
 
     measuresList = sorted(["Saturation_flow_rate", "Percent_of_green_duration", "Green_duration",
-                           "Queue_length", "Active_green", "Maximum_capacity", 
+                           "Queue_length", "Active_green", "Maximum_capacity",
                            "Arrival_on_green_percent", "Volume", "Arrival_on_green_ratio", "Comparison_volume",
                            "Comparison_arrival_on_green", "Comparison_arrival_on_green_ratio", "Green_time_in_interval"])
 
     # display CSV file
-    fileReader = csv.reader("traffic/static/traffic/result.csv", delimiter=',')
-    lineNum = 0  # initialize line number
+    fileReader = csv.reader(csv_file_path, delimiter=',')
+    csv_file ="traffic/"+csv_filename
 
     refreshType = request.POST.get('refreshType', "")
     image = ""
@@ -199,6 +223,7 @@ def index(request):
                                                endTime)
     context = {'locationNameList': locationNameList,
                'selectedPerformance': selectedPerformance,
+               'selectedInfoMeasurement': selectedInfoMeasurement,
                'measuresList': measuresList,
                'timeIntervalList': timeIntervalList,
                'selectedTimeInterval': selectedTimeInterval,
@@ -212,13 +237,14 @@ def index(request):
                'startTimeString': startTime.strftime('%d.%m.%Y %H:%M'),
                'endTimeString': endTime.strftime('%d.%m.%Y %H:%M'),
                'fileReader': fileReader,
-               'lineNum': lineNum,
                'form': form,
                'image': image,
-               'version_number' : version_number}
-    #return HttpResponse(green_example, content_type="image/png")
+               'version_number' : version_number,
+               'csv_filename': csv_filename}
+
 
     return render(request, 'traffic/index.html', context)
+
 
 def data(request):
     control_form = ControlForm(request.POST)
@@ -226,20 +252,20 @@ def data(request):
 
         return render(request, 'data.html', {'control_form': control_form})
 
-def measuresinfo(request):
 
+def measuresinfo(request):
     return render(request, 'traffic/measuresinfo.html', "")
+
 
 def maps(request):
     selectedLocation = request.POST.get('selectedLocatioForMap', "TRE303")
     context = {'selectedLocation': selectedLocation}
     return render(request, 'traffic/maps.html', context)
 
+
 def download_data_file(request):
-    download_file("traffic/static/traffic/result.csv", "result.csv")
+    download_file(csv_file, csv_file)
 
 
 def download_user_manual(request):
-    download_file("traffic/static/traffic/UserManual.pdf", "UserManual.pdf") 
-    
-    
+    download_file("traffic/static/traffic/UserManual.pdf", "UserManual.pdf")
