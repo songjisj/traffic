@@ -1,10 +1,10 @@
 # __________________
 # Imtech CONFIDENTIAL
 # __________________
-# 
+#
 #  [2015] Imtech Traffic & Infra Oy
 #  All Rights Reserved.
-# 
+#
 # NOTICE:  All information contained herein is, and remains
 # the property of Imtech Traffic & Infra Oy and its suppliers,
 # if any.  The intellectual and technical concepts contained
@@ -31,6 +31,7 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
+import logging
 import psycopg2  # @UnusedImport
 from netaddr import IPSet
 
@@ -51,6 +52,8 @@ SECRET_KEY = 'kjzcm9e$lyiiif(pd#j8h4fdhe%%yl+f7_ndectik$-7h1u@n8'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = TEMPLATE_DEBUG = True
+
+logging.basicConfig(level=logging.INFO)
 
 ALLOWED_HOSTS = []
 
@@ -143,6 +146,7 @@ ALLOWED_NETWORKS = [IPSet(['127.0.0.0/8']),      # loopback addresses
                     IPSet(['172.18.169.0/24'])   # Office network
                     ]
 
-
-IP_RANGE_DICT = {'tre':[IPSet(['128.0.0.0/8']),],
-                 'oulu':[IPSet(['127.0.0.0/8']),]}
+IP_RANGE_DICT = {'FullAccessUser': [[IPSet(['128.0.0.0/8']), ], ['']],
+                 'RegionalUser1': [[IPSet(['128.0.0.0/8']), ], ['oulu']],
+                 'RegionalUser2': [[IPSet(['128.0.0.0/8']), ], ['tre', 'nok']]
+                 }

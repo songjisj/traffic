@@ -141,5 +141,8 @@ ALLOWED_NETWORKS = [IPSet(['127.0.0.0/8']),      # loopback addresses
 TAMPERE_IP_RANGE = [IPSet(['127.0.0.0/2']),] # Fake value is just for testing
 OULU_IP_RANGE = [IPSet(['127.0.0.3/4']),]
 
-IP_RANGE_DICT = {'tre':[IPSet(['127.0.0.0/8']),],
-                 'oulu':[IPSet(['128.0.0.0/8']),]}
+#IP_RANGE_DICT is a dictionary a 
+IP_RANGE_DICT = {'FullAccessUser': [[IPSet(['127.0.0.0/8']),],['']],
+                 'RegionalUser1': [[IPSet(['128.0.0.0/8']),],['oulu']],
+                 'RegionalUser2': [[IPSet(['128.0.0.0/8']),],['tre','nok']]
+                 }

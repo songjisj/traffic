@@ -26,5 +26,14 @@ STATICFILES_DIRS = (
 ALLOWED_HOSTS = [
     '127.0.0.1',
     'localhost',
-    '10.10.*',
+    '10.10.250.75',
 ]
+
+ALLOWED_NETWORKS = [IPSet(['127.0.0.0/8']),      # loopback addresses
+                    IPSet(['10.10.20.0/28']),    # Imtech VPN network
+                    ]
+
+IP_RANGE_DICT = {'FullAccessUser': [[IPSet(['10.10.20.0/24']), ], ['']],
+                 'RegionalUser1': [[IPSet(['10.10.20.0/28']), ], ['oulu']],
+                 'RegionalUser2': [[IPSet(['10.10.20.0/28']), ], ['tre', 'nok']]
+                 }
