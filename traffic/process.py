@@ -392,6 +392,7 @@ def open_csv_file(headers_list):
 def write_row_csv(file,values):
     writer = csv.writer(file, delimiter=';')
     writer.writerow(values)
+    
 def get_one_plot_figure():
     fig =plt.figure(figsize=(9,6),facecolor='#99CCFF')  #figsize argument is for resizing the figure.
     #ax =fig.add_subplot(111) #fig.add_subplot equivalent to fig.add_subplot(1,1,1), means subplot(nrows.,ncols, plot_number)    
@@ -411,19 +412,7 @@ def file_close_and_copy(file):
     file.close()
         
     
-def download_file(file_name, file_download_name):
-    import os, tempfile, zipfile
-    from django.core.servers.basehttp import FileWrapper
-    from django.conf import settings
-    import mimetypes
-    file_name = file_name
-    download_name = file_download_name
-    wrapper = FileWrapper(open(filename))
-    content_type = mimetypes.guess_type(filename)[0]
-    response = Httpresponse(wrapper, content_type=content_type)
-    response['Content-length'] = os.path.getsize(filename)
-    response['Content-Disposition'] = "attachment;filename=%s" % download_name
-    return response    
+    
 
 def set_xaxis_datetime_limit(ax,fmt,xlim1,xlim2):
     ax.xaxis.set_major_formatter(fmt)    

@@ -109,7 +109,7 @@ def get_green_time(location_name,sg_name,time1,time2):
             useless_green = timedelta.total_seconds(s[0]-detector_unoccupied_lastest_time) 
             useless_green_list.append(useless_green)
             #f.write("{} {} {} {} {}\n".format(start_green_time,active_green,useless_green,active_green_state_time,total_passive_green_state_time)) 
-            write_row_csv(file, [start_green_time,active_green,useless_green,active_green_state_time,total_passive_green_state_time])
+            write_row_csv(f, [start_green_time,active_green,useless_green,active_green_state_time,total_passive_green_state_time])
             total_passive_green_state_time = 0
     file_close_and_copy(f)
     

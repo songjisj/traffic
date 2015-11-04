@@ -26,6 +26,6 @@ urlpatterns = patterns('',
                        url(r'^measuresinfo', measuresinfo, name='measuresinfo'),
                        url(r'^maps', maps, name='maps'),
                        url(r'^data/$', data, name='data'),
-                       url(r'^../static/traffic/result.csv', download_data_file),
-                       url(r'^../static/traffic/result.csv', download_user_manual),
+                       url(r'^download_data_file', download_data_file,name='download_data_file'),
+                       url(r'^download_user_manual', download_user_manual, name='download_user_manual'),
                        )

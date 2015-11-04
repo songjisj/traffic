@@ -264,8 +264,36 @@ def maps(request):
 
 
 def download_data_file(request):
-    download_file(csv_file, csv_file)
+    return download_file("traffic/static/traffic/"+csv_filename, "result.csv") 
+    
 
 
 def download_user_manual(request):
-    download_file("traffic/static/traffic/UserManual.pdf", "UserManual.pdf")
+    return download_file("traffic/static/traffic/UserManual.pdf", "UserManual.pdf")
+   
+
+def download_file2(file_name, file_download_name):
+    import os, tempfile, zipfile
+    from django.http import HttpResponse
+    from django.core.servers.basehttp import FileWrapper
+    from django.conf import settings
+    import mimetypes
+    file_name = file_name
+    download_name = file_download_name
+    wrapper = FileWrapper(open(file_name))
+    content_type = mimetypes.guess_type(file_name)[0]
+    response = HttpResponse(wrapper, content_type=content_type)
+    response['Content-length'] = os.path.getsize(file_name)
+    response['Content-Disposition'] = "attachment;filename=%s" % download_name
+    return response
+
+def download_file(file_path, file_name):
+    from django.utils.encoding import smart_str
+    import mimetypes
+    from django.core.servers.basehttp import FileWrapper
+    wrapper = FileWrapper(open(file_path))
+    content_type = mimetypes.guess_type(file_path)[0]
+    response = HttpResponse(wrapper, content_type=content_type)
+    response['Content-Disposition'] = 'attachment; filename=%s' % smart_str(file_name)
+    response['X-Sendfile'] = smart_str(file_path)    
+    return response 
