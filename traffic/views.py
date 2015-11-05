@@ -59,6 +59,8 @@ def index(request):
     version_number = settings.VERSION
 
     defaultTimezone = timezone('Europe/Helsinki')
+    
+ 
 
     # Select performance
     try:
@@ -186,41 +188,52 @@ def index(request):
                            "Arrival_on_green_percent", "Volume", "Arrival_on_green_ratio", "Comparison_volume",
                            "Comparison_arrival_on_green", "Comparison_arrival_on_green_ratio", "Green_time_in_interval"])
 
-    # display CSV file
-    fileReader = csv.reader(csv_file_path, delimiter=',')
-    csv_file ="traffic/"+csv_filename
+
 
     refreshType = request.POST.get('refreshType', "")
     image = ""
     if refreshType == "Plot" and startTimeString and endTimeString:
-        if selectedPerformance == "Green_duration":
-            image = get_green_time_2(selectedLocation, startTime, endTime, selectedPerformance)
-        elif selectedPerformance == "Percent_of_green_duration":
-            image = get_green_time_2(selectedLocation, startTime, endTime, selectedPerformance)
+        if selectedPerformance == "Green_duration" or selectedPerformance == "Percent_of_green_duration":
+            image,uuid_name = get_green_time_2(selectedLocation, startTime, endTime, selectedPerformance)
+            
+            
         elif selectedPerformance == "Saturation_flow_rate":
-            image = get_saturation_flow_rate(selectedLocation, selectedSgName, startTime, endTime)
+            image, uuid_name= get_saturation_flow_rate(selectedLocation, selectedSgName, startTime, endTime) 
+            
         elif selectedPerformance == "Queue_length":
-            image = get_queue_length(selectedLocation, selectedSgName, selectedDetector, startTime, endTime)
+            image,uuid_name = get_queue_length(selectedLocation, selectedSgName, selectedDetector, startTime, endTime)
+            
+            
         elif selectedPerformance == "Active_green":
-            image = get_green_time(selectedLocation, selectedSgName, startTime, endTime)
+            image, uuid_name = get_green_time(selectedLocation, selectedSgName, startTime, endTime )
+            
         elif selectedPerformance == "Maximum_capacity":
-            image = get_maxCapacity(selectedLocation, selectedSgName, selectedDetector, selectedTimeInterval, startTime, endTime)
+            image, uuid_name = get_maxCapacity(selectedLocation, selectedSgName, selectedDetector, selectedTimeInterval, startTime, endTime)
+            
         elif selectedPerformance == "Arrival_on_green_percent":
-            image = get_arrival_on_green(selectedLocation, selectedSgName, selectedDetector, selectedTimeInterval, startTime, endTime, selectedPerformance)
+            image, uuid_name = get_arrival_on_green(selectedLocation, selectedSgName, selectedDetector, selectedTimeInterval, startTime, endTime, selectedPerformance)
+            
         elif selectedPerformance == "Volume":
-            image = get_volume_lanes(selectedLocation, selectedSgName, selectedDetector, selectedTimeInterval, startTime, endTime)
+            image, uuid_name = get_volume_lanes(selectedLocation, selectedSgName, selectedDetector, selectedTimeInterval, startTime, endTime)
+            
         elif selectedPerformance == "Arrival_on_green_ratio":
-            image = get_arrival_on_green(selectedLocation, selectedSgName, selectedDetector, selectedTimeInterval, startTime, endTime, selectedPerformance)
-        elif selectedPerformance == "Comparison_volume":
-            image = get_compared_arrival_on_green_ratio(selectedLocation, selectedDetectorList, selectedTimeInterval, startTime, endTime, selectedPerformance)
-        elif selectedPerformance == "Comparison_arrival_on_green":
-            image = get_compared_arrival_on_green_ratio(selectedLocation, selectedDetectorList, selectedTimeInterval, startTime, endTime, selectedPerformance)
-        elif selectedPerformance == "Comparison_arrival_on_green_ratio":
-            image = get_compared_arrival_on_green_ratio(selectedLocation, selectedDetectorList, selectedTimeInterval, startTime, endTime, selectedPerformance)
+            image, uuid_name = get_arrival_on_green(selectedLocation, selectedSgName, selectedDetector, selectedTimeInterval, startTime, endTime, selectedPerformance )           
+            
+        elif selectedPerformance == "Comparison_volume" or selectedPerformance == "Comparison_arrival_on_green" or selectedPerformance == "Comparison_arrival_on_green_ratio":
+            image, uuid_name = get_compared_arrival_on_green_ratio(selectedLocation, selectedDetectorList, selectedTimeInterval, startTime, endTime, selectedPerformance)
+            
         elif selectedPerformance == "Green_time_in_interval":
-            image = get_green_time_in_interval(selectedLocation, selectedTimeInterval,
-                                               startTime,
-                                               endTime)
+            image, uuid_name = get_green_time_in_interval(selectedLocation, selectedTimeInterval, startTime, endTime )
+    else:
+        uuid_name = 0
+            
+    csv_filename = str(uuid_name) + '.csv'
+    csv_file_path =temp_folder_path + str(uuid_name) +'.csv'   
+    
+    csv_file ="traffic/"+csv_filename  
+    request.session['uniqueId'] = csv_filename   
+    request.session['selectedPerformance'] = selectedPerformance
+    
     context = {'locationNameList': locationNameList,
                'selectedPerformance': selectedPerformance,
                'selectedInfoMeasurement': selectedInfoMeasurement,
@@ -236,7 +249,6 @@ def index(request):
                'selectedDetectorList': selectedDetectorList,
                'startTimeString': startTime.strftime('%d.%m.%Y %H:%M'),
                'endTimeString': endTime.strftime('%d.%m.%Y %H:%M'),
-               'fileReader': fileReader,
                'form': form,
                'image': image,
                'version_number' : version_number,
@@ -264,36 +276,20 @@ def maps(request):
 
 
 def download_data_file(request):
-    return download_file("traffic/static/traffic/"+csv_filename, "result.csv") 
+    csv_filename = request.session['uniqueId']
+    performance = request.session['selectedPerformance'] 
+    current_time_str =datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    return download_file(temp_folder_path+csv_filename, performance + current_time_str+'.csv') 
     
 
 
 def download_user_manual(request):
-    return download_file("traffic/static/traffic/UserManual.pdf", "UserManual.pdf")
-   
+    
+    with open("traffic/static/traffic/UserManual.pdf", 'rb') as pdf:
+        file_path = "traffic/static/traffic/UserManual.pdf"
+        content_type = mimetypes.guess_type(file_path)[0]
+        response = HttpResponse(pdf.read(), content_type=content_type)
+        response['Content-Disposition'] = 'inline;filename=ImAnalyst_user_manual.pdf'
+        return response
+    pdf.closed    
 
-def download_file2(file_name, file_download_name):
-    import os, tempfile, zipfile
-    from django.http import HttpResponse
-    from django.core.servers.basehttp import FileWrapper
-    from django.conf import settings
-    import mimetypes
-    file_name = file_name
-    download_name = file_download_name
-    wrapper = FileWrapper(open(file_name))
-    content_type = mimetypes.guess_type(file_name)[0]
-    response = HttpResponse(wrapper, content_type=content_type)
-    response['Content-length'] = os.path.getsize(file_name)
-    response['Content-Disposition'] = "attachment;filename=%s" % download_name
-    return response
-
-def download_file(file_path, file_name):
-    from django.utils.encoding import smart_str
-    import mimetypes
-    from django.core.servers.basehttp import FileWrapper
-    wrapper = FileWrapper(open(file_path))
-    content_type = mimetypes.guess_type(file_path)[0]
-    response = HttpResponse(wrapper, content_type=content_type)
-    response['Content-Disposition'] = 'attachment; filename=%s' % smart_str(file_name)
-    response['X-Sendfile'] = smart_str(file_path)    
-    return response 

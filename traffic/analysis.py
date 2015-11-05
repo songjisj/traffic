@@ -38,6 +38,8 @@ UNKNOWN = "UNKNOWN"
 
 green_state_list = ["1", "3", "4", "5", "6", "7", "8", ":"]
 
+drivable_state_list = ["1", "3", "4", "5", "6", "7", "8", ":","0", ";", "<", "=", ">"] # The drivable_state_list includes green_state_list, amber state list and red/amber state. 
+
 colors = ['skyblue', 'blue', 'c', 'purple', 'red', '#890303', 'black', '#ECE51C', '#FF33FF', '#CC9966',
           '#669900', '#915C0B', '#006600', '#DBFF86', '#99FFFF', '#006666', '#c0c0c0', '#666666']
 
@@ -47,8 +49,8 @@ def get_green_time(location_name,sg_name,time1,time2):
        The parameters are the name of location, the name of the signal group , the start time and end time. 
        The plot has two sub plots based on two different definition of active and passive green.
     """   
-    activate_green_state_list = ["0","1","3","5","6","7","8",":"] 
-    passive_green_state_list = ["4"]
+    activate_green_state_list = ["0","1","3","5","6","7","8"] 
+    passive_green_state_list = ["4", ":"]
     
     sg_status= get_sg_status(location_name, sg_name, time1, time2) #[time,grint,seq,dint] 
     
@@ -66,7 +68,9 @@ def get_green_time(location_name,sg_name,time1,time2):
     total_passive_green_state_time = 0
     active_green_state_time =0
     
-    f = open_csv_file(["start_green_time","active_green_duration(seconds)","passive_green_duration(seconds)",
+    uuid_name = generate_uuid()
+    
+    f = open_csv_file(uuid_name, ["start_green_time","active_green_duration(seconds)","passive_green_duration(seconds)",
                        "active_green_duration_from_grint","passive_green_from_grint"])
 
     for s in sg_status:
@@ -108,7 +112,6 @@ def get_green_time(location_name,sg_name,time1,time2):
             
             useless_green = timedelta.total_seconds(s[0]-detector_unoccupied_lastest_time) 
             useless_green_list.append(useless_green)
-            #f.write("{} {} {} {} {}\n".format(start_green_time,active_green,useless_green,active_green_state_time,total_passive_green_state_time)) 
             write_row_csv(f, [start_green_time,active_green,useless_green,active_green_state_time,total_passive_green_state_time])
             total_passive_green_state_time = 0
     file_close_and_copy(f)
@@ -139,7 +142,7 @@ def get_green_time(location_name,sg_name,time1,time2):
         ax2.legend((green_active_state[0], green_passive_state[0]),("grint active green","grint passive green"))
     plt.xlabel('Time')
     ylabel('Green duration(s)')    
-    return getBufferImage(fig)    
+    return getBufferImage(fig), uuid_name  
 
 
 def get_queue_length(location_name,sg_name,det_name,time1,time2): 
@@ -162,8 +165,10 @@ def get_queue_length(location_name,sg_name,det_name,time1,time2):
     count_vehicle_in_queue_dict = {}
     
     average_length_per_vehicle = 8 
+    
+    uuid_name = generate_uuid() 
 
-    f = open_csv_file(["discharge_queue_time","number of vehicles","The length of queue(meters)"])
+    f = open_csv_file(uuid_name, ["discharge_queue_time","number of vehicles","The length of queue(meters)"])
 
     for s in sg_det_status:
         
@@ -181,9 +186,8 @@ def get_queue_length(location_name,sg_name,det_name,time1,time2):
             green_on =False 
             discharge_queue_time = s[0]
             count_vehicle_in_queue_dict[discharge_queue_time] = count_vehicle_in_queue
-            queue_length = count_vehicle_in_queue * average_length_per_vehicle
-            #f.write("{} {} {}\n".format(discharge_queue_time,count_vehicle_in_queue,queue_length))     
-            write_row_csv(file, [discharge_queue_time,count_vehicle_in_queue,queue_length])
+            queue_length = count_vehicle_in_queue * average_length_per_vehicle  
+            write_row_csv(f, [discharge_queue_time,count_vehicle_in_queue,queue_length])
             count_vehicle_in_queue = 0 
     file_close_and_copy(f)
     
@@ -230,7 +234,7 @@ def get_queue_length(location_name,sg_name,det_name,time1,time2):
     # The second parameter of title is for not overlapping title with yaxis on the top. Title has x and y arguments.
     title('Queue length: sg '+ sg_name+ ' in '+location_name + 'detected by' + det_name, y =1.05)  
     
-    return getBufferImage(fig)
+    return getBufferImage(fig), uuid_name
 
 
 
@@ -248,7 +252,8 @@ def get_green_time_2(location_name, time1,time2,performance):
     
     sg_dict = get_sg_config_in_one(location_name)
     
-    f = open_csv_file(["sg_name","start_green_time","green_duration(seconds)","cycle_duration","percent_of_green"]) 
+    uuid_name = generate_uuid() 
+    f = open_csv_file(uuid_name, ["sg_name","start_green_time","green_duration(seconds)","cycle_duration","percent_of_green"]) 
    
     fig=get_one_plot_figure()
     plt.subplots_adjust(left=0.07, bottom=0.1, right=0.8, top=0.9, wspace=None, hspace=None)
@@ -290,7 +295,6 @@ def get_green_time_2(location_name, time1,time2,performance):
                 start_green_time_list.append(start_green_time)
                 minimum_green_list.append(minimum_green)
                 green_end_time = r[0] 
-                #f.write("{} , {} ,{} ,{} ,{}\n".format(sg_name,start_green_time,minimum_green,cycle_duration,percent_green)) 
                 write_row_csv(f,[sg_name,start_green_time,minimum_green,cycle_duration,percent_green])
                 
         if performance == "Green_duration":
@@ -306,7 +310,7 @@ def get_green_time_2(location_name, time1,time2,performance):
     ax.legend(bbox_to_anchor=(1, 1), loc=2, borderaxespad=0.)
     file_close_and_copy(f)
     
-    return getBufferImage(fig)
+    return getBufferImage(fig),uuid_name
 
 
 def get_saturation_flow_rate(location_name, sg_name, time1, time2):
@@ -329,7 +333,8 @@ def get_saturation_flow_rate(location_name, sg_name, time1, time2):
     mean_saturation_by_det_list = []
     xlabel_list = []
     
-    f = open_csv_file(["det_name","saturation_flow_rate"]) 
+    uuid_name = generate_uuid() 
+    f = open_csv_file(uuid_name, ["det_name","saturation_flow_rate"]) 
     
     for det_index in list(det_dict.keys()):
         det_name = det_dict[det_index]
@@ -391,7 +396,6 @@ def get_saturation_flow_rate(location_name, sg_name, time1, time2):
         mean_saturation_by_det = mean_in_list(saturation_flow_rate_list)
         mean_saturation_by_det_list.append(mean_saturation_by_det) 
         xlabel_list.append(det_name)
-        #f.write("{} {}\n".format(det_name, mean_saturation_by_det)) 
         write_row_csv(f,[det_name, mean_saturation_by_det])
     file_close_and_copy(f)
     fig_size = plt.rcParams["figure.figsize"]
@@ -403,7 +407,7 @@ def get_saturation_flow_rate(location_name, sg_name, time1, time2):
     xlabel("Name of each detector")
     title("Saturation flow rate by detectors in signalGroup "+sg_name +" in "+ location_name) 
     
-    return getBufferImage(plt.gcf())
+    return getBufferImage(plt.gcf()), uuid_name
 
 
 def get_maxCapacity(location_name,sg_name,det_name,time_interval,time1,time2):   
@@ -426,8 +430,8 @@ def get_maxCapacity(location_name,sg_name,det_name,time_interval,time1,time2):
         start_time = sg_status[0][0] 
     except:
         start_time = "10/07/2015 19:00:00" 
-        
-    f=open_csv_file(["start_time","max_capacity","green in total(seconds)"]) 
+    uuid_name = generate_uuid()   
+    f=open_csv_file(uuid_name, ["start_time","max_capacity","green in total(seconds)"]) 
     
     # the sum of green time in a time interval 
     for s in sg_status:
@@ -448,7 +452,6 @@ def get_maxCapacity(location_name,sg_name,det_name,time_interval,time1,time2):
             
     addCapacityInList(start_time_list, start_time, sum_green, 
                      max_capacity_list)
-    #f.write("{} {} {}\n".format(start_time_list[-1],max_capacity_list[-1],sum_green))
     write_row_csv(f,[start_time_list[-1],max_capacity_list[-1],sum_green])
     file_close_and_copy(f)
     
@@ -465,7 +468,7 @@ def get_maxCapacity(location_name,sg_name,det_name,time_interval,time1,time2):
     ylabel('maximum capacity(unit:number of vehicles)' )
     title('Maximum capacity for sg '+ sg_name+ ' via '+ det_name +' in '+location_name)
     
-    return getBufferImage(fig)    
+    return getBufferImage(fig), uuid_name   
     
     
 
@@ -492,8 +495,8 @@ def get_arrival_on_green(location_name, sg_name,det_name,time_interval,time1,tim
     number_vehicle_in_sum_list = []
     start_time_list = []
     number_vehicles_in_green_list = []
-
-    f=open_csv_file(["start_time","vehicles arrived during green","vehicles in total","arrival on green(%)"])   
+    uuid_name = generate_uuid() 
+    f=open_csv_file(uuid_name, ["start_time","vehicles arrived during green","vehicles in total","arrival on green(%)"])   
     
     for s in sg_det_status:
         if s[0] < start_time + interval:
@@ -526,7 +529,6 @@ def get_arrival_on_green(location_name, sg_name,det_name,time_interval,time1,tim
                 start_time_list.append(start_time)
                 
                 number_vehicle_in_sum_list.append(number_vehicle_in_sum)
-                #f.write("{} {} {} {}\n".format(start_time,number_vehicles_in_green, number_vehicle_in_sum,arrival_on_green))
                 write_row_csv(f,[start_time,number_vehicles_in_green, number_vehicle_in_sum,arrival_on_green])
             number_vehicles_in_green = 0
             number_vehicles_in_red = 0 
@@ -578,7 +580,7 @@ def get_arrival_on_green(location_name, sg_name,det_name,time_interval,time1,tim
         ylabel('Vehicles arriving on green')
         xlabel('All the vehicles arriving in time interval ' +time_interval+' minutes')
         title("Ratio of vehicles arrived intersection " + location_name + " during green in signalGroup " + sg_name +" via detector " + det_name )
-        return getBufferImage(fig)  
+        return getBufferImage(fig) , uuid_name
 
 
 
@@ -615,8 +617,8 @@ def get_volume_lanes(location_name, sg_name,det_name,time_interval,time1,time2):
     for det_id, det_name in list(det_dict.items()):
         if det_name.startswith(lane_by_det):
             det_paralleled_dict[det_id]=det_name 
-            
-    f=open_csv_file(["start_time","name of detector","volume"])   
+    uuid_name = generate_uuid()        
+    f=open_csv_file(uuid_name, ["start_time","name of detector","volume"])   
     
     for det_id in list(det_paralleled_dict.keys()):
         det_name = det_dict[det_id]
@@ -640,7 +642,6 @@ def get_volume_lanes(location_name, sg_name,det_name,time_interval,time1,time2):
                 volume_list.append(volume) 
                 start_time_list.append(start_time)
                 start_time = start_time + interval
-                #f.write("{} {} {}\n".format(start_time,det_name, volume)) 
                 write_row_csv(f,[start_time,det_name, volume])
                 volume = 0 
         volume_by_lane_dict[det_name]=volume_list  
@@ -677,7 +678,7 @@ def get_volume_lanes(location_name, sg_name,det_name,time_interval,time1,time2):
         legend((x[0] for x in p),labels)
     except:
         pass
-    return getBufferImage(fig)
+    return getBufferImage(fig) ,uuid_name
 
 
 def get_compared_arrival_on_green_ratio(location_name,det_name_list,time_interval,time1,time2,performance):
@@ -687,7 +688,8 @@ def get_compared_arrival_on_green_ratio(location_name,det_name_list,time_interva
     
     main_data = get_main_data(location_name, time1, time2) # tt,grint,dint,seq
     interval = convert_time_interval_str_to_timedelta(time_interval)
-    f = open_csv_file(["det_name","start_time","name of vehicle in green","volume","arrival_on_green"])   
+    uuid_name = generate_uuid() 
+    f = open_csv_file(uuid_name, ["det_name","start_time","name of vehicle in green","volume","arrival_on_green"])   
     fig = get_one_plot_figure()
     ax =fig.add_subplot(111) #fig.add_subplot equivalent to fig.add_subplot(1,1,1), means subplot(nrows.,ncols, plot_number)    
     plt.subplots_adjust(left=0.07, bottom=0.1, right=0.85, top=0.9, wspace=None, hspace=None)
@@ -750,8 +752,6 @@ def get_compared_arrival_on_green_ratio(location_name,det_name_list,time_interva
                     start_time_list.append(middle_time)
                         
                     number_vehicle_in_sum_list.append(number_vehicle_in_sum)
-                    
-                    #f.write("{} {} {} {} {}\n".format(det_name, start_time+interval, number_vehicles_in_green, number_vehicle_in_sum, arrival_on_green))
                     write_row_csv(f,[det_name, start_time+interval, number_vehicles_in_green,
                                                       number_vehicle_in_sum, arrival_on_green])
                     
@@ -809,7 +809,7 @@ def get_compared_arrival_on_green_ratio(location_name,det_name_list,time_interva
     ax.legend(bbox_to_anchor=(1, 1), loc=2, borderaxespad=0.)
     file_close_and_copy(f)
 
-    return getBufferImage(fig)          
+    return getBufferImage(fig) ,uuid_name      
 
 
 def get_green_time_in_interval(location_name, time_interval,time1,time2): 
@@ -828,8 +828,9 @@ def get_green_time_in_interval(location_name, time_interval,time1,time2):
     sg_dict = get_sg_config_in_one(location_name)
     
     print(sg_dict) 
-  
-    f=open_csv_file( ["sg_name","end_interval_time","green_duration(seconds)_in_interval","percent"])      
+    
+    uuid_name = generate_uuid() 
+    f=open_csv_file(uuid_name, ["sg_name","end_interval_time","green_duration(seconds)_in_interval","percent"])      
     
     fig = get_one_plot_figure()
     
@@ -871,7 +872,6 @@ def get_green_time_in_interval(location_name, time_interval,time1,time2):
                 start_time = start_time + interval 
                 green_time_percent =green_time_in_interval/(int(time_interval)*60)
                 green_time_percent_in_interval_list.append(green_time_percent)
-                f.write("{} {} {} {} \n".format(sg_name,start_time,green_time_in_interval,green_time_percent)) 
                 write_row_csv(f,[sg_name,start_time,green_time_in_interval,green_time_percent])
                 minimum_green_list = []
                 
@@ -888,4 +888,4 @@ def get_green_time_in_interval(location_name, time_interval,time1,time2):
     title("Green time of signals  at " + location_name +" by " + str(time_interval) + " minutes")      
     f.close() 
     
-    return getBufferImage(fig)
+    return getBufferImage(fig),uuid_name

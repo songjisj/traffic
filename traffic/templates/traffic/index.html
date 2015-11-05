@@ -116,11 +116,6 @@
 	}
 	
     </script>
-    <script>  
-        $(function ()  {
-	    $("#timezonetip").popover();  
-        });  
-    </script> 
     <script>
         $(document).ready(function(){
             $('[data-toggle="popover"]').popover();
@@ -193,12 +188,10 @@
 	    {% endfor %}
 	    performanceChanged()
 	</select>
-		
-	<a href="#" id="timezonetip-link"  data-toggle="popover" data-trigger="hover" title="" data-content="{{selectedInfoMeasurement}}" >
-	<i class='glyphicon glyphicon-info-sign'></i>
-	</a>  
-	
 	</p>
+	
+        {# check box for driving time#}
+	<div class="checkbox-inline"><input type="checkbox" class="radio" value ="1" name=""> drivable timing </div>
 	
 	{# Select intersection #}
 	<p>
@@ -298,6 +291,9 @@
 	<br>
 	<div class="form-group">
 	    <label> Start datetime </label>
+        <a href="#" id="timezonetip" data-toggle="popover" data-trigger="hover"
+            title="" data-content="Please use timezone Europe/Helsinki">
+        <i class='glyphicon glyphicon-info-sign'></i></a>
 		<div class='input-group date'>
 		{% if startTimeString %}
 		    <input id="startdatetimepicker" type='text' class="form-control" name="starttime" value="{{startTimeString}}" required="required"
@@ -308,13 +304,17 @@
 		    data-validation="length" data-validation-length="16"
             data-validation-error-msg="Please give the date in valid format 'd.m.Y H:i'."/>
 		{% endif %}
-		    <span class="input-group-addon">
-			<span class="glyphicon glyphicon-calendar"></span>
-		    </span>
+            <span id="startdatetimepickerglyph" class="input-group-addon">
+                <span class="glyphicon glyphicon-calendar"></span>
+            </span>
 		</div>
 	</div>
 	<div class="form-group">
 	    <label> End datetime </label>
+        <a href="#" id="timezonetip" data-toggle="popover" data-trigger="hover"
+            title="" data-content="Please use timezone Europe/Helsinki">
+        <i class='glyphicon glyphicon-info-sign'></i></a>
+        </a>
 		<div class='input-group date'>
 		    {% if endTimeString %}
 			<input id="enddatetimepicker" type='text' class="form-control" name="endtime" value="{{endTimeString}}" required="required"
@@ -325,20 +325,14 @@
             data-validation="length" data-validation-length="16"
             data-validation-error-msg="Please give the date in valid format 'd.m.Y H:i'."/>
 		    {% endif %}
-		    <span class="input-group-addon">
-			<span class="glyphicon glyphicon-calendar"></span>
-		    </span>
+            <span id="enddatetimepickerglyph" class="input-group-addon">
+                <span class="glyphicon glyphicon-calendar"></span>
+            </span>
 		</div>
-	</div> 
-
-	<p>
-	<a href="#" id="timezonetip"  data-toggle="popover" data-trigger="hover" title="" data-content="Please use timezone Europe/Helsinki" >
-	<i class='glyphicon glyphicon-info-sign'></i>
-	</a>   
-	</p>
+	</div>
 
 	{# submit button #}
-	<br>
+	<br/>
 	<button id="submitBtn" onclick="submitToPlot()" class="btn btn-primary">
 	{% bootstrap_icon "star" %} Submit
 	</button>
@@ -350,8 +344,13 @@
 
     {# Plot result #}
     <div class="col-sm-6">
-	<img src="data:image/png;base64,{{ image }}">    
-	<br>
+    <img src="data:image/png;base64,{{ image }}">    
+    <br/>
+    <a href="#" data-toggle="popover" data-trigger="hover" data-placement="top"
+        title="Plot info" data-content="{{selectedInfoMeasurement}}" >
+    <i class='glyphicon glyphicon-info-sign'> info</i></a>
+
+    <br/>
 	Analysis result <a href="../download_data_file">Download CSV File</a>   
 
     </div>
@@ -396,6 +395,9 @@ $('#startdatetimepicker').datetimepicker({
         })
     },
 });
+$('#startdatetimepickerglyph').click(function() {
+  $('#startdatetimepicker').datetimepicker( "show" );
+});
 $('#enddatetimepicker').datetimepicker({
     dayOfWeekStart : 1,
     lang:'en',
@@ -408,6 +410,9 @@ $('#enddatetimepicker').datetimepicker({
             minDate:$('#startdatetimepicker').val()?$('#startdatetimepicker').val():false
         })
     },
+});
+$('#enddatetimepickerglyph').click(function() {
+  $('#enddatetimepicker').datetimepicker( "show" );
 });
     </script>
 

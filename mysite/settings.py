@@ -78,6 +78,7 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'middleware.allowedIp.AllowedIpMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
 )
 
 ROOT_URLCONF = 'mysite.urls'
@@ -146,3 +147,5 @@ IP_RANGE_DICT = {'FullAccessUser': [[IPSet(['127.0.0.0/8']),],['']],
                  'RegionalUser1': [[IPSet(['128.0.0.0/8']),],['oulu']],
                  'RegionalUser2': [[IPSet(['128.0.0.0/8']),],['tre','nok']]
                  }
+
+TEMP_FILE_PATH ="C:/Users/cwwang/AppData/Local/Temp/"

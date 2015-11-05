@@ -23,6 +23,7 @@ from pylab import *
 from io import BytesIO
 import psycopg2.extras
 from operator import itemgetter
+import datetime
 from datetime import timedelta
 import base64
 import csv
@@ -30,12 +31,19 @@ from pytz import timezone
 from django.db import connection
 from django.conf import settings
 import uuid 
+import tempfile
+import mimetypes
 
 
-user_filename = uuid.uuid4()
-csv_filename = str(user_filename)+ '.csv'
-csv_file_path ="traffic/static/traffic/" + csv_filename
+temp_folder_path = str(tempfile.mkdtemp())+"\\"
 
+
+def generate_uuid():
+    
+    user_filename = uuid.uuid4() 
+    return user_filename
+    
+    
 def create_plot_define_format(backgroud_color): 
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
@@ -382,11 +390,13 @@ def count_volume_and_arrival_on_green(sg_state,det_state,interval,start_time,tim
         start_time= start_time + interval 
     return(start_time_list,number_vehicle_in_sum_list,arrival_on_green_percent_format_list) 
 
-def open_csv_file(headers_list):
-
+def open_csv_file(uuid_name,headers_list):
+    
+    csv_file_path = temp_folder_path + str(uuid_name) +'.csv'
     file = open(csv_file_path,"w+")
     writer = csv.DictWriter(file, fieldnames = headers_list, delimiter = ';')
-    writer.writeheader()       
+    writer.writeheader()     
+    print(file.name)
     return file
 
 def write_row_csv(file,values):
@@ -421,3 +431,32 @@ def set_xaxis_datetime_limit(ax,fmt,xlim1,xlim2):
     
 def draw_bar_chart(ax, x_list, y_list, width, color):
     ax.bar(x_list, y_list, width, color='g',edgecolor = "none")
+
+def download_file(file_name, file_download_name):
+    import os, tempfile, zipfile
+    from django.http import HttpResponse
+    from django.core.servers.basehttp import FileWrapper
+    from django.conf import settings
+    import mimetypes
+    file_name = file_name
+    download_name = file_download_name
+    wrapper = FileWrapper(open(file_name))
+    content_type = mimetypes.guess_type(file_name)[0]
+    response = HttpResponse(wrapper, content_type=content_type)
+    response['Content-length'] = os.path.getsize(file_name)
+    response['Content-Disposition'] = "attachment;filename=%s" % download_name
+    return response
+
+def download_file2(file_path, file_name):
+    from django.utils.encoding import smart_str
+    from django.http import HttpResponse
+    
+    from django.conf import settings
+    from django.core.servers.basehttp import FileWrapper
+    
+    wrapper = FileWrapper(open(file_path))
+    content_type = mimetypes.guess_type(file_path)[0]
+    response = HttpResponse(wrapper, content_type=content_type)
+    response['Content-Disposition'] = 'attachment; filename=%s' % smart_str(file_name)
+    response['X-Sendfile'] = smart_str(file_path)    
+    return response 

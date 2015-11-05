@@ -80,7 +80,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
-    'middleware.allowedIp.AllowedIpMiddleware',
+    'middleware.allowedIp.AllowedIpMiddleware', 
 )
 
 ROOT_URLCONF = 'mysite.urls'
