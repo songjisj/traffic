@@ -16,6 +16,8 @@ DATABASES = {
     }
 }
 
+SESSION_COOKIE_PATH = '/imanalyst/traffic'
+
 STATIC_URL = '/imanalyst/static/'
 
 STATICFILES_DIRS = (
@@ -29,11 +31,12 @@ ALLOWED_HOSTS = [
     '10.10.250.75',
 ]
 
-ALLOWED_NETWORKS = [IPSet(['127.0.0.0/8']),      # loopback addresses
-                    IPSet(['10.10.20.0/28']),    # Imtech VPN network
+ALLOWED_NETWORKS = [IPSet(['127.0.0.0/8']),         # loopback addresses
+                    IPSet(['10.10.20.0/24']),       # Extended Imtech Administrator VPN network
+                    IPSet(['10.10.210.248/29']),    # Client VPN network
                     ]
 
-IP_RANGE_DICT = {'FullAccessUser': [[IPSet(['10.10.20.0/24']), ], ['']],
-                 'RegionalUser1': [[IPSet(['10.10.20.0/28']), ], ['oulu']],
-                 'RegionalUser2': [[IPSet(['10.10.20.0/28']), ], ['tre', 'nok']]
+IP_RANGE_DICT = {'FullAccessUser ITI 1': [[IPSet(['10.10.20.192/28']), ], ['']],
+                 'FullAccessUser ITI 2': [[IPSet(['10.10.20.248/29']), ], ['']],
+                 'Client VPN Tampere': [[IPSet(['10.10.210.248/29']), ], ['tre', 'nok']]
                  }

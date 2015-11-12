@@ -21,29 +21,20 @@ from django.http import HttpResponse
 from django.conf import settings
 from traffic.analysis import *
 from traffic.utility import IpFilter
-from .forms import ControlForm
-from .forms import ContactForm
 import dateutil.parser
 from pytz import timezone
 import datetime
 import csv
 import netaddr
 import logging
-
+from django.shortcuts import redirect
 
 logger = logging.getLogger('traffic.views')
 
 
 # Create your views here.
 def home(request):
-    return HttpResponse('''
-        Login with <a href="login/fb">Facebook</a>.<br />
-        Login with <a href="login/tw">Twitter</a>.<br />
-        <form action="login/oi">
-            <input type="text" name="id" value="me.yahoo.com" />
-            <input type="submit" value="Authenticate With OpenID">
-        </form>
-    ''')
+    return redirect(settings.SESSION_COOKIE_PATH + '/index/')
 
 
 def index(request):
@@ -52,15 +43,23 @@ def index(request):
     selectedLocation = ""
     sgNameList = []
     selectedSgName = ""
+    selectedSgNameList = []
     detectorList = []
     selectedDetectorList = []
+    green_for_driver = []
     selectedDetector = ""
     timeIntervalList = ["5", "10", "15", "30", "60", "120"]
     version_number = settings.VERSION
+    uuid_name = 0 
 
     defaultTimezone = timezone('Europe/Helsinki')
-    
- 
+
+    checkboxSelection = request.POST.get("drivableTime", "")
+    if checkboxSelection == "drivableTimeSelected":
+        green_for_driver = drivable_state_group
+    else:
+        green_for_driver = green_state_group
+    print(green_for_driver)
 
     # Select performance
     try:
@@ -69,19 +68,19 @@ def index(request):
         selectedPerformance = "greenDuration"
 
     # Simple complementary and explanation of measurements
-    infoMeasurementDict = {"Active_green": "In this plot, the distance between two adjacent bar of green phases represents the red and amber duration between them.",
-                           "Queue_length": "In this plot, the queue is recorded at the end of red both in number of vehicles and estimated meters.",
-                           "Arrival_on_green_ratio": "In this plot, the scattered points represent ratio of volume and number of vehicles during green, and the line is their regression linear",
+    infoMeasurementDict = {"Active green": "In this plot, the distance between two adjacent bar of green phases represents the red and amber duration between them.",
+                           "Queue length": "In this plot, the queue is recorded at the end of red both in number of vehicles and estimated meters.",
+                           "Arrival on green ratio": "In this plot, the scattered points represent ratio of volume and number of vehicles during green, and the line is their regression linear",
                            "Arrival_on_green_pecent": "In this plot, it records the percentage of vehicles arriving during green phases in the time interval.",
-                           "Comparison_arrival_on_green": "In this plot, it illustrates the measurement 'arrival_on_green' from multile detectors.",
-                           "Comparison_arrival_on_green_ratio": "In this plot, it shows 'arrival on green_ratio' from the multiple detectors you selected.",
+                           "Comparison arrival on green": "In this plot, it illustrates the measurement 'arrival_on_green' from multile detectors.",
+                           "Comparison_Arrival on green ratio": "In this plot, it shows 'arrival on green_ratio' from the multiple detectors you selected.",
                            "Volume": "In the plot, it calculates the volume of vehicles arriving the intersection through a detector in the time interval",
-                           "Comparison_volume": "In the plot, it shows the volumes from multiple detectors.",
-                           "Maximum_capacity": "In the plot, it estimates the maximum number of vehicles being able to pass the intersection from a detector during the green timing of selected interval.",
-                           "Green_duration": "In this plot, it calculates the duration of every green phase.",
+                           "Comparison volume": "In the plot, it shows the volumes from multiple detectors.",
+                           "Maximum capacity": "In the plot, it estimates the maximum number of vehicles being able to pass the intersection from a detector during the green timing of selected interval.",
+                           "Green duration": "In this plot, it calculates the duration of every green phase.",
                            "Green_time_in_interval": "In this plot, it calculates the total timing of green during every selected time interval.",
-                           "Percent_of_green_duration": "In this plot, it calculates the percentage of green phases in the cycle.",
-                           "Saturation_flow_rate": "In this plot, it estimates saturation flow rate through detectors."
+                           "Percentage of green duration": "In this plot, it calculates the percentage of green phases in the cycle.",
+                           "Saturation flow rate ": "In this plot, it estimates saturation flow rate through detectors."
                            }
     try:
         selectedInfoMeasurement = infoMeasurementDict[selectedPerformance]
@@ -127,6 +126,13 @@ def index(request):
     except(KeyError):
         if sgNameList:
             selectedSgName = sgNameList[0]
+            
+    # Select signalGroupList
+    try:
+        selectedSgNameList = request.POST.getlist('signalGroupList[]')
+    except:
+        if sgNameList:
+            selectedSgNameList = sgNameList[0:1]
 
     # Select detector
     if selectedSgName and selectedLocation:
@@ -153,16 +159,18 @@ def index(request):
             selectedDetectorList = detectorListInSelectedLocation[0:1]
 
     # Select time interval
+    if selectedPerformance =="Green duration" or selectedPerformance == "Percentage of green duration":
+        timeIntervalList=["5", "10", "15", "30", "60", "120", "None"]
+    else:
+        timeIntervalList=["5", "10", "15", "30", "60", "120"]
     try:
         selectedTimeInterval = request.POST['timeInterval']
     except(KeyError):
         if timeIntervalList:
             selectedTimeInterval = timeIntervalList[0]
 
-    form = ContactForm(request.POST)
-
     # select start and end time
-    startTimeString = request.POST.get('starttime', "")
+    startTimeString = request.POST.get('starttime', "") 
     endTimeString = request.POST.get('endtime', "")
     if not startTimeString:
         startTime = datetime.datetime.now(defaultTimezone)
@@ -183,57 +191,53 @@ def index(request):
             endTime = datetime.datetime.now(defaultTimezone)
             logger.warning('Failed to parse end time! Lack of user input validation - check it!')
 
-    measuresList = sorted(["Saturation_flow_rate", "Percent_of_green_duration", "Green_duration",
-                           "Queue_length", "Active_green", "Maximum_capacity",
-                           "Arrival_on_green_percent", "Volume", "Arrival_on_green_ratio", "Comparison_volume",
-                           "Comparison_arrival_on_green", "Comparison_arrival_on_green_ratio", "Green_time_in_interval"])
+    measuresList = sorted(["Saturation flow rate ", "Percentage of green duration", "Green duration",
+                           "Queue length", "Active green", "Maximum capacity",
+                           "Arrival on green percent", "Volume", "Arrival on green ratio", "Comparison volume",
+                           "Comparison arrival on green", "Comparison arrival on green ratio"])
 
 
 
     refreshType = request.POST.get('refreshType', "")
     image = ""
     if refreshType == "Plot" and startTimeString and endTimeString:
-        if selectedPerformance == "Green_duration" or selectedPerformance == "Percent_of_green_duration":
-            image,uuid_name = get_green_time_2(selectedLocation, startTime, endTime, selectedPerformance)
+        
+        if selectedPerformance == "Green duration" or selectedPerformance == "Percentage of green duration":
+            timeIntervalList = ["None", "5", "10", "15", "30", "60", "120"]
+            image,uuid_name = get_green_duration(selectedLocation, selectedSgNameList , selectedTimeInterval, startTime, endTime, selectedPerformance, green_for_driver)
             
             
-        elif selectedPerformance == "Saturation_flow_rate":
-            image, uuid_name= get_saturation_flow_rate(selectedLocation, selectedSgName, startTime, endTime) 
+        elif selectedPerformance == "Saturation flow rate ":
+            image, uuid_name= get_saturation_flow_rate(selectedLocation, selectedSgName, startTime, endTime, green_for_driver) 
             
-        elif selectedPerformance == "Queue_length":
-            image,uuid_name = get_queue_length(selectedLocation, selectedSgName, selectedDetector, startTime, endTime)
+        elif selectedPerformance == "Queue length":
+            image,uuid_name = get_queue_length(selectedLocation, selectedSgName, selectedDetector, startTime, endTime, green_for_driver)
             
             
-        elif selectedPerformance == "Active_green":
-            image, uuid_name = get_green_time(selectedLocation, selectedSgName, startTime, endTime )
+        elif selectedPerformance == "Active green":
+            image, uuid_name = get_green_time(selectedLocation, selectedSgName, startTime, endTime, green_for_driver )
             
-        elif selectedPerformance == "Maximum_capacity":
-            image, uuid_name = get_maxCapacity(selectedLocation, selectedSgName, selectedDetector, selectedTimeInterval, startTime, endTime)
+        elif selectedPerformance == "Maximum capacity":
+            image, uuid_name = get_maxCapacity(selectedLocation, selectedSgName, selectedDetector, selectedTimeInterval, startTime, endTime, green_for_driver)
             
-        elif selectedPerformance == "Arrival_on_green_percent":
-            image, uuid_name = get_arrival_on_green(selectedLocation, selectedSgName, selectedDetector, selectedTimeInterval, startTime, endTime, selectedPerformance)
+        elif selectedPerformance == "Arrival on green percent" or selectedPerformance == "Arrival on green ratio":
+            image, uuid_name = get_arrival_on_green(selectedLocation, selectedSgName, selectedDetector, selectedTimeInterval, startTime, endTime, selectedPerformance, green_for_driver)
             
         elif selectedPerformance == "Volume":
-            image, uuid_name = get_volume_lanes(selectedLocation, selectedSgName, selectedDetector, selectedTimeInterval, startTime, endTime)
+            image, uuid_name = get_volume_lanes(selectedLocation, selectedSgName, selectedDetector, selectedTimeInterval, startTime, endTime, green_for_driver)    
             
-        elif selectedPerformance == "Arrival_on_green_ratio":
-            image, uuid_name = get_arrival_on_green(selectedLocation, selectedSgName, selectedDetector, selectedTimeInterval, startTime, endTime, selectedPerformance )           
+        elif selectedPerformance == "Comparison volume" or selectedPerformance == "Comparison arrival on green" or selectedPerformance == "Comparison arrival on green ratio":
+            image, uuid_name = get_compared_arrival_on_green_ratio(selectedLocation, selectedDetectorList, selectedTimeInterval, startTime, endTime, selectedPerformance, green_for_driver)
             
-        elif selectedPerformance == "Comparison_volume" or selectedPerformance == "Comparison_arrival_on_green" or selectedPerformance == "Comparison_arrival_on_green_ratio":
-            image, uuid_name = get_compared_arrival_on_green_ratio(selectedLocation, selectedDetectorList, selectedTimeInterval, startTime, endTime, selectedPerformance)
-            
-        elif selectedPerformance == "Green_time_in_interval":
-            image, uuid_name = get_green_time_in_interval(selectedLocation, selectedTimeInterval, startTime, endTime )
     else:
         uuid_name = 0
-            
+
     csv_filename = str(uuid_name) + '.csv'
-    csv_file_path =temp_folder_path + str(uuid_name) +'.csv'   
-    
-    csv_file ="traffic/"+csv_filename  
-    request.session['uniqueId'] = csv_filename   
+
+    request.session['uniqueId'] = csv_filename
     request.session['selectedPerformance'] = selectedPerformance
-    
+    request.session['selectedLocationForMap'] = selectedLocation
+
     context = {'locationNameList': locationNameList,
                'selectedPerformance': selectedPerformance,
                'selectedInfoMeasurement': selectedInfoMeasurement,
@@ -243,53 +247,51 @@ def index(request):
                'selectedLocation': selectedLocation,
                'sgNameList': sgNameList,
                'selectedSgName': selectedSgName,
+               'selectedSgNameList': selectedSgNameList, 
                'detectorList': detectorList,
                'detectorListInSelectedLocation': detectorListInSelectedLocation,
                'selectedDetector': selectedDetector,
                'selectedDetectorList': selectedDetectorList,
                'startTimeString': startTime.strftime('%d.%m.%Y %H:%M'),
                'endTimeString': endTime.strftime('%d.%m.%Y %H:%M'),
-               'form': form,
                'image': image,
-               'version_number' : version_number,
-               'csv_filename': csv_filename}
-
+               'version_number': version_number,
+               'csv_filename': csv_filename,
+               'checkboxSelection': checkboxSelection}
 
     return render(request, 'traffic/index.html', context)
-
-
-def data(request):
-    control_form = ControlForm(request.POST)
-    if control_form.is_valid():
-
-        return render(request, 'data.html', {'control_form': control_form})
 
 
 def measuresinfo(request):
     return render(request, 'traffic/measuresinfo.html', "")
 
 
-def maps(request):
-    selectedLocation = request.POST.get('selectedLocatioForMap', "TRE303")
-    context = {'selectedLocation': selectedLocation}
-    return render(request, 'traffic/maps.html', context)
-
 
 def download_data_file(request):
     csv_filename = request.session['uniqueId']
-    performance = request.session['selectedPerformance'] 
-    current_time_str =datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-    return download_file(temp_folder_path+csv_filename, performance + current_time_str+'.csv') 
-    
+    performance = request.session['selectedPerformance']
+    current_time_str = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    return download_file(temp_folder_path + os.sep + csv_filename, performance + current_time_str + '.csv')
 
 
 def download_user_manual(request):
-    
-    with open("traffic/static/traffic/UserManual.pdf", 'rb') as pdf:
-        file_path = "traffic/static/traffic/UserManual.pdf"
+    file_path = media_folder + "UserManual.pdf"
+    with open(file_path, 'rb') as pdf:
         content_type = mimetypes.guess_type(file_path)[0]
         response = HttpResponse(pdf.read(), content_type=content_type)
         response['Content-Disposition'] = 'inline;filename=ImAnalyst_user_manual.pdf'
         return response
-    pdf.closed    
+    pdf.closed
 
+
+def maps(request):
+    selectedLocation = request.session['selectedLocationForMap']
+    map_file = maps_folder + selectedLocation + '.pdf'
+    try:
+        with open(map_file, 'rb') as pdf:
+            content_type = mimetypes.guess_type(map_file)[0]
+            response = HttpResponse(pdf.read(), content_type=content_type)
+            return response
+    except:
+        response = HttpResponse('<h1>Sorry, currently no map for this location</h1>')
+        return response

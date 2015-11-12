@@ -25,31 +25,33 @@ import psycopg2.extras
 from operator import itemgetter
 import datetime
 from datetime import timedelta
+import os
 import base64
 import csv
 from pytz import timezone
 from django.db import connection
 from django.conf import settings
-import uuid 
 import tempfile
 import mimetypes
 
 
-temp_folder_path = str(tempfile.mkdtemp())+"\\"
+temp_folder_path = tempfile.gettempdir() + os.sep + 'imanalyst'
+if not os.path.exists(temp_folder_path):
+    os.makedirs(temp_folder_path)
+
+media_folder ="traffic/media/traffic/"
+maps_folder = media_folder + "maps/"
 
 
-def generate_uuid():
-    
-    user_filename = uuid.uuid4() 
-    return user_filename
-    
-    
+
+
+
 def create_plot_define_format(backgroud_color): 
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
-
     fig = plt.figure(figsize=(10,6),facecolor=backgroud_color)  #figsize argument is for resizing the figure.
-    ax = fig.add_subplot(111) #fig.add_subplot equivalent to fig.add_subplot(1,1,1), means subplot(nrows.,ncols, plot_number)
+    #fig.add_subplot equivalent to fig.add_subplot(1,1,1), means subplot(nrows.,ncols, plot_number)
+    ax = fig.add_subplot(111)
     ax.xaxis_date()
 
     #x values are times of a day and using a Formatter to formate them.
@@ -75,28 +77,26 @@ def getBufferImage(fig):
 
     image = base64.encodebytes(imgdata.getvalue())
 
-    #TODO: We should return here a HttpResponse or change the method and utilize http://www.dajaxproject.com/ or other similar
-
     pylab.close()
     return image
     
 
-#Function to connect to postgresql 
+
 def connect_db():
-    #conn = psycopg2.connect(conn_string)
+    """Function to connect to postgresql """
     return connection
     
 #Function to disconnect to database       
 def disconnect_db(conn): 
-    #conn.close() 
     return
 
 
 
-""" write a function: the location name of intersection is the only parameter  
-    return all the signals and detectors related to it. 
-""" 
+
 def get_location_id(location_name,):
+    """ write a function: the location name of intersection is the only parameter  
+        return all the signals and detectors related to it. 
+    """     
     conn = connect_db()
     cursor = conn.cursor() 
     cursor.execute("SELECT cid FROM controller WHERE cname = '" + location_name +"'") 
@@ -104,7 +104,6 @@ def get_location_id(location_name,):
     disconnect_db(conn) 
     
     return location_id
-    #get_signalgroup = cursor.execute
     
 def get_sg_and_det_index_by_det_name(location_name,det_name):
     
@@ -117,9 +116,9 @@ def get_sg_and_det_index_by_det_name(location_name,det_name):
     return row
 
 
-#Function to get a dictionary that all signals' indexes are keys and names are values when input location_name   
+
 def get_sg_config_in_one(location_name):
-    
+    """Function to get a dictionary that all signals' indexes are keys and names are values when input location_name   """
     
     conn = connect_db()
     location_id = get_location_id(location_name)
@@ -134,10 +133,10 @@ def get_sg_config_in_one(location_name):
     return signals
 
 
-#Return a dictionary of all detectors in one intersection, the key is the local index of detector, the value is its name.
-# TODO: Seems to be unused, cleanup before first release if not used
+
+
 def get_det_in_one_location(location_name):
-    
+    """Return a dictionary of all detectors in one intersection, the key is the local index of detector, the value is its name."""
     conn = connect_db()
     location_id = get_location_id(location_name)
     cursor = conn.cursor()
@@ -152,10 +151,10 @@ def get_det_in_one_location(location_name):
 
 
 
-#Function to get the configuration of detectors in the intersection and the specified signalgroup whose name is provided 
-#Return a dictionary detectors, the keys are index of detectors and values are names of detectors.
 def get_det_config_in_one_sg(location_name, sg_name):
-
+    """Function to get the configuration of detectors in the intersection and the specified signalgroup whose name is provided 
+    Return a dictionary detectors, the keys are index of detectors and values are names of detectors.
+    """
     conn = connect_db()
     location_id = get_location_id(location_name)
     sg_dict = get_sg_config_in_one(location_name)
@@ -199,23 +198,24 @@ def get_main_data(location_name, time1, time2):
     disconnect_db(conn)
     return main_data
 
+
 def get_location_name_list():
     conn = connect_db()
     cursor = conn.cursor()
-    cursor.execute("SELECT distinct cid,  cname FROM controller")
-    rows =cursor.fetchall()
-    location_name_list =[]
+    cursor.execute("SELECT cid,  cname FROM controller")
+    rows = cursor.fetchall()
+    location_name_list = []
     for i in range(len(rows)):
         location_name_list.append(rows[i][1])
     disconnect_db(conn)
     return location_name_list
-    
 
-#This function is used to filter the status of single signalgroup with timestamp.
-#Parameters:
-#location_name, conn_string, sg_name, start time and end time.
+
 def get_sg_status(location_name,sg_name,time1,time2): 
-    
+    """This function is used to filter the status of single signalgroup with timestamp.
+    Parameters:
+    location_name, conn_string, sg_name, start time and end time.
+    """
     sg_pairs = get_sg_config_in_one(location_name)
     for idx, name in list(sg_pairs.items()):
         if name == sg_name:
@@ -243,10 +243,12 @@ def get_sg_status(location_name,sg_name,time1,time2):
     
 
 
-#This function is used to filter the status of single signalgroup and signal detector with timestamp.
-#Parameters:
-#location_name, conn_string, sg_name, start time and end time.
+
 def get_sg_det_status(location_name,sg_name,det_name,time1,time2): 
+    """This function is used to filter the status of single signalgroup and signal detector with timestamp.
+    Parameters:
+    location_name, conn_string, sg_name, start time and end time. 
+    """   
     sg_index = 0
     det_index = 0
     #look for the index of the input sg_name.
@@ -315,20 +317,6 @@ def addCapacityInList(start_time_list, start_time, sum_green, max_capacity_list)
     
     return max_capacity
 
-#def rowNumber():
-    
-    ##read configuration file
-    #config = configparser.RawConfigParser()
-    #config.read('config.cfg')
-    
-    #conn_string = config.get('Section1','conn_string') 
-    #conn = psycopg2.connect()
-    #cursor = conn.cursor()
-    #query = "SELECT fk_cid from controller_config_det"
-    #cursor.execute(query)
-    #rows = cursor.fetchall()     
-    #conn.close()
-    #return len(rows) % 2 + 1
 
 
 def fetch_data(query): 
@@ -390,19 +378,20 @@ def count_volume_and_arrival_on_green(sg_state,det_state,interval,start_time,tim
         start_time= start_time + interval 
     return(start_time_list,number_vehicle_in_sum_list,arrival_on_green_percent_format_list) 
 
-def open_csv_file(uuid_name,headers_list):
-    
-    csv_file_path = temp_folder_path + str(uuid_name) +'.csv'
-    file = open(csv_file_path,"w+")
-    writer = csv.DictWriter(file, fieldnames = headers_list, delimiter = ';')
-    writer.writeheader()     
-    print(file.name)
+
+def open_csv_file(uuid_name, headers_list):
+
+    csv_file_path = temp_folder_path + os.sep + str(uuid_name) + '.csv'
+    file = os.fdopen(os.open(csv_file_path, os.O_WRONLY | os.O_CREAT, 0o600), 'w')
+    writer = csv.DictWriter(file, fieldnames=headers_list, lineterminator='\n',delimiter=';')
+    writer.writeheader()
     return file
 
-def write_row_csv(file,values):
-    writer = csv.writer(file, delimiter=';')
+
+def write_row_csv(file, values):
+    writer = csv.writer(file, lineterminator='\n', delimiter=';')
     writer.writerow(values)
-    
+
 def get_one_plot_figure():
     fig =plt.figure(figsize=(9,6),facecolor='#99CCFF')  #figsize argument is for resizing the figure.
     #ax =fig.add_subplot(111) #fig.add_subplot equivalent to fig.add_subplot(1,1,1), means subplot(nrows.,ncols, plot_number)    
@@ -417,12 +406,10 @@ def format_axis_date():
     fmt = mdates.DateFormatter('%m-%d %H:%M:%S', tz=helsinkiTimezone)
     return fmt 
 
-def file_close_and_copy(file):
-    import shutil
+
+def close_csv_file(file):
     file.close()
-        
-    
-    
+
 
 def set_xaxis_datetime_limit(ax,fmt,xlim1,xlim2):
     ax.xaxis.set_major_formatter(fmt)    
@@ -432,31 +419,21 @@ def set_xaxis_datetime_limit(ax,fmt,xlim1,xlim2):
 def draw_bar_chart(ax, x_list, y_list, width, color):
     ax.bar(x_list, y_list, width, color='g',edgecolor = "none")
 
+
 def download_file(file_name, file_download_name):
-    import os, tempfile, zipfile
     from django.http import HttpResponse
     from django.core.servers.basehttp import FileWrapper
-    from django.conf import settings
-    import mimetypes
     file_name = file_name
     download_name = file_download_name
-    wrapper = FileWrapper(open(file_name))
-    content_type = mimetypes.guess_type(file_name)[0]
-    response = HttpResponse(wrapper, content_type=content_type)
-    response['Content-length'] = os.path.getsize(file_name)
-    response['Content-Disposition'] = "attachment;filename=%s" % download_name
-    return response
-
-def download_file2(file_path, file_name):
-    from django.utils.encoding import smart_str
-    from django.http import HttpResponse
-    
-    from django.conf import settings
-    from django.core.servers.basehttp import FileWrapper
-    
-    wrapper = FileWrapper(open(file_path))
-    content_type = mimetypes.guess_type(file_path)[0]
-    response = HttpResponse(wrapper, content_type=content_type)
-    response['Content-Disposition'] = 'attachment; filename=%s' % smart_str(file_name)
-    response['X-Sendfile'] = smart_str(file_path)    
-    return response 
+    try:
+        wrapper = FileWrapper(open(file_name))
+        content_type = mimetypes.guess_type(file_name)[0]
+        response = HttpResponse(wrapper, content_type=content_type)
+        response['Content-length'] = os.path.getsize(file_name)
+        response['Content-Disposition'] = "attachment;filename=%s" % download_name
+        return response
+    except:
+        response = HttpResponse('<h1>Sorry, currently no valid csv file. Please submit your selections at first. </h1>')
+        return response        
+   
+  

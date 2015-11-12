@@ -37,6 +37,18 @@
 	    document.getElementById("locationFormId").submit();
 	}
 	
+	function signalListChanged(){
+	    document.getElementById("refreshTypeId").value = "RefreshData";
+	    document.getElementById("locationFormId").submit();
+	
+	}
+	
+	function timeIntervalChanged() {
+	    document.getElementById("refreshTypeId").value = "RefreshData";
+	    document.getElementById("locationFormId").submit();
+	
+	}
+	
 	function alertEmptyList(){
 	    alert("")    
 	}
@@ -85,34 +97,45 @@
 		}
 	    }
 	    
-	    var detectorNotNeededArray = ["Green_duration","Percent_of_green_duration","Active_green","Saturation_flow_rate",
-	    "Comparison_volume","Comparison_arrival_on_green","Comparison_arrival_on_green_ratio","Green_time_in_interval"];
+	    var detectorNotNeededArray = ["Green duration","Percentage of green duration","Active green","Saturation flow rate ",
+	    "Comparison volume","Comparison arrival on green","Comparison arrival on green ratio"];
 	    var detectorHidden = (detectorNotNeededArray.indexOf(selectedPerformance) > -1);
     
 	    elementDisplay(detectorHidden,'detectorLabelId','detectorSelectionId')
 	   
-	    var signalGroupNotNeededArray = ["Green_duration","Percent_of_green_duration",
-	    "Comparison_arrival_on_green","Comparison_arrival_on_green_ratio","Comparison_volume","Green_time_in_interval"];
+	    var signalGroupNotNeededArray = ["Green duration","Percentage of green duration",
+	    "Comparison arrival on green","Comparison arrival on green ratio","Comparison volume"];
 	    var signalGroupHidden = (signalGroupNotNeededArray.indexOf(selectedPerformance) > -1);
-	    
 	    elementDisplay(signalGroupHidden,'signalGroupLabelId','signalGroupSelectionId')
+	    
+	    
+	    var signalGroupListNotNeededArray = ["Saturation flow rate ",  "Queue length", "Active green", "Maximum capacity",
+                           "Arrival on green percent", "Volume", "Arrival_on_green_ratio", "Comparison volume",
+                           "Comparison arrival on green", "Comparison arrival on green ratio"];
+			   
+	    var signalGroupListHidden =(signalGroupListNotNeededArray.indexOf(selectedPerformance) > -1); 
+	    elementDisplay(signalGroupListHidden, 'signalGroupListLabelId', 'signalGroupListSelectionId') 
+	    
+	    
   
-	    var timeIntervalNotNeededArray = ["Green_duration","Percent_of_green_duration","Active_green","Queue_length","Saturation_flow_rate"];
+	    var timeIntervalNotNeededArray = ["Active green","Queue length","Saturation flow rate "];
 	    var timeIntervalHidden = (timeIntervalNotNeededArray.indexOf(selectedPerformance) > -1);
 	    
 	    elementDisplay(timeIntervalHidden,'timeIntervalLabelId', 'timeIntervalSelectionId')
 	    
-	    var multipleDetectorsNotNeededArray = ["Green_duration","Percent_of_green_duration","Active_green","Saturation_flow_rate",
-	    "Arrival_on_green_ratio","Volume","Maximum_capacity","Queue_length","Arrival_on_green_percent","Green_time_in_interval"];
+	    var multipleDetectorsNotNeededArray = ["Green duration","Percentage of green duration","Active green","Saturation flow rate ",
+	    "Arrival_on_green_ratio","Volume","Maximum capacity","Queue length","Arrival on green percent"];
 	    var multipleDetectorsHidden = (multipleDetectorsNotNeededArray.indexOf(selectedPerformance) > -1);
 	                                  
 	    elementDisplay(multipleDetectorsHidden,'detectorMultipleLabelId', 'detectorMultipleSelectionId')
 	}
 	
 	function showLocationMap() {
+	
 	    var selectedLocationForMap = document.getElementById("intersectionSelectionId").value;
 	    document.getElementById('selectedLocatioForMapId').value = selectedLocationForMap;
 	    document.getElementById("showMapFormId").submit();	
+
 	}
 	
     </script>
@@ -174,16 +197,16 @@
 
 	<i class='glyphicon glyphicon-book'></i></a>
 	</p>
- 
-	
+
+
 	{# onchange means when select option is changed, we will call function performanceChanged() in javascript #}
 	<p>
 	<select id="performanceSelectionId" name ="performance" class="form-control" onchange="performanceChanged()">
 	    {% for measure in measuresList %}
 		{% if measure == selectedPerformance %}
-		    <option value= {{measure}} selected="selected"> {{measure}} </option> 
+            <option value= "{{measure}}" selected="selected"> {{measure}} </option>
 		{% else %}
-		    <option value= {{measure}}> {{measure}} </option> 
+            <option value= "{{measure}}"> {{measure}} </option>
 		{% endif %}
 	    {% endfor %}
 	    performanceChanged()
@@ -191,7 +214,9 @@
 	</p>
 	
         {# check box for driving time#}
-	<div class="checkbox-inline"><input type="checkbox" class="radio" value ="1" name=""> drivable timing </div>
+	<div class="checkbox-inline"><input type="checkbox" class="radio" value ="drivableTimeSelected" name="drivableTime" {% if checkboxSelection ==  "drivableTimeSelected"%} checked {% endif %} > 
+	    drive timing 
+	</div>
 	
 	{# Select intersection #}
 	<p>
@@ -207,15 +232,19 @@
 	</select> 
 	</p>
 	
+	{# The button for map#}
         <p>  
-	<button type="button" class="btn btn-info" onclick="showLocationMap()">map</button>
+	<a href= "../maps" onclick="window.open('../maps', 'newwindow', 'width=1200, height=800'); return false;">
+	<button type="button" class="btn btn-info">map</button>
+	</a>
 	</p>
 	
 	{# Selct signalGroup #}
 	{% if not sgNameList  %}
 	    <p> Sorry, there is no valid signalGroup configuration data in the selected intersection. Please choose other intersections. </p>
 	{% else %}
-	    <p>
+	    {# Single Signal Group #}
+	    <p> 
 	    <label id="signalGroupLabelId" for="signalGroup">Signal group</label>
 	    
 	    <select id="signalGroupSelectionId" name="signalGroup" onchange="signalChanged()" class="form-control">
@@ -227,10 +256,25 @@
 		    {% endif %}
 		{% endfor %}
 	    </select>
+	    </p>
+	    
+	    {# Multiple Signal Group #}
+	    <p>
+	    <label id =" signalGroupListLabelId" for="signalGroupList[]" > Multiple Signal Groups </label>
+	    <select id="signalGroupListSelectionId" name="signalGroupList[]" onchange="signalListChanged()" class="form-control" multiple="multiple" size="5">
+		{% for signalGroup in sgNameList %}
+		    {% if signalGroup in selectedSgNameList %}
+			<option value = {{signalGroup}} selected="selected">{{signalGroup}} </option>
+		    {% else %}
+			<option value = {{signalGroup}}> {{signalGroup}} </option>
+		    {% endif %}
+		{% endfor %}
+	    
+	    </select> 
+	    
+	    </p>
 	{% endif %}
-	</p>
-
-
+	
 	{# Selct detector #}
 	{% if sgNameList  %}
 	    <p>
@@ -251,16 +295,13 @@
 	    </p>
 	{% endif %}
 
-	{# multiple select detectors #}
-
+	{# multiple detectors #}
 	{% if sgNameList %}
 	    {% if detectorList %}
 	    <p>
 	    <label id="detectorMultipleLabelId" for="detectors[]" > Multiple choice of detectors <em>(Ctrl + click)</em> </label>
-	    
 	    <select id = "detectorMultipleSelectionId" name = "detectors[]" class="form-control" multiple ="multiple" size ="5">
 		{% for detector in detectorListInSelectedLocation %}
-		
                     {% if detector in selectedDetectorList %} 
 			<option value = {{detector}} selected="selected">{{detector}}</option>
 		    {% else %}
@@ -276,7 +317,7 @@
 	
 	{# Select timeInterval #}
 	<label id = "timeIntervalLabelId" for="timeInterval"> Time interval (minutes) </label>
-	<select id="timeIntervalSelectionId" name="timeInterval" class="form-control" >
+	<select id="timeIntervalSelectionId" name="timeInterval" onchange="timeIntervalChanged() " class="form-control" >
 	{% for timeInterval in timeIntervalList%}
 	    {% if timeInterval = selectedTimeInterval %}
 	        <option value = {{timeInterval}} selected="selected">{{timeInterval}}</option>
@@ -343,15 +384,27 @@
     </div>
 
     {# Plot result #}
-    <div class="col-sm-6">
-    <img src="data:image/png;base64,{{ image }}">    
-    <br/>
+    <div class="col-sm-6"> 
+    {% if image %}
+    <img id="plotImage" src="data:image/png;base64,{{ image }}">  
+    
     <a href="#" data-toggle="popover" data-trigger="hover" data-placement="top"
-        title="Plot info" data-content="{{selectedInfoMeasurement}}" >
-    <i class='glyphicon glyphicon-info-sign'> info</i></a>
+	title="Plot info" data-content="{{selectedInfoMeasurement}}" >
+    <i class='glyphicon glyphicon-info-sign'> info</i>
+    </a>
 
     <br/>
-	Analysis result <a href="../download_data_file">Download CSV File</a>   
+    <table>
+    <tr><td>Analysis result as&nbsp;</td><td><a id="downloadPlotImage" download="{{selectedPerformance}}.png" href="" onclick="downloadPlotImage();">Image</a></td></tr>
+    <tr><td></td><td><a href="../download_data_file">CSV File</a></td></tr>
+    </table>
+    {% else%}
+    <br>
+    <br>
+    <p>No content to show. Please submit your selections.</p>
+    {% endif %}
+    <br/>
+
 
     </div>
     </div>
@@ -360,21 +413,8 @@
     <div class="col-sm-4">
     </div>
 
-    <!--{# show csv file of result #}-->
-    <!--<div class="col-sm-5">-->
-    <!--<iframe style = "width:600px;" src="{% static "traffic/result.txt" %}"></iframe> -->
-    <!--</div>-->
-    <!--</div>-->
     <br>
     <br>
-    
-    
-    {# display the map of the intersection #}
-    <div class="row">
-	<div class="col-sm-8">
-	<img src="{% static "traffic/"|add:selectedLocation|add:".png" %}">
-	</div>
-    </div>
 
     <div style="color: #666; text-align: center;">
        <p>&#169; 2015 Imtech Traffic &#38; Infra Oy<br/>Software version: {{version_number}}</p>
@@ -455,6 +495,12 @@ $.noty.defaults = {
     },
     buttons: false // an array of buttons
 };
+    </script>
+
+    <script>
+    function downloadPlotImage() {
+        $('#downloadPlotImage').attr("href", $('#plotImage').attr("src"));
+    }
     </script>
 
 {% if not sgNameList  %}

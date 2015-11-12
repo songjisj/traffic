@@ -1,0 +1,2 @@
+#!/bin/sh
+find /tmp/imanalyst -mmin +1440 -delete

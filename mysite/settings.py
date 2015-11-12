@@ -136,6 +136,8 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
+MEDIA_URL = '/media/'
+
 ALLOWED_NETWORKS = [IPSet(['127.0.0.0/8']),      # loopback addresses
                     IPSet(['172.18.169.0/24'])   # Office network
                     ]

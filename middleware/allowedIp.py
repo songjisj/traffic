@@ -25,8 +25,6 @@ import logging
 class AllowedIpMiddleware(object):
 
     def process_request(self, request):
-        if settings.DEBUG:
-            return None
 
         try:
             real_ip = request.META['HTTP_X_FORWARDED_FOR']

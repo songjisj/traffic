@@ -61,8 +61,6 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = (
-    'django.contrib.admin',
-    'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
@@ -75,12 +73,10 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
-    'middleware.allowedIp.AllowedIpMiddleware', 
+    'middleware.allowedIp.AllowedIpMiddleware',
 )
 
 ROOT_URLCONF = 'mysite.urls'
@@ -94,7 +90,6 @@ TEMPLATES = [
             'context_processors': [
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
             ],
         },
@@ -117,6 +112,14 @@ DATABASES = {
         'PORT': '5432',
     }
 }
+
+
+# Sessions
+# https://docs.djangoproject.com/en/1.8/topics/http/sessions/
+SESSION_ENGINE = 'django.contrib.sessions.backends.signed_cookies'
+SESSION_COOKIE_AGE = 86400  # a day, in seconds
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_PATH = '/traffic'
 
 
 # Internationalization
@@ -142,10 +145,13 @@ STATICFILES_DIRS = (
     os.path.join(BASE_DIR, "static"),
 )
 
+MEDIA_URL = '/media/'
+
 ALLOWED_NETWORKS = [IPSet(['127.0.0.0/8']),      # loopback addresses
                     IPSet(['172.18.169.0/24'])   # Office network
                     ]
 
+# Only for example, please override in local settings
 IP_RANGE_DICT = {'FullAccessUser': [[IPSet(['128.0.0.0/8']), ], ['']],
                  'RegionalUser1': [[IPSet(['128.0.0.0/8']), ], ['oulu']],
                  'RegionalUser2': [[IPSet(['128.0.0.0/8']), ], ['tre', 'nok']]

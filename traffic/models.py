@@ -21,7 +21,7 @@ class Controller(models.Model):
 
     class Meta:
         managed = False
-        db_table = 'controller' 
+        db_table = 'controller'
 
 
 class ControllerConfig(models.Model):

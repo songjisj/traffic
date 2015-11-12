@@ -73,11 +73,11 @@ As to signal line, the y-value of solid points means time duration in seconds an
 
 <ol>
 
-<li style="font-size:18px">From general knowledge, it is defined that green timing of a signal group is any vehicle passing during the green, oppositely, 
-passive green is the timing no vehicle passing any more.</li>
+<li style="font-size:18px">From general knowledge, it is defined that active green is the green timing from green start time to the time when last vehicle comes. oppositely, 
+passive green is the green timing after the last vehicle comes until the end of green.</li>
 
 <li style="font-size:18px">From internal state of signal group (grint) from traffic signal controller, 
-the active green timing is to the contrary of passive green timing during a green sequence. </li>
+the active green timing is to the contrary of passive green timing during a green sequence. Passive green is green timing when the internal state of signal is <q>PASSIVE_GREEN</q> </li>
 
 </ol>
 
