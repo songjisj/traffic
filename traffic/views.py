@@ -50,7 +50,7 @@ def index(request):
     selectedDetector = ""
     timeIntervalList = ["5", "10", "15", "30", "60", "120"]
     version_number = settings.VERSION
-    uuid_name = 0 
+    uuid_name = None 
 
     defaultTimezone = timezone('Europe/Helsinki')
 
@@ -159,10 +159,9 @@ def index(request):
             selectedDetectorList = detectorListInSelectedLocation[0:1]
 
     # Select time interval
-    if selectedPerformance =="Green duration" or selectedPerformance == "Percentage of green duration":
-        timeIntervalList=["5", "10", "15", "30", "60", "120", "None"]
-    else:
-        timeIntervalList=["5", "10", "15", "30", "60", "120"]
+
+    timeIntervalList=["None", "5", "10", "15", "30", "60", "120"]
+
     try:
         selectedTimeInterval = request.POST['timeInterval']
     except(KeyError):
@@ -211,7 +210,7 @@ def index(request):
             image, uuid_name= get_saturation_flow_rate(selectedLocation, selectedSgName, startTime, endTime, green_for_driver) 
             
         elif selectedPerformance == "Queue length":
-            image,uuid_name = get_queue_length(selectedLocation, selectedSgName, selectedDetector, startTime, endTime, green_for_driver)
+            image,uuid_name = get_queue(selectedLocation, selectedSgName, selectedDetector,selectedTimeInterval, startTime, endTime, green_for_driver)
             
             
         elif selectedPerformance == "Active green":
@@ -229,8 +228,6 @@ def index(request):
         elif selectedPerformance == "Comparison volume" or selectedPerformance == "Comparison arrival on green" or selectedPerformance == "Comparison arrival on green ratio":
             image, uuid_name = get_compared_arrival_on_green_ratio(selectedLocation, selectedDetectorList, selectedTimeInterval, startTime, endTime, selectedPerformance, green_for_driver)
             
-    else:
-        uuid_name = 0
 
     csv_filename = str(uuid_name) + '.csv'
 

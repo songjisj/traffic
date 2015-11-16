@@ -202,7 +202,7 @@ def get_main_data(location_name, time1, time2):
 def get_location_name_list():
     conn = connect_db()
     cursor = conn.cursor()
-    cursor.execute("SELECT cid,  cname FROM controller")
+    cursor.execute("SELECT cid,  cname FROM controllers_with_config")
     rows = cursor.fetchall()
     location_name_list = []
     for i in range(len(rows)):

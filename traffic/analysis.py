@@ -145,13 +145,12 @@ def get_green_time(location_name, sg_name, time1, time2, green_state_list):
     return getBufferImage(fig), uuid_name
 
 
-def get_queue_length(location_name,sg_name,det_name,time1,time2,green_state_list): 
+def get_queue_length(location_name, sg_name, det_name,time_interval, time1, time2, green_state_list):      
     """Function get_queue_length is used to calculate that until the end of red,
        the number of vehicles in the queue and the length of queue in meters.
        The parameters of the function include location name, signal name, detector name, the start time and end time.
        The plot is a bar chart with dual y-axis.
     """    
-    
     sg_det_status = get_sg_det_status(location_name,sg_name,det_name,time1,time2) #sg_det_status[time,seq,grint,dint]
     
     green_on = True
@@ -164,25 +163,24 @@ def get_queue_length(location_name,sg_name,det_name,time1,time2,green_state_list
     
     count_vehicle_in_queue_dict = {}
     
-    average_length_per_vehicle = 8
+    average_length_per_vehicle = 6 
 
     uuid_name = uuid.uuid4()
-
     f = open_csv_file(uuid_name, ["discharge_queue_time", "number of vehicles", "The length of queue(meters)"])
 
     for s in sg_det_status:
         
-        if not green_on and s[2] not in green_state_list:
-            if not detector_occupied and s[3] == '1':
+        if not green_on and s[2] not in green_state_list: #Not green
+            if not detector_occupied and s[3] == '1': #vehicle comes
                 detector_occupied = True
                 count_vehicle_in_queue = count_vehicle_in_queue +1 
-            elif detector_occupied and s[3] == '0':
+            elif detector_occupied and s[3] == '0':   #vehicle leaves 
                 detector_occupied = False
-        elif not green_on and s[2] in green_state_list:
+        elif not green_on and s[2] in green_state_list: #start green
             green_on = True
         
             
-        elif green_on and s[2] not in green_state_list:
+        elif green_on and s[2] not in green_state_list:  #end green
             green_on =False 
             discharge_queue_time = s[0]
             count_vehicle_in_queue_dict[discharge_queue_time] = count_vehicle_in_queue
@@ -234,7 +232,138 @@ def get_queue_length(location_name,sg_name,det_name,time1,time2,green_state_list
     # The second parameter of title is for not overlapping title with yaxis on the top. Title has x and y arguments.
     title('Queue length: sg '+ sg_name+ ' in '+location_name + 'detected by' + det_name, y =1.05)  
     
-    return getBufferImage(fig), uuid_name
+    return getBufferImage(fig), uuid_name      
+  
+def get_queue_length_in_interval(location_name, sg_name, det_name,time_interval, time1, time2, green_state_list):      
+    """Function get_queue_length is used to calculate that until the end of red,
+       the number of vehicles in the queue and the length of queue in meters.
+       The parameters of the function include location name, signal name, detector name, the start time and end time.
+       The plot is a bar chart with dual y-axis.
+    """    
+    sg_det_status = get_sg_det_status(location_name,sg_name,det_name,time1,time2) #sg_det_status[time,seq,grint,dint]
+    
+    green_on = True
+    
+    discharge_queue_time = None
+    
+    detector_occupied = False
+    
+    count_vehicle_in_queue = 0 
+    
+    count_vehicle_in_queue_dict = {}
+    
+    average_length_per_vehicle = 6 
+    average_vehicle_in_queue_list= []
+    average_queue_length_list = []
+    max_queue_list = []
+    start_time_list = []
+    count_vehicle_in_queue_list = []
+    uuid_name = uuid.uuid4()
+    
+    f = open_csv_file(uuid_name, ["start_interval_time", "average number of vehicles","maximum vehicles in queue" "average length of queue(meters)"])
+    
+    interval = convert_time_interval_str_to_timedelta(time_interval)
+    if sg_det_status: 
+        start_time = sg_det_status[0][0]
+        
+        for s in sg_det_status:
+            
+            if s[0] < start_time + interval :
+                if not green_on and s[2] not in green_state_list: #Not green
+                    if not detector_occupied and s[3] == '1': #vehicle comes
+                        detector_occupied = True
+                        count_vehicle_in_queue = count_vehicle_in_queue +1 
+                    elif detector_occupied and s[3] == '0':   #vehicle leaves 
+                        detector_occupied = False
+                elif not green_on and s[2] in green_state_list: #start green
+                    green_on = True
+                
+                elif green_on and s[2] not in green_state_list:  #end green
+                    green_on =False 
+                    discharge_queue_time = s[0]
+                    count_vehicle_in_queue_dict[discharge_queue_time] = count_vehicle_in_queue
+                    count_vehicle_in_queue_list.append(count_vehicle_in_queue)
+            else:
+                #average_vehicle_in_queue = (sum(list(count_vehicle_in_queue_dict.values())))/len(list(count_vehicle_in_queue_dict.values())) 
+                average_vehicle_in_queue = mean_in_list(count_vehicle_in_queue_list)
+                max_queue = max(count_vehicle_in_queue_list)
+                average_queue_length = average_vehicle_in_queue * average_length_per_vehicle  
+                write_row_csv(f, [start_time,average_vehicle_in_queue, max_queue, average_queue_length])
+                start_time_list.append(start_time)
+                average_vehicle_in_queue_list.append(average_vehicle_in_queue)
+                average_queue_length_list.append(average_queue_length)
+                max_queue_list.append(max_queue)
+                start_time = start_time + interval 
+                count_vehicle_in_queue_dict.clear() 
+                average_vehicle_in_queue = 0 
+                max_queue = 0 
+                count_vehicle_in_queue_list = []
+                
+    
+        close_csv_file(f)
+        
+        fig=get_one_plot_figure()
+        ax =fig.add_subplot(111) #fig.add_subplot equivalent to fig.add_subplot(1,1,1), means subplot(nrows.,ncols, plot_number)
+        fmt=format_axis_date()
+        set_xaxis_datetime_limit(ax, fmt, time1, time2)
+        plt.setp( plt.gca().get_xticklabels(), rotation=45, horizontalalignment='right')
+        plt.tick_params(labelsize=6)    
+        #The segment codes is for marking dual units(dual axis) using matplotlib
+        ax.bar(start_time_list, average_vehicle_in_queue_list, width = 0.0005, color='purple', edgecolor = "none")
+        ax.plot(start_time_list, max_queue_list, marker = '*', color = 'red')
+        xlabel('Times')
+        ylabel('Number of vehicles in queue' )
+        
+        #Define limits of figures
+        ymin = 0
+        ymax = 15 
+        
+        #first plot
+        ax.set_ylim(ymin,ymax)
+        ax.yaxis.tick_left()
+        
+        #Second plot
+        ax2 =twinx()
+        
+        ax2.axes.get_xaxis().set_visible(False) # Tring to hide the x-axes of second plot but I don't know it did not work
+        ax2.get_xaxis().tick_bottom() 
+        
+        ay2 = twiny()  
+        
+        #Function 'yconv' convert the number of vehicles in queue to length of queue in metre 
+        def yconv(y):
+            return y * average_length_per_vehicle
+        
+        ymin2 = yconv(ymin)
+        ymax2 = yconv(ymax)
+        
+        ax2.set_ylabel('queue length (unit:meter)') 
+        
+        ay2.yaxis.tick_right()
+        ax2.set_ylim(ymin2,ymax2) 
+        
+        # The second parameter of title is for not overlapping title with yaxis on the top. Title has x and y arguments.
+        title('Queue length: sg '+ sg_name+ ' in '+location_name + 'detected by' + det_name, y =1.05)  
+        
+        return getBufferImage(fig), uuid_name                      
+
+def get_queue(location_name, sg_name, det_name,time_interval, time1, time2, green_state_list): 
+    if time_interval =='None':
+        return get_queue_length(location_name, sg_name, det_name, time_interval, 
+                        time1, time2, 
+                        green_state_list)
+    else:
+        return get_queue_length_in_interval(location_name, sg_name, det_name, 
+                                    time_interval, 
+                                    time1, 
+                                    time2, 
+                                    green_state_list)
+
+    
+    
+        
+
+
 
 
 
@@ -478,8 +607,8 @@ def get_maxCapacity(location_name,sg_name,det_name,time_interval,time1,time2, gr
         set_xaxis_datetime_limit(ax, fmt, time1, time2)
         plt.setp( plt.gca().get_xticklabels(), rotation=45, horizontalalignment='right')
         plt.tick_params(labelsize=6)    
-       
-        ax.plot(start_time_list,max_capacity_list,marker='D',linestyle='--',color='g')
+        if max_capacity_list:
+            ax.plot(start_time_list,max_capacity_list,marker='D',linestyle='--',color='g')
     
         xlabel('Time')
         ylabel('maximum capacity(unit:number of vehicles)' )
@@ -938,3 +1067,4 @@ def get_green_duration(location_name, sg_name_list, time_interval, time1, time2,
                                          time2, 
                                          performance, 
                                          green_state_list)
+

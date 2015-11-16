@@ -37,11 +37,6 @@
 	    document.getElementById("locationFormId").submit();
 	}
 	
-	function signalListChanged(){
-	    document.getElementById("refreshTypeId").value = "RefreshData";
-	    document.getElementById("locationFormId").submit();
-	
-	}
 	
 	function timeIntervalChanged() {
 	    document.getElementById("refreshTypeId").value = "RefreshData";
@@ -84,16 +79,37 @@
 	function performanceChanged() {
 	    //get html element (here is the select), by id, id is in element's <>
 	    var selectedPerformance = document.getElementById("performanceSelectionId").value;
+	    
+            var timeIntervalSelect = document.getElementById("timeIntervalSelectionId");
+	        if (selectedPerformance == "Green duration" || selectedPerformance == "Percentage of green duration" || selectedPerformance =="Queue length") {
+		    timeIntervalSelect.options[0].style.display = "block";
+	        } 
+		else {
+		    timeIntervalSelect.options[0].style.display = "none";
+		    if (timeIntervalSelect.selectedIndex == 0) {
+		        timeIntervalSelect.options[1].selected = true;
+		    }
+	        }
 
 	    function elementDisplay(elementHiddenCondition,elementLabelId,elementSelectionId) {
 		if (elementHiddenCondition) {
 		    //get detector label by its id and change delector style, by change display to none or block (means hide or show)
-		    document.getElementById(elementLabelId).style.display = "none";
-		    document.getElementById(elementSelectionId).style.display = "none";
+		    if (document.getElementById(elementLabelId) != null) {
+		        document.getElementById(elementLabelId).style.display = "none";
+		    }
+		    if (document.getElementById(elementSelectionId) != null){
+		        document.getElementById(elementSelectionId).style.display = "none";
+		    }
+		    
 		}
 		else{
-		    document.getElementById(elementLabelId).style.display = "block";
-		    document.getElementById(elementSelectionId).style.display = "block";
+		    if (document.getElementById(elementLabelId) != null){
+		        document.getElementById(elementLabelId).style.display = "block";
+		    }
+		    if (document.getElementById(elementSelectionId) != null){
+		        document.getElementById(elementSelectionId).style.display = "block";
+		    }
+		      
 		}
 	    }
 	    
@@ -110,7 +126,7 @@
 	    
 	    
 	    var signalGroupListNotNeededArray = ["Saturation flow rate ",  "Queue length", "Active green", "Maximum capacity",
-                           "Arrival on green percent", "Volume", "Arrival_on_green_ratio", "Comparison volume",
+                           "Arrival on green percent", "Volume", "Arrival on green ratio", "Comparison volume",
                            "Comparison arrival on green", "Comparison arrival on green ratio"];
 			   
 	    var signalGroupListHidden =(signalGroupListNotNeededArray.indexOf(selectedPerformance) > -1); 
@@ -118,7 +134,7 @@
 	    
 	    
   
-	    var timeIntervalNotNeededArray = ["Active green","Queue length","Saturation flow rate "];
+	    var timeIntervalNotNeededArray = ["Active green","Saturation flow rate "];
 	    var timeIntervalHidden = (timeIntervalNotNeededArray.indexOf(selectedPerformance) > -1);
 	    
 	    elementDisplay(timeIntervalHidden,'timeIntervalLabelId', 'timeIntervalSelectionId')
@@ -260,8 +276,8 @@
 	    
 	    {# Multiple Signal Group #}
 	    <p>
-	    <label id =" signalGroupListLabelId" for="signalGroupList[]" > Multiple Signal Groups </label>
-	    <select id="signalGroupListSelectionId" name="signalGroupList[]" onchange="signalListChanged()" class="form-control" multiple="multiple" size="5">
+	    <label id ="signalGroupListLabelId" for="signalGroupList[]" > Multiple Signal Groups </label>
+	    <select id="signalGroupListSelectionId" name="signalGroupList[]"  class="form-control" multiple="multiple" size="5">
 		{% for signalGroup in sgNameList %}
 		    {% if signalGroup in selectedSgNameList %}
 			<option value = {{signalGroup}} selected="selected">{{signalGroup}} </option>
@@ -319,7 +335,7 @@
 	<label id = "timeIntervalLabelId" for="timeInterval"> Time interval (minutes) </label>
 	<select id="timeIntervalSelectionId" name="timeInterval" onchange="timeIntervalChanged() " class="form-control" >
 	{% for timeInterval in timeIntervalList%}
-	    {% if timeInterval = selectedTimeInterval %}
+	    {% if timeInterval == selectedTimeInterval %}
 	        <option value = {{timeInterval}} selected="selected">{{timeInterval}}</option>
 	    {% else %}
 	        <option value = {{timeInterval}}> {{timeInterval}} </option>
