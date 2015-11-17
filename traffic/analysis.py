@@ -49,10 +49,8 @@ def get_green_time(location_name, sg_name, time1, time2, green_state_list):
        The parameters are the name of location, the name of the signal group , the start time, end time and green_state_list.
        The plot has two sub plots based on two different definition of active and passive green.
     """
-    passive_green_state_list = ["4"]
-
-    sg_status = get_sg_status(location_name, sg_name, time1, time2)
-
+    passive_green_state_list = ["4"] 
+    sg_status = get_sg_status(location_name, sg_name, time1, time2) 
     green_on = False
     passive_green_on = False
     active_green_list = []
@@ -64,85 +62,87 @@ def get_green_time(location_name, sg_name, time1, time2, green_state_list):
     width = 0.0005
     total_passive_green_state_time = 0
     active_green_state_time = 0
-
     uuid_name = uuid.uuid4()
 
     f = open_csv_file(uuid_name, ["start_green_time", "active_green_duration(seconds)",
                                   "passive_green_duration(seconds)",
                                   "active_green_duration_from_grint", "passive_green_from_grint"])
-
-    for s in sg_status:
-
-        # Start to be green
-        if not green_on and s[1] in green_state_list:
-            start_green_time = s[0]
-            green_on = True
-            any_detectors_occupied = True
-            detector_unoccupied_lastest_time = s[0]
-        # During green
-        elif green_on and s[1] in green_state_list:
-
-            if int(s[3]) != 0:  # some detectors are occupied
+    if sg_status:
+        for s in sg_status:
+    
+            # Start to be green
+            if not green_on and s[1] in green_state_list:
+                start_green_time = s[0]
+                green_on = True
                 any_detectors_occupied = True
-            elif int(s[3]) == 0 and any_detectors_occupied:  # record the start that detectors become occupied to unoccupied.
                 detector_unoccupied_lastest_time = s[0]
-                any_detectors_occupied = False
-
-            # for the state passive_green part
-            elif s[1] in passive_green_state_list and not passive_green_on:
-                passive_green_on = True
-                passive_green_start_time = s[0]
-            elif s[1] not in passive_green_state_list and passive_green_on:
+            # During green
+            elif green_on and s[1] in green_state_list:
+    
+                if int(s[3]) != 0:  # some detectors are occupied
+                    any_detectors_occupied = True
+                elif int(s[3]) == 0 and any_detectors_occupied:  # record the start that detectors become occupied to unoccupied.
+                    detector_unoccupied_lastest_time = s[0]
+                    any_detectors_occupied = False
+    
+                # for the state passive_green part
+                elif s[1] in passive_green_state_list and not passive_green_on:
+                    passive_green_on = True
+                    passive_green_start_time = s[0]
+                elif s[1] not in passive_green_state_list and passive_green_on:
+                    passive_green_on = False
+                    current_passive_green_state_time = timedelta.total_seconds(s[0] - passive_green_start_time)
+                    total_passive_green_state_time = total_passive_green_state_time + current_passive_green_state_time
+    
+            elif green_on and s[1] not in green_state_list:
+                green_on = False
                 passive_green_on = False
-                current_passive_green_state_time = timedelta.total_seconds(s[0] - passive_green_start_time)
-                total_passive_green_state_time = total_passive_green_state_time + current_passive_green_state_time
+                active_green = timedelta.total_seconds(detector_unoccupied_lastest_time - start_green_time)
+                total_green = timedelta.total_seconds(s[0] - start_green_time)
+                start_green_time_list.append(start_green_time)
+                active_green_list.append(active_green)
+                active_green_state_time = total_green - total_passive_green_state_time
+                active_green_time_state_list.append(active_green_state_time)
+                total_passive_green_state_time_list.append(total_passive_green_state_time)
+    
+                useless_green = timedelta.total_seconds(s[0] - detector_unoccupied_lastest_time)
+                useless_green_list.append(useless_green)
+                write_row_csv(f, [start_green_time, active_green, useless_green,
+                                  active_green_state_time, total_passive_green_state_time])
+                total_passive_green_state_time = 0
+        close_csv_file(f)
+    
+        fig = plt.figure(figsize=(10, 6), facecolor='#99CCFF')
+        fig.suptitle('Signalgroup Green Duration: sg ' + sg_name + ' in ' + location_name, fontsize=14, fontweight='bold')
+    
+        ax = fig.add_subplot(211)  # fig.add_subplot equivalent to fig.add_subplot(1,1,1), means subplot(nrows.,ncols, plot_number)
+        helsinkiTimezone = timezone('Europe/Helsinki')
+        fmt = mdates.DateFormatter('%m-%d %H:%M:%S', tz=helsinkiTimezone)
+        fmt2 = mdates.DateFormatter('%H:%M:%S', tz=helsinkiTimezone)
+        set_xaxis_datetime_limit(ax, fmt2, time1, time2)
+        plt.setp(plt.gca().get_xticklabels(), rotation=45, horizontalalignment='right')
+        plt.tick_params(labelsize=6)
+    
+        green_active = ax.bar(start_green_time_list, active_green_list, width, color='g', edgecolor="none")
+        green_useless = ax.bar(start_green_time_list, useless_green_list, width, color='blue', bottom=active_green_list, edgecolor="none")
+    
+        ax2 = fig.add_subplot(212)
+        set_xaxis_datetime_limit(ax2, fmt, time1, time2)
+        plt.setp(plt.gca().get_xticklabels(), rotation=45, horizontalalignment='right')
+        plt.tick_params(labelsize=6)
+        green_active_state = ax2.bar(start_green_time_list, active_green_time_state_list, width, color='r', edgecolor="none")
+        green_passive_state = ax2.bar(start_green_time_list, total_passive_green_state_time_list, width, color='y',
+                                      bottom=active_green_time_state_list, edgecolor="none")
+        if green_active and green_useless:
+            ax.legend((green_active[0], green_useless[0]), ("active green", "passive green"))
+        if green_active_state and green_passive_state:
+            ax2.legend((green_active_state[0], green_passive_state[0]), ("grint active green", "grint passive green"))
+        plt.xlabel('Time')
+        ylabel('Green duration(s)')
+        return getBufferImage(fig), uuid_name  
+    else:
+        raise ValueError('No data is valid!')
 
-        elif green_on and s[1] not in green_state_list:
-            green_on = False
-            passive_green_on = False
-            active_green = timedelta.total_seconds(detector_unoccupied_lastest_time - start_green_time)
-            total_green = timedelta.total_seconds(s[0] - start_green_time)
-            start_green_time_list.append(start_green_time)
-            active_green_list.append(active_green)
-            active_green_state_time = total_green - total_passive_green_state_time
-            active_green_time_state_list.append(active_green_state_time)
-            total_passive_green_state_time_list.append(total_passive_green_state_time)
-
-            useless_green = timedelta.total_seconds(s[0] - detector_unoccupied_lastest_time)
-            useless_green_list.append(useless_green)
-            write_row_csv(f, [start_green_time, active_green, useless_green,
-                              active_green_state_time, total_passive_green_state_time])
-            total_passive_green_state_time = 0
-    close_csv_file(f)
-
-    fig = plt.figure(figsize=(10, 6), facecolor='#99CCFF')
-    fig.suptitle('Signalgroup Green Duration: sg ' + sg_name + ' in ' + location_name, fontsize=14, fontweight='bold')
-
-    ax = fig.add_subplot(211)  # fig.add_subplot equivalent to fig.add_subplot(1,1,1), means subplot(nrows.,ncols, plot_number)
-    helsinkiTimezone = timezone('Europe/Helsinki')
-    fmt = mdates.DateFormatter('%m-%d %H:%M:%S', tz=helsinkiTimezone)
-    fmt2 = mdates.DateFormatter('%H:%M:%S', tz=helsinkiTimezone)
-    set_xaxis_datetime_limit(ax, fmt2, time1, time2)
-    plt.setp(plt.gca().get_xticklabels(), rotation=45, horizontalalignment='right')
-    plt.tick_params(labelsize=6)
-
-    green_active = ax.bar(start_green_time_list, active_green_list, width, color='g', edgecolor="none")
-    green_useless = ax.bar(start_green_time_list, useless_green_list, width, color='blue', bottom=active_green_list, edgecolor="none")
-
-    ax2 = fig.add_subplot(212)
-    set_xaxis_datetime_limit(ax2, fmt, time1, time2)
-    plt.setp(plt.gca().get_xticklabels(), rotation=45, horizontalalignment='right')
-    plt.tick_params(labelsize=6)
-    green_active_state = ax2.bar(start_green_time_list, active_green_time_state_list, width, color='r', edgecolor="none")
-    green_passive_state = ax2.bar(start_green_time_list, total_passive_green_state_time_list, width, color='y',
-                                  bottom=active_green_time_state_list, edgecolor="none")
-    if green_active and green_useless:
-        ax.legend((green_active[0], green_useless[0]), ("active green", "passive green"))
-    if green_active_state and green_passive_state:
-        ax2.legend((green_active_state[0], green_passive_state[0]), ("grint active green", "grint passive green"))
-    plt.xlabel('Time')
-    ylabel('Green duration(s)')
-    return getBufferImage(fig), uuid_name
 
 
 def get_queue_length(location_name, sg_name, det_name,time_interval, time1, time2, green_state_list):      
@@ -263,6 +263,7 @@ def get_queue_length_in_interval(location_name, sg_name, det_name,time_interval,
     f = open_csv_file(uuid_name, ["start_interval_time", "average number of vehicles","maximum vehicles in queue" "average length of queue(meters)"])
     
     interval = convert_time_interval_str_to_timedelta(time_interval)
+    
     if sg_det_status: 
         start_time = sg_det_status[0][0]
         
@@ -296,6 +297,7 @@ def get_queue_length_in_interval(location_name, sg_name, det_name,time_interval,
                 start_time = start_time + interval 
                 count_vehicle_in_queue_dict.clear() 
                 average_vehicle_in_queue = 0 
+                count_vehicle_in_queue = 0
                 max_queue = 0 
                 count_vehicle_in_queue_list = []
                 
@@ -466,94 +468,98 @@ def get_saturation_flow_rate(location_name, sg_name, time1, time2, green_state_l
     """ 
     main_data = get_main_data(location_name, time1, time2)  # [tt,gint,dint,seq]
     sg_pairs = get_sg_config_in_one(location_name)
-    for idx, name in list(sg_pairs.items()):
-        if name == sg_name:
-            sg_index = idx
-            break      
-    det_dict = get_det_config_in_one_sg(location_name, sg_name)
-
-    required_vehicle_number = 8
+    if main_data:
+        for idx, name in list(sg_pairs.items()):
+            if name == sg_name:
+                sg_index = idx
+                break      
+        det_dict = get_det_config_in_one_sg(location_name, sg_name)
     
-    one_hour_in_second = 3600
-    
-    mean_saturation_by_det_list = []
-    xlabel_list = []
-
-    uuid_name = uuid.uuid4()
-    f = open_csv_file(uuid_name, ["det_name", "saturation_flow_rate"])
-
-    for det_index in list(det_dict.keys()):
-        det_name = det_dict[det_index]
-
-        green_on = False
+        required_vehicle_number = 8
         
-        detector_occupied = False 
-    
-        detector_occupied_time = None
-    
-        detector_occupied_time_list_on_green = []
-    
-        successive_vehicle_end_index = 7
-    
-        successive_vehicle_start_index =3
-    
-        time_diff = 0
-    
-        time_diff_list = []
-    
-        start_green_time = None
-    
-        start_green_time_list = [] 
-    
-        saturation_flow_rate = 0 
-    
-        saturation_flow_rate_list = []
-    
-        saturation_flow_rate_pair_list = []
-    
-        sum_green_duration = 0  
+        one_hour_in_second = 3600
         
-        for r in main_data:
-            if not green_on and r[1][sg_index] in green_state_list:
-                green_on = True
-                start_green_time = r[0]
-                start_green_time_list.append(start_green_time)
-            elif green_on and r[1][sg_index] in green_state_list:
-                if not detector_occupied and r[2][det_index] == '1':
-                    detector_occupied_time = r[0]
-                    detector_occupied = True
-                    detector_occupied_time_list_on_green.append(detector_occupied_time)
-                elif detector_occupied and r[2][det_index] =='0':
-                    detector_occupied = False 
-            elif green_on and r[1][sg_index] not in green_state_list:
-                green_on = False
-                #sum_green_duration = timedelta.total_seconds(r[0]-start_green_time) + sum_green_duration
-                if len(detector_occupied_time_list_on_green) > required_vehicle_number:
-                    time_diff = (detector_occupied_time_list_on_green[successive_vehicle_end_index] - 
-                                 detector_occupied_time_list_on_green[successive_vehicle_start_index])/(successive_vehicle_end_index - successive_vehicle_start_index)
-                    
-                    saturation_flow_rate = one_hour_in_second/time_diff.total_seconds()
-                    #saturation_flow_rate_pair =[saturation_flow_rate, detector_occupied_time_list_on_green[0]]
-                    #saturation_flow_rate_pair_list.append(saturation_flow_rate_pair)
-                    saturation_flow_rate_list.append(saturation_flow_rate)
-                detector_occupied_time_list_on_green = []
+        mean_saturation_by_det_list = []
+        xlabel_list = []
+    
+        uuid_name = uuid.uuid4()
+        f = open_csv_file(uuid_name, ["det_name", "saturation_flow_rate"])
+        
+        for det_index in list(det_dict.keys()):
+            det_name = det_dict[det_index]
+    
+            green_on = False
             
-         
-        mean_saturation_by_det = mean_in_list(saturation_flow_rate_list)
-        mean_saturation_by_det_list.append(mean_saturation_by_det) 
-        xlabel_list.append(det_name)
-        write_row_csv(f,[det_name, mean_saturation_by_det])
-    close_csv_file(f)
-    fig_size = plt.rcParams["figure.figsize"]
-    fig_size[0]=10 # resize width
-    fig_size[1]=6 # resize height
-    plt.bar(list(range(len(mean_saturation_by_det_list))),mean_saturation_by_det_list,width=0.009,color = "r", align='center')
-    plt.xticks(list(range(len(mean_saturation_by_det_list))),xlabel_list)
-    ylabel("Number of vehicles")
-    xlabel("Name of each detector")
-    title("Saturation flow rate by detectors in signalGroup "+sg_name +" in "+ location_name) 
-    
-    return getBufferImage(plt.gcf()), uuid_name
+            detector_occupied = False 
+        
+            detector_occupied_time = None
+        
+            detector_occupied_time_list_on_green = []
+        
+            successive_vehicle_end_index = 7
+        
+            successive_vehicle_start_index =3
+        
+            time_diff = 0
+        
+            time_diff_list = []
+        
+            start_green_time = None
+        
+            start_green_time_list = [] 
+        
+            saturation_flow_rate = 0 
+        
+            saturation_flow_rate_list = []
+        
+            saturation_flow_rate_pair_list = []
+        
+            sum_green_duration = 0  
+            
+            for r in main_data:
+                if not green_on and r[1][sg_index] in green_state_list:
+                    green_on = True
+                    start_green_time = r[0]
+                    start_green_time_list.append(start_green_time)
+                elif green_on and r[1][sg_index] in green_state_list:
+                    if not detector_occupied and r[2][det_index] == '1':
+                        detector_occupied_time = r[0]
+                        detector_occupied = True
+                        detector_occupied_time_list_on_green.append(detector_occupied_time)
+                    elif detector_occupied and r[2][det_index] =='0':
+                        detector_occupied = False 
+                elif green_on and r[1][sg_index] not in green_state_list:
+                    green_on = False
+                    #sum_green_duration = timedelta.total_seconds(r[0]-start_green_time) + sum_green_duration
+                    if len(detector_occupied_time_list_on_green) > required_vehicle_number:
+                        time_diff = (detector_occupied_time_list_on_green[successive_vehicle_end_index] - 
+                                     detector_occupied_time_list_on_green[successive_vehicle_start_index])/(successive_vehicle_end_index - successive_vehicle_start_index)
+                        
+                        saturation_flow_rate = one_hour_in_second/time_diff.total_seconds()
+                        #saturation_flow_rate_pair =[saturation_flow_rate, detector_occupied_time_list_on_green[0]]
+                        #saturation_flow_rate_pair_list.append(saturation_flow_rate_pair)
+                        saturation_flow_rate_list.append(saturation_flow_rate)
+                    detector_occupied_time_list_on_green = []
+                
+             
+            mean_saturation_by_det = mean_in_list(saturation_flow_rate_list)
+            mean_saturation_by_det_list.append(mean_saturation_by_det) 
+            xlabel_list.append(det_name)
+            write_row_csv(f,[det_name, mean_saturation_by_det])
+        close_csv_file(f)
+        fig_size = plt.rcParams["figure.figsize"]
+        fig_size[0]=10 # resize width
+        fig_size[1]=6 # resize height
+        plt.bar(list(range(len(mean_saturation_by_det_list))),mean_saturation_by_det_list,width=0.009,color = "r", align='center')
+        plt.xticks(list(range(len(mean_saturation_by_det_list))),xlabel_list)
+        ylabel("Number of vehicles")
+        xlabel("Name of each detector")
+        title("Saturation flow rate by detectors in signalGroup "+sg_name +" in "+ location_name) 
+        
+        return getBufferImage(plt.gcf()), uuid_name     
+    else:
+        raise ValueError("No data is valid!")
+
 
 
 def get_maxCapacity(location_name,sg_name,det_name,time_interval,time1,time2, green_state_list):   
@@ -572,11 +578,8 @@ def get_maxCapacity(location_name,sg_name,det_name,time_interval,time1,time2, gr
         width = 0.0005 
         green_end_time = None 
         sum_green = 0 
-        try:
-            start_time = sg_status[0][0] 
-        except:
-            start_time = "10/07/2015 19:00:00"
-    
+        start_time = sg_status[0][0] 
+
         uuid_name = uuid.uuid4()
         f = open_csv_file(uuid_name, ["start_time", "max_capacity", "green in total(seconds)"])
     
@@ -635,10 +638,7 @@ def get_arrival_on_green(location_name, sg_name,det_name,time_interval,time1,tim
         detector_occupied = False
         number_vehicles_in_green = 0 
         number_vehicles_in_red = 0
-        try:
-            start_time = sg_det_status[0][0] 
-        except:
-            start_time = "10/07/2015 19:00" 
+        start_time = sg_det_status[0][0] 
         arrival_on_green_percent_format_list = []
         number_vehicle_in_sum_list = []
         start_time_list = []
@@ -772,13 +772,10 @@ def get_volume_lanes(location_name, sg_name,det_name,time_interval,time1,time2, 
         f = open_csv_file(uuid_name, ["start_time", "name of detector", "volume"])
     
         for det_id in list(det_paralleled_dict.keys()):
-            det_name = det_dict[det_id]
-            
+            det_name = det_dict[det_id]   
             detector_occupied = False
-            try:
-                start_time = main_data[0][0] 
-            except:
-                start_time = "10/07/2015 19:00"
+            start_time = main_data[0][0] 
+
             volume = 0 
             volume_list=[]
             start_time_list= []
@@ -853,11 +850,7 @@ def get_compared_arrival_on_green_ratio(location_name,det_name_list,time_interva
             detector_occupied = False
             number_vehicles_in_green = 0 
             number_vehicles_in_red = 0
-            try:
-                start_time = main_data[0][0] 
-            except:
-                start_time = "10/07/2015 19:00"
-    
+            start_time = main_data[0][0] 
             arrival_on_green_percent_format_list = []
             number_vehicle_in_sum_list = []
             start_time_list = []
@@ -1011,11 +1004,8 @@ def get_green_time_in_interval(location_name, sg_name_list, time_interval, time1
 
 
 def plot_green_time_in_interval(green_on,start_green_time, ax, fmt, f, interval, main_data,sg_index, sg_name, location_name, time_interval, time1, time2, performance, green_state_list):
-    try:
-        start_time = main_data[0][0]
-    except:
-        start_time = "10/07/2015 19:00"
-    
+
+    start_time = main_data[0][0]
     minimum_green_list = []
     green_on = False
     start_interval_time_list = []

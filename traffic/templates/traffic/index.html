@@ -140,7 +140,7 @@
 	    elementDisplay(timeIntervalHidden,'timeIntervalLabelId', 'timeIntervalSelectionId')
 	    
 	    var multipleDetectorsNotNeededArray = ["Green duration","Percentage of green duration","Active green","Saturation flow rate ",
-	    "Arrival_on_green_ratio","Volume","Maximum capacity","Queue length","Arrival on green percent"];
+	    "Arrival on green ratio","Volume","Maximum capacity","Queue length","Arrival on green percent"];
 	    var multipleDetectorsHidden = (multipleDetectorsNotNeededArray.indexOf(selectedPerformance) > -1);
 	                                  
 	    elementDisplay(multipleDetectorsHidden,'detectorMultipleLabelId', 'detectorMultipleSelectionId')
@@ -234,11 +234,11 @@
 	    drive timing 
 	</div>
 	
-	{# Select intersection #}
+	{# Select intersection #}  
 	<p>
 	<label for="location">Intersection </label>
-	<select id="intersectionSelectionId" name="location" onchange="intersectionChanged()" class="form-control">
-	{% for locationName in locationNameList %}
+	<select id="intersectionSelectionId" name="location" onchange="intersectionChanged()" class="form-control">    
+	{% for locationName in locationNameList %} 
 	    {% if locationName == selectedLocation %}
 		<option value= {{locationName}} selected="selected"> {{locationName}} </option> 
 	    {% else %}
@@ -251,7 +251,7 @@
 	{# The button for map#}
         <p>  
 	<a href= "../maps" onclick="window.open('../maps', 'newwindow', 'width=1200, height=800'); return false;">
-	<button type="button" class="btn btn-info">map</button>
+	<button type="button" class="btn btn-info">map</button> 
 	</a>
 	</p>
 	
@@ -401,7 +401,7 @@
 
     {# Plot result #}
     <div class="col-sm-6"> 
-    {% if image %}
+    {% if image and data_is_valid  %}
     <img id="plotImage" src="data:image/png;base64,{{ image }}">  
     
     <a href="#" data-toggle="popover" data-trigger="hover" data-placement="top"
@@ -414,6 +414,10 @@
     <tr><td>Analysis result as&nbsp;</td><td><a id="downloadPlotImage" download="{{selectedPerformance}}.png" href="" onclick="downloadPlotImage();">Image</a></td></tr>
     <tr><td></td><td><a href="../download_data_file">CSV File</a></td></tr>
     </table>
+    {%elif not data_is_valid%}
+    <br>
+    <br>
+    <p>No data is valid, please select other time.</p>
     {% else%}
     <br>
     <br>

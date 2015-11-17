@@ -51,6 +51,7 @@ def index(request):
     timeIntervalList = ["5", "10", "15", "30", "60", "120"]
     version_number = settings.VERSION
     uuid_name = None 
+    data_is_valid = True 
 
     defaultTimezone = timezone('Europe/Helsinki')
 
@@ -200,33 +201,36 @@ def index(request):
     refreshType = request.POST.get('refreshType', "")
     image = ""
     if refreshType == "Plot" and startTimeString and endTimeString:
+        try:
+            if selectedPerformance == "Green duration" or selectedPerformance == "Percentage of green duration":
+                timeIntervalList = ["None", "5", "10", "15", "30", "60", "120"]
+                image,uuid_name = get_green_duration(selectedLocation, selectedSgNameList , selectedTimeInterval, startTime, endTime, selectedPerformance, green_for_driver)       
+                
+            elif selectedPerformance == "Saturation flow rate ":
+                image, uuid_name= get_saturation_flow_rate(selectedLocation, selectedSgName, startTime, endTime, green_for_driver) 
+                
+            elif selectedPerformance == "Queue length":
+                image,uuid_name = get_queue(selectedLocation, selectedSgName, selectedDetector,selectedTimeInterval, startTime, endTime, green_for_driver)
+                
+                
+            elif selectedPerformance == "Active green":
+                image, uuid_name = get_green_time(selectedLocation, selectedSgName, startTime, endTime, green_for_driver )
+                
+            elif selectedPerformance == "Maximum capacity":
+                image, uuid_name = get_maxCapacity(selectedLocation, selectedSgName, selectedDetector, selectedTimeInterval, startTime, endTime, green_for_driver)
+                
+            elif selectedPerformance == "Arrival on green percent" or selectedPerformance == "Arrival on green ratio":
+                image, uuid_name = get_arrival_on_green(selectedLocation, selectedSgName, selectedDetector, selectedTimeInterval, startTime, endTime, selectedPerformance, green_for_driver)
+                
+            elif selectedPerformance == "Volume":
+                image, uuid_name = get_volume_lanes(selectedLocation, selectedSgName, selectedDetector, selectedTimeInterval, startTime, endTime, green_for_driver)    
+                
+            elif selectedPerformance == "Comparison volume" or selectedPerformance == "Comparison arrival on green" or selectedPerformance == "Comparison arrival on green ratio":
+                image, uuid_name = get_compared_arrival_on_green_ratio(selectedLocation, selectedDetectorList, selectedTimeInterval, startTime, endTime, selectedPerformance, green_for_driver)    
+        except:
+            data_is_valid= False 
         
-        if selectedPerformance == "Green duration" or selectedPerformance == "Percentage of green duration":
-            timeIntervalList = ["None", "5", "10", "15", "30", "60", "120"]
-            image,uuid_name = get_green_duration(selectedLocation, selectedSgNameList , selectedTimeInterval, startTime, endTime, selectedPerformance, green_for_driver)
-            
-            
-        elif selectedPerformance == "Saturation flow rate ":
-            image, uuid_name= get_saturation_flow_rate(selectedLocation, selectedSgName, startTime, endTime, green_for_driver) 
-            
-        elif selectedPerformance == "Queue length":
-            image,uuid_name = get_queue(selectedLocation, selectedSgName, selectedDetector,selectedTimeInterval, startTime, endTime, green_for_driver)
-            
-            
-        elif selectedPerformance == "Active green":
-            image, uuid_name = get_green_time(selectedLocation, selectedSgName, startTime, endTime, green_for_driver )
-            
-        elif selectedPerformance == "Maximum capacity":
-            image, uuid_name = get_maxCapacity(selectedLocation, selectedSgName, selectedDetector, selectedTimeInterval, startTime, endTime, green_for_driver)
-            
-        elif selectedPerformance == "Arrival on green percent" or selectedPerformance == "Arrival on green ratio":
-            image, uuid_name = get_arrival_on_green(selectedLocation, selectedSgName, selectedDetector, selectedTimeInterval, startTime, endTime, selectedPerformance, green_for_driver)
-            
-        elif selectedPerformance == "Volume":
-            image, uuid_name = get_volume_lanes(selectedLocation, selectedSgName, selectedDetector, selectedTimeInterval, startTime, endTime, green_for_driver)    
-            
-        elif selectedPerformance == "Comparison volume" or selectedPerformance == "Comparison arrival on green" or selectedPerformance == "Comparison arrival on green ratio":
-            image, uuid_name = get_compared_arrival_on_green_ratio(selectedLocation, selectedDetectorList, selectedTimeInterval, startTime, endTime, selectedPerformance, green_for_driver)
+
             
 
     csv_filename = str(uuid_name) + '.csv'
@@ -254,7 +258,8 @@ def index(request):
                'image': image,
                'version_number': version_number,
                'csv_filename': csv_filename,
-               'checkboxSelection': checkboxSelection}
+               'checkboxSelection': checkboxSelection,
+               'data_is_valid': data_is_valid}
 
     return render(request, 'traffic/index.html', context)
 
