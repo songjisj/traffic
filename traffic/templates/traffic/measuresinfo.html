@@ -17,10 +17,30 @@
 </head>
 
 <body>
-    {# Navigate bar and a header #}
-    <nav id="myNavbar" class="navbar navbar-default navbar-inverse navbar-fixed-top" role="navigation">
-        <!-- Brand and toggle get grouped for better mobile display -->
-        <div class="container-fluid">
+
+    <div>
+      <div style="height: 55px; width: 1600px; overflow: hidden; padding-left: 0px; padding-top: 0px;">
+        <div style="float: left; margin-left: 0px;">
+         <div style="height: 55px; width=1600px; overflow: hidden; padding-left: 0px; padding-top: 0px;">
+           <div style="height: 55px; width: 207px; overflow: hidden; float: left; padding-left: 0px; padding-top: 0px;">
+             <div style="float: left; margin-left: 0px;">
+               <img src="{% static "companyLogo.png" %}" style="width: 207px; height: 55px;">
+             </div>
+           </div>
+           <div style="height: 55px; width: 1393px; overflow: hidden; float: left; padding-left: 0px; padding-top: 0px;">
+             <div style="float: left; margin-left: 0px;">
+               <img src="{% static "banner.jpg" %}" style="width: 100%; height: 55px;">
+             </div>
+           </div>
+           <div style="width: 0px; height: 0px; clear: both; overflow: hidden;"></div>
+         </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="jumbotron">
+        <div class="container-fluid" style="height:20px">
+            <div style="padding-top: 0px; position:absolute; top:35px" ><h1>Traffic Signal Analysis</h1>
             <div class="navbar-header">
                 <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbarCollapse">
                     <span class="sr-only">Toggle navigation</span>
@@ -28,23 +48,14 @@
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                <a class="navbar-brand" href="../traffic/index/#">Imanalyst</a>
+                <a class="navbar-brand" href="../traffic/index">Home</a>
+                <a class="navbar-brand" href="#">Help</a>
             </div>
-            <!-- Collect the nav links, forms, and other content for toggling -->
-            <div class="collapse navbar-collapse" id="navbarCollapse">
-                <ul class="nav navbar-nav">
-                    <!--<li class="active"><a href="http://www.tutorialrepublic.com" target="_blank">Instruction</a></li>-->
-                    <li><a href="http://www.peekfinland.fi/" target="_blank">About</a></li>
-                    <li><a href="http://imtech.com/EN/Contacts-Nordic.html" target="_blank">Contact</a></li>
-                </ul>
+
             </div>
         </div>
-    </nav>
-    <div class="jumbotron">
-        <div class="container-fluid">
-            <h1>Instruction of measures</h1>
-        </div>
-    </div>
+    </div>    
+    
 <div class ="col-sm-1"></div> 
 <div class = "col-sm-9">
 
@@ -57,11 +68,17 @@
 <h3>Explanation</h3>
 
 <p style="font-size:18px">The function calculates green duration per cycle. Multi curve lines represent all the signals at the selected intersection. 
-As to signal line, the y-value of solid points means time duration in seconds and x-value of points means the date and time when the green phase starts from.   </p>
+Two measures serve the performance, which are <q> Green duration </q> and <q> Percentage of green duration</q>. 
+Green duration calculates green timing in seconds and another calculates the percentage of green per cycle or per interval.
+ </p> 
+
+<p style="font-size:18px"> Green duration can be measured as exact timing in every green phase level or as cumulative timing in certain time interval. It depends on which time interval you select.
+If you would like to check green timing in every phase, please select 'None' on time interval dropdown list; if you would like to check the timing in a wider time span, 
+it had better to define a suitable time interval. </p> 
 
 <h3>Illustration</h3>
 
-<p style="font-size:18px">The following image demonstrates the green duration in intersection TRE303 from 14:00 to 14:40 on 10th, July, 2015. </p>
+<p style="font-size:18px">The following image demonstrates the precise green duration in every phases without timeinterval in intersection TRE303 from 14:00 to 14:40 on 10th, July, 2015.  </p>
 
 <img src="{% static "traffic/Illustration/greenduration.png" %}"/>
 
@@ -79,8 +96,7 @@ passive green is the green timing after the last vehicle comes until the end of 
 <li style="font-size:18px">From internal state of signal group (grint) from traffic signal controller, 
 the active green timing is to the contrary of passive green timing during a green sequence. Passive green is green timing when the internal state of signal is <q>PASSIVE_GREEN</q> </li>
 
-</ol>
-
+</ol> 
 
 <h3>Explanation</h3>
 
@@ -112,8 +128,10 @@ active green state. And yellow part is for the time duration when the signal sta
 <h3>Explanation</h3>
 
 <p style="font-size:18px">This measure calculates the length of queue in meters and the amount of vehicles forming the queue at the end of red time. 
+Queue length could be presented with or without time interval. If you would like to see the value of every queue, please select<q>None</q> time interval.
+While selecting an actual interval, the average queue in interval will be shown in bar, and maximum queue in every period will be shown on a red curve line with <q>*</q> markers.  
 The plot of this measure has dual y-axis. The left y-axis is number of vehicles and right y-axis is length of queue in meters, 
-while x-axis is actual time of a day, indicating when the red time ends.   </p>
+while x-axis is actual time of a day, indicating when the red time ends.  </p>
 
 <h3>Illustration</h3>
 
@@ -121,6 +139,10 @@ while x-axis is actual time of a day, indicating when the red time ends.   </p>
 at intersection TRE303 in Tampere from 18:00 to 19:00 on 10th, July, 2015. </p>
 
 <img src="{% static "traffic/Illustration/queuelength.png" %}"/> 
+
+<p style="font-size:18px">The next graph shows average queue and its maximum value in every period </p>
+
+<img src="{% static "traffic/Illustration/queuelengthininterval.png" %}"/> 
 
 <br></br>
 

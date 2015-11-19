@@ -23,27 +23,25 @@
 
     {% load bootstrap3 %}
     {% bootstrap_css %}
-    {% bootstrap_javascript %} 
-    {% bootstrap_icon "info" %}
-    
+    {% bootstrap_javascript %}
+
     <script>
 	function intersectionChanged() {
-	    document.getElementById("refreshTypeId").value = "RefreshData";
+	    document.getElementById("refreshTypeId").value = "RefreshLocationData";
 	    document.getElementById("locationFormId").submit();
 	}
-	
+
 	function signalChanged() {
-	    document.getElementById("refreshTypeId").value = "RefreshData";
+	    document.getElementById("refreshTypeId").value = "RefreshSignalData";
 	    document.getElementById("locationFormId").submit();
 	}
-	
-	
+
 	function timeIntervalChanged() {
 	    document.getElementById("refreshTypeId").value = "RefreshData";
 	    document.getElementById("locationFormId").submit();
 	
 	}
-	
+
 	function alertEmptyList(){
 	    alert("")    
 	}
@@ -75,7 +73,7 @@
             document.getElementById("locationFormId").submit();
 	    }	
 	}
-	
+
 	function performanceChanged() {
 	    //get html element (here is the select), by id, id is in element's <>
 	    var selectedPerformance = document.getElementById("performanceSelectionId").value;
@@ -91,69 +89,59 @@
 		    }
 	        }
 
-	    function elementDisplay(elementHiddenCondition,elementLabelId,elementSelectionId) {
+	    function elementDisplay(elementHiddenCondition,elementHiddenList) {
+
+		var condition = "block"; 
+
 		if (elementHiddenCondition) {
-		    //get detector label by its id and change delector style, by change display to none or block (means hide or show)
-		    if (document.getElementById(elementLabelId) != null) {
-		        document.getElementById(elementLabelId).style.display = "none";
-		    }
-		    if (document.getElementById(elementSelectionId) != null){
-		        document.getElementById(elementSelectionId).style.display = "none";
-		    }
-		    
+		    condition = "none";  
 		}
-		else{
-		    if (document.getElementById(elementLabelId) != null){
-		        document.getElementById(elementLabelId).style.display = "block";
-		    }
-		    if (document.getElementById(elementSelectionId) != null){
-		        document.getElementById(elementSelectionId).style.display = "block";
-		    }
-		      
-		}
+
+		for( elementIndex in elementHiddenList ) {
+		    elementId = elementHiddenList[elementIndex]
+		    var element = document.getElementById(elementId);
+		    if (element != null) {
+		      element.style.display = condition;
+			}
+		  }
 	    }
-	    
+
 	    var detectorNotNeededArray = ["Green duration","Percentage of green duration","Active green","Saturation flow rate ",
 	    "Comparison volume","Comparison arrival on green","Comparison arrival on green ratio"];
 	    var detectorHidden = (detectorNotNeededArray.indexOf(selectedPerformance) > -1);
-    
-	    elementDisplay(detectorHidden,'detectorLabelId','detectorSelectionId')
-	   
+
+	    elementDisplay(detectorHidden,['detectorLabelId','detectorSelectionId','detectorErrorMessageId'])
+
 	    var signalGroupNotNeededArray = ["Green duration","Percentage of green duration",
 	    "Comparison arrival on green","Comparison arrival on green ratio","Comparison volume"];
 	    var signalGroupHidden = (signalGroupNotNeededArray.indexOf(selectedPerformance) > -1);
-	    elementDisplay(signalGroupHidden,'signalGroupLabelId','signalGroupSelectionId')
-	    
-	    
+	    elementDisplay(signalGroupHidden,['signalGroupLabelId','signalGroupSelectionId','signalErrorMessageId'])
+
 	    var signalGroupListNotNeededArray = ["Saturation flow rate ",  "Queue length", "Active green", "Maximum capacity",
                            "Arrival on green percent", "Volume", "Arrival on green ratio", "Comparison volume",
                            "Comparison arrival on green", "Comparison arrival on green ratio"];
 			   
 	    var signalGroupListHidden =(signalGroupListNotNeededArray.indexOf(selectedPerformance) > -1); 
-	    elementDisplay(signalGroupListHidden, 'signalGroupListLabelId', 'signalGroupListSelectionId') 
-	    
-	    
-  
+	    elementDisplay(signalGroupListHidden,['signalGroupListLabelId', 'signalGroupListSelectionId']) 
+
 	    var timeIntervalNotNeededArray = ["Active green","Saturation flow rate "];
 	    var timeIntervalHidden = (timeIntervalNotNeededArray.indexOf(selectedPerformance) > -1);
-	    
-	    elementDisplay(timeIntervalHidden,'timeIntervalLabelId', 'timeIntervalSelectionId')
-	    
+
+	    elementDisplay(timeIntervalHidden,['timeIntervalLabelId', 'timeIntervalSelectionId'])
+
 	    var multipleDetectorsNotNeededArray = ["Green duration","Percentage of green duration","Active green","Saturation flow rate ",
 	    "Arrival on green ratio","Volume","Maximum capacity","Queue length","Arrival on green percent"];
 	    var multipleDetectorsHidden = (multipleDetectorsNotNeededArray.indexOf(selectedPerformance) > -1);
-	                                  
-	    elementDisplay(multipleDetectorsHidden,'detectorMultipleLabelId', 'detectorMultipleSelectionId')
+
+	    elementDisplay(multipleDetectorsHidden,['detectorMultipleLabelId', 'detectorMultipleSelectionId'])
 	}
-	
+
 	function showLocationMap() {
-	
 	    var selectedLocationForMap = document.getElementById("intersectionSelectionId").value;
 	    document.getElementById('selectedLocatioForMapId').value = selectedLocationForMap;
 	    document.getElementById("showMapFormId").submit();	
-
 	}
-	
+
     </script>
     <script>
         $(document).ready(function(){
@@ -163,10 +151,29 @@
     </script>
 
     <body onload="performanceChanged()">
-    {# Navigate bar and a header #}
-    <nav id="myNavbar" class="navbar navbar-default navbar-inverse navbar-fixed-top" role="navigation">
-	<!-- Brand and toggle get grouped for better mobile display -->
-	<div class="container-fluid">
+    <div>
+      <div style="height: 55px; width: 1600px; overflow: hidden; padding-left: 0px; padding-top: 0px;">
+        <div style="float: left; margin-left: 0px;">
+         <div style="height: 55px; width=1600px; overflow: hidden; padding-left: 0px; padding-top: 0px;">
+           <div style="height: 55px; width: 207px; overflow: hidden; float: left; padding-left: 0px; padding-top: 0px;">
+             <div style="float: left; margin-left: 0px;">
+               <img src="{% static "companyLogo.png" %}" style="width: 207px; height: 55px;">
+             </div>
+           </div>
+           <div style="height: 55px; width: 1393px; overflow: hidden; float: left; padding-left: 0px; padding-top: 0px;">
+             <div style="float: left; margin-left: 0px;">
+               <img src="{% static "banner.jpg" %}" style="width: 100%; height: 55px;">
+             </div>
+           </div>
+           <div style="width: 0px; height: 0px; clear: both; overflow: hidden;"></div>
+         </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="jumbotron">
+	<div class="container-fluid" style="height:20px">
+	    <div style="padding-top: 0px; position:absolute; top:35px" ><h1>Traffic Signal Analysis</h1>
 	    <div class="navbar-header">
 		<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbarCollapse">
 		    <span class="sr-only">Toggle navigation</span>
@@ -174,33 +181,23 @@
 		    <span class="icon-bar"></span>
 		    <span class="icon-bar"></span>
 		</button>
-		<a class="navbar-brand" href="#">Imanalyst</a>
+		<a class="navbar-brand" href="#">Home</a>
+		<a class="navbar-brand" href="../measuresinfo">Help</a>
 	    </div>
-	    <!-- Collect the nav links, forms, and other content for toggling -->
-	    <div class="collapse navbar-collapse" id="navbarCollapse">
-		<ul class="nav navbar-nav">
-		    <li><a href="http://www.peekfinland.fi/" target="_blank">About</a></li>
-		    <li><a href="http://imtech.com/EN/Contacts-Nordic.html" target="_blank">Contact</a></li>
-		</ul>
+
 	    </div>
 	</div>
-    </nav>
-    
-    <div class="jumbotron">
-	<div class="container-fluid">
-	    <h1>Traffic Signal Analysis</h1>
-	</div>
-    </div>
-    
+    </div>  
+
     {# Menu #}
     <div class="row">
     <div class="col-sm-1 " ></div>
     <div class="col-sm-3 " >
-    
+
     <form id="showMapFormId" method="POST" type="hidden" action="../maps" target="_blank">{% csrf_token %}
 	<input id="selectedLocatioForMapId" type="hidden" name="selectedLocatioForMap" value="">
     </form>
-     
+
     <form id="locationFormId" method="POST" action="">{% csrf_token %}
         
         {# Select performance #}
@@ -234,11 +231,11 @@
 	    drive timing 
 	</div>
 	
-	{# Select intersection #}  
+	{# Select intersection #}
 	<p>
 	<label for="location">Intersection </label>
-	<select id="intersectionSelectionId" name="location" onchange="intersectionChanged()" class="form-control">    
-	{% for locationName in locationNameList %} 
+	<select id="intersectionSelectionId" name="location" onchange="intersectionChanged()" class="form-control">
+	{% for locationName in locationNameList %}
 	    {% if locationName == selectedLocation %}
 		<option value= {{locationName}} selected="selected"> {{locationName}} </option> 
 	    {% else %}
@@ -251,13 +248,13 @@
 	{# The button for map#}
         <p>  
 	<a href= "../maps" onclick="window.open('../maps', 'newwindow', 'width=1200, height=800'); return false;">
-	<button type="button" class="btn btn-info">map</button> 
+	<button type="button" class="btn btn-info">map</button>
 	</a>
 	</p>
 	
 	{# Selct signalGroup #}
 	{% if not sgNameList  %}
-	    <p> Sorry, there is no valid signalGroup configuration data in the selected intersection. Please choose other intersections. </p>
+	    <p id="signalErrorMessageId"> Sorry, there is no valid signalGroup configuration data in the selected intersection. Please choose other intersections. </p>
 	{% else %}
 	    {# Single Signal Group #}
 	    <p> 
@@ -295,7 +292,7 @@
 	{% if sgNameList  %}
 	    <p>
 	    {% if not detectorList  %}
-		<p> Sorry, there is no valid detector configuration data in the selected signal group. Please choose other signal group. </p>
+		<p id="detectorErrorMessageId"> Sorry, there is no valid detector configuration data in the selected signal group. Please choose other signal group. </p>
 	    {% else %}
 		<label id="detectorLabelId" for="detector">Detector</label>
 		<select id="detectorSelectionId" name ="detector" class="form-control" >
@@ -333,7 +330,7 @@
 	
 	{# Select timeInterval #}
 	<label id = "timeIntervalLabelId" for="timeInterval"> Time interval (minutes) </label>
-	<select id="timeIntervalSelectionId" name="timeInterval" onchange="timeIntervalChanged() " class="form-control" >
+	<select id="timeIntervalSelectionId" name="timeInterval"  class="form-control" >
 	{% for timeInterval in timeIntervalList%}
 	    {% if timeInterval == selectedTimeInterval %}
 	        <option value = {{timeInterval}} selected="selected">{{timeInterval}}</option>
@@ -400,9 +397,9 @@
     </div>
 
     {# Plot result #}
-    <div class="col-sm-6"> 
+    <div class="col-sm-6">
     {% if image and data_is_valid  %}
-    <img id="plotImage" src="data:image/png;base64,{{ image }}">  
+    <img id="plotImage" src="data:image/png;base64,{{ image }}">
     
     <a href="#" data-toggle="popover" data-trigger="hover" data-placement="top"
 	title="Plot info" data-content="{{selectedInfoMeasurement}}" >

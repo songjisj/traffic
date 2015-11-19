@@ -54,7 +54,9 @@ def index(request):
     data_is_valid = True 
 
     defaultTimezone = timezone('Europe/Helsinki')
-
+    
+    refreshType = request.POST.get('refreshType', "")
+    
     checkboxSelection = request.POST.get("drivableTime", "")
     if checkboxSelection == "drivableTimeSelected":
         green_for_driver = drivable_state_group
@@ -70,16 +72,19 @@ def index(request):
 
     # Simple complementary and explanation of measurements
     infoMeasurementDict = {"Active green": "In this plot, the distance between two adjacent bar of green phases represents the red and amber duration between them.",
-                           "Queue length": "In this plot, the queue is recorded at the end of red both in number of vehicles and estimated meters.",
+                           "Queue length": "In this plot, the queue is recorded at the end of red both in number of vehicles and estimated meters. When the time intervel is 'None',\
+                           every bar represents the exact queue length during a red phase. When certain actual time interval is selected, every bar represents average value of queues \
+                           in the period, and the red curve line with 'star' markers shows the maximum values in intervals.",
                            "Arrival on green ratio": "In this plot, the scattered points represent ratio of volume and number of vehicles during green, and the line is their regression linear",
-                           "Arrival_on_green_pecent": "In this plot, it records the percentage of vehicles arriving during green phases in the time interval.",
+                           "Arrival on green percent": "In this plot, it records the percentage of vehicles arriving during green phases in the time interval.",
                            "Comparison arrival on green": "In this plot, it illustrates the measurement 'arrival_on_green' from multile detectors.",
-                           "Comparison_Arrival on green ratio": "In this plot, it shows 'arrival on green_ratio' from the multiple detectors you selected.",
+                           "Comparison Arrival on green ratio": "In this plot, it shows 'arrival on green_ratio' from the multiple detectors you selected.",
                            "Volume": "In the plot, it calculates the volume of vehicles arriving the intersection through a detector in the time interval",
                            "Comparison volume": "In the plot, it shows the volumes from multiple detectors.",
                            "Maximum capacity": "In the plot, it estimates the maximum number of vehicles being able to pass the intersection from a detector during the green timing of selected interval.",
-                           "Green duration": "In this plot, it calculates the duration of every green phase.",
-                           "Green_time_in_interval": "In this plot, it calculates the total timing of green during every selected time interval.",
+                           "Green duration": "In this plot, it calculates the duration of every green phase. If you would like to see exaxt length of every green phase, please selete time interval as 'None'\
+                           if you would like to know the total green timing in some interval, please select a actual value of time interval.",
+                           "Green time_in interval": "In this plot, it calculates the total timing of green during every selected time interval.",
                            "Percentage of green duration": "In this plot, it calculates the percentage of green phases in the cycle.",
                            "Saturation flow rate ": "In this plot, it estimates saturation flow rate through detectors."
                            }
@@ -121,30 +126,34 @@ def index(request):
     if selectedLocation:
         sgNameDict = get_sg_config_in_one(selectedLocation)
         sgNameList = list(sgNameDict.values())
-
-    try:
-        selectedSgName = request.POST['signalGroup']
-    except(KeyError):
-        if sgNameList:
+   
+    if sgNameList: 
+        if refreshType == "RefreshLocationData":
             selectedSgName = sgNameList[0]
+        else:
+            selectedSgName = request.POST.get('signalGroup', "")
+               
+
             
     # Select signalGroupList
-    try:
-        selectedSgNameList = request.POST.getlist('signalGroupList[]')
-    except:
-        if sgNameList:
+    if sgNameList:
+        if refreshType =="RefreshLocationData":
             selectedSgNameList = sgNameList[0:1]
+        else:
+            selectedSgNameList = request.POST.getlist('signalGroupList[]')
+            
+            
 
     # Select detector
     if selectedSgName and selectedLocation:
         detectorDict = get_det_config_in_one_sg(selectedLocation, selectedSgName)
         detectorList = sorted(list(detectorDict.values()))
+    if detectorList:
+        if refreshType == "RefreshLocationData" or refreshType == "RefreshSignalData":
+            electedDetector = detectorList[0]
+        else:
+            selectedDetector = request.POST.get('detector',"")
 
-    try:
-        selectedDetector = request.POST['detector']
-    except(KeyError):
-        if detectorList:
-            selectedDetector = detectorList[0]
 
     # Select multiple detectors
     if selectedLocation:
@@ -152,12 +161,14 @@ def index(request):
         detectorListInSelectedLocation = sorted(list(detectorDictInSelectedLocation.values()))
     else:
         detectorListInSelectedLocation = []
-
-    try:
-        selectedDetectorList = request.POST.getlist('detectors[]')
-    except(KeyError):
-        if detectorListInSelectedLocation:
+    
+    if detectorDictInSelectedLocation:
+        if refreshType == "RefreshLocationData":
             selectedDetectorList = detectorListInSelectedLocation[0:1]
+        else:
+            selectedDetectorList = request.POST.getlist('detectors[]')
+            
+            
 
     # Select time interval
 
@@ -198,7 +209,7 @@ def index(request):
 
 
 
-    refreshType = request.POST.get('refreshType', "")
+
     image = ""
     if refreshType == "Plot" and startTimeString and endTimeString:
         try:
