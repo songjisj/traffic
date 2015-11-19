@@ -298,7 +298,8 @@ def signalState(sgStateCode):
     
 def mean_in_list(list):
     mean = 0 
-    mean = sum(list)/len(list)
+    if(len(list) > 0):
+        mean = sum(list)/len(list)
     return mean  
  
 

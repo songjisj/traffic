@@ -290,19 +290,22 @@ def get_queue_length_in_interval(location_name, sg_name, det_name,time_interval,
                         count_vehicle_in_queue_list.append(count_vehicle_in_queue)   
 
                 else:
-                    average_vehicle_in_queue = mean_in_list(count_vehicle_in_queue_list)
-                    max_queue = max(count_vehicle_in_queue_list)
-                    average_queue_length = average_vehicle_in_queue * average_length_per_vehicle  
-                    write_row_csv(f, [start_time,average_vehicle_in_queue, max_queue, average_queue_length])
-                    start_time_list.append(start_time + interval)
-                    average_vehicle_in_queue_list.append(average_vehicle_in_queue)
-                    average_queue_length_list.append(average_queue_length)
-                    max_queue_list.append(max_queue)
-                    count_vehicle_in_queue_dict.clear() 
-                    average_vehicle_in_queue = 0 
-                    max_queue = 0 
-                    count_vehicle_in_queue_list = []
-                    start_time = start_time + interval   
+                    while(discharge_queue_time > start_time + interval):
+                        average_vehicle_in_queue = mean_in_list(count_vehicle_in_queue_list)
+                        max_queue = 0
+                        if(len(count_vehicle_in_queue_list) > 0):
+                            max_queue = max(count_vehicle_in_queue_list)
+                        average_queue_length = average_vehicle_in_queue * average_length_per_vehicle  
+                        write_row_csv(f, [start_time,average_vehicle_in_queue, max_queue, average_queue_length])
+                        start_time_list.append(start_time + interval)
+                        average_vehicle_in_queue_list.append(average_vehicle_in_queue)
+                        average_queue_length_list.append(average_queue_length)
+                        max_queue_list.append(max_queue)
+                        count_vehicle_in_queue_dict.clear() 
+                        average_vehicle_in_queue = 0 
+                        max_queue = 0 
+                        count_vehicle_in_queue_list = []
+                        start_time = start_time + interval   
                 count_vehicle_in_queue = 0
     
         close_csv_file(f)
