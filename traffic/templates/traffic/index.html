@@ -115,6 +115,7 @@
 	    var signalGroupNotNeededArray = ["Green duration","Percentage of green duration",
 	    "Comparison arrival on green","Comparison arrival on green ratio","Comparison volume"];
 	    var signalGroupHidden = (signalGroupNotNeededArray.indexOf(selectedPerformance) > -1);
+	    
 	    elementDisplay(signalGroupHidden,['signalGroupLabelId','signalGroupSelectionId','signalErrorMessageId'])
 
 	    var signalGroupListNotNeededArray = ["Saturation flow rate ",  "Queue length", "Active green", "Maximum capacity",
@@ -150,42 +151,45 @@
 	   });
     </script>
 
-    <body onload="performanceChanged()">
+    <body onload="performanceChanged()"> 
     <div>
-      <div style="height: 55px; width: 1600px; overflow: hidden; padding-left: 0px; padding-top: 0px;">
+    
+      <div style="height: 55px; width: 1600px; overflow: hidden; padding-left: 0px; padding-top: 0px; ">
         <div style="float: left; margin-left: 0px;">
          <div style="height: 55px; width=1600px; overflow: hidden; padding-left: 0px; padding-top: 0px;">
            <div style="height: 55px; width: 207px; overflow: hidden; float: left; padding-left: 0px; padding-top: 0px;">
-             <div style="float: left; margin-left: 0px;">
-               <img src="{% static "companyLogo.png" %}" style="width: 207px; height: 55px;">
+             <div style="float: left; margin-left: 0px;  max-width: 100%;">
+               <img src="{% static "companyLogo.png" %}" style="width: 207px; height: 55px; ">
              </div>
            </div>
-           <div style="height: 55px; width: 1393px; overflow: hidden; float: left; padding-left: 0px; padding-top: 0px;">
+           <div style="height: 55px; width: 1393px; overflow: hidden; float: left; padding-left: 0px; padding-top: 0px; ">
              <div style="float: left; margin-left: 0px;">
-               <img src="{% static "banner.jpg" %}" style="width: 100%; height: 55px;">
+               <img src="{% static "banner.jpg" %}" style="width: 2000px; height: 55px; max-size:100% ">
              </div>
            </div>
            <div style="width: 0px; height: 0px; clear: both; overflow: hidden;"></div>
          </div>
         </div>
       </div>
+    
     </div>
 
     <div class="jumbotron">
-	<div class="container-fluid" style="height:20px">
-	    <div style="padding-top: 0px; position:absolute; top:35px" ><h1>Traffic Signal Analysis</h1>
+	<div class="container-fluid" style="height:20px" >
+	    <div style="padding-top: 0px; position:absolute; top:45px"><h1>Traffic Signal Analysis</h1></div>
+	    <br>
 	    <div class="navbar-header">
-		<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbarCollapse">
-		    <span class="sr-only">Toggle navigation</span>
+		<button style="position:absolute; top:85px" type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbarCollapse">
+		    <span class="sr-only">Toggle navigation</span> 
 		    <span class="icon-bar"></span>
 		    <span class="icon-bar"></span>
-		    <span class="icon-bar"></span>
+		    <span class="icon-bar"></span> 
 		</button>
 		<a class="navbar-brand" href="#">Home</a>
 		<a class="navbar-brand" href="../measuresinfo">Help</a>
 	    </div>
 
-	    </div>
+	    
 	</div>
     </div>  
 
@@ -254,13 +258,13 @@
 	
 	{# Selct signalGroup #}
 	{% if not sgNameList  %}
-	    <p id="signalErrorMessageId"> Sorry, there is no valid signalGroup configuration data in the selected intersection. Please choose other intersections. </p>
+	    <p style="display:none" id="signalErrorMessageId"> Sorry, there is no valid signalGroup configuration data in the selected intersection. Please choose other intersections. </p>
 	{% else %}
 	    {# Single Signal Group #}
 	    <p> 
-	    <label id="signalGroupLabelId" for="signalGroup">Signal group</label>
+	    <label style="display:none" id="signalGroupLabelId" for="signalGroup">Signal group</label>
 	    
-	    <select id="signalGroupSelectionId" name="signalGroup" onchange="signalChanged()" class="form-control">
+	    <select style="display:none" id="signalGroupSelectionId" name="signalGroup" onchange="signalChanged()" class="form-control">
 		{% for signalGroup in sgNameList %}
 		    {% if signalGroup == selectedSgName %}
 			<option value = {{signalGroup}} selected="selected">{{signalGroup}} </option>
@@ -273,8 +277,8 @@
 	    
 	    {# Multiple Signal Group #}
 	    <p>
-	    <label id ="signalGroupListLabelId" for="signalGroupList[]" > Multiple Signal Groups </label>
-	    <select id="signalGroupListSelectionId" name="signalGroupList[]"  class="form-control" multiple="multiple" size="5">
+	    <label style="display:none" id ="signalGroupListLabelId" for="signalGroupList[]" > Multiple Signal Groups <em>(Ctrl + click)</em> </label>
+	    <select style="display:none" id="signalGroupListSelectionId" name="signalGroupList[]"  class="form-control" multiple="multiple" size="5">
 		{% for signalGroup in sgNameList %}
 		    {% if signalGroup in selectedSgNameList %}
 			<option value = {{signalGroup}} selected="selected">{{signalGroup}} </option>
@@ -294,8 +298,8 @@
 	    {% if not detectorList  %}
 		<p id="detectorErrorMessageId"> Sorry, there is no valid detector configuration data in the selected signal group. Please choose other signal group. </p>
 	    {% else %}
-		<label id="detectorLabelId" for="detector">Detector</label>
-		<select id="detectorSelectionId" name ="detector" class="form-control" >
+		<label style="display:none" id="detectorLabelId" for="detector">Detector</label>
+		<select style="display:none" id="detectorSelectionId" name ="detector" class="form-control" >
 		{% for detector in detectorList %}
 		    {% if detector == selectedDetector %}
 		        <option value ={{detector}} selected="selected">{{detector}}</option>
@@ -312,8 +316,8 @@
 	{% if sgNameList %}
 	    {% if detectorList %}
 	    <p>
-	    <label id="detectorMultipleLabelId" for="detectors[]" > Multiple choice of detectors <em>(Ctrl + click)</em> </label>
-	    <select id = "detectorMultipleSelectionId" name = "detectors[]" class="form-control" multiple ="multiple" size ="5">
+	    <label style="display:none" id="detectorMultipleLabelId" for="detectors[]" > Multiple choice of detectors <em>(Ctrl + click)</em> </label>
+	    <select style="display:none" id = "detectorMultipleSelectionId" name = "detectors[]" class="form-control" multiple ="multiple" size ="5">
 		{% for detector in detectorListInSelectedLocation %}
                     {% if detector in selectedDetectorList %} 
 			<option value = {{detector}} selected="selected">{{detector}}</option>
@@ -329,8 +333,8 @@
 	{% endif %}
 	
 	{# Select timeInterval #}
-	<label id = "timeIntervalLabelId" for="timeInterval"> Time interval (minutes) </label>
-	<select id="timeIntervalSelectionId" name="timeInterval"  class="form-control" >
+	<label style="display:none" id = "timeIntervalLabelId" for="timeInterval"> Time interval (minutes) </label>
+	<select style="display:none" id="timeIntervalSelectionId" name="timeInterval"  class="form-control" >
 	{% for timeInterval in timeIntervalList%}
 	    {% if timeInterval == selectedTimeInterval %}
 	        <option value = {{timeInterval}} selected="selected">{{timeInterval}}</option>
@@ -400,12 +404,12 @@
     <div class="col-sm-6">
     {% if image and data_is_valid  %}
     <img id="plotImage" src="data:image/png;base64,{{ image }}">
-    
+    <div>
     <a href="#" data-toggle="popover" data-trigger="hover" data-placement="top"
 	title="Plot info" data-content="{{selectedInfoMeasurement}}" >
     <i class='glyphicon glyphicon-info-sign'> info</i>
     </a>
-
+    </div>
     <br/>
     <table>
     <tr><td>Analysis result as&nbsp;</td><td><a id="downloadPlotImage" download="{{selectedPerformance}}.png" href="" onclick="downloadPlotImage();">Image</a></td></tr>

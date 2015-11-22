@@ -827,7 +827,7 @@ def get_volume_lanes(location_name, sg_name,det_name,time_interval,time1,time2, 
             
         xlabel("time")
         ylabel("Amount of vehicles")
-        title("Traffic volume for "+ sg_name +" at " + location_name)  
+        title("Traffic volume for "+ sg_name +" at " + location_name + " in " + time_interval +" mins interval")  
         try:
             legend((x[0] for x in p),labels)
         except:
