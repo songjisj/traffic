@@ -28,6 +28,7 @@ import csv
 import netaddr
 import logging
 from django.shortcuts import redirect
+import traceback
 
 logger = logging.getLogger('traffic.views')
 
@@ -86,7 +87,10 @@ def index(request):
                            if you would like to know the total green timing in some interval, please select a actual value of time interval.",
                            "Green time_in interval": "In this plot, it calculates the total timing of green during every selected time interval.",
                            "Percentage of green duration": "In this plot, it calculates the percentage of green phases in the cycle.",
-                           "Saturation flow rate ": "In this plot, it estimates saturation flow rate through detectors."
+                           "Saturation flow rate ": "In this plot, it estimates saturation flow rate through detectors.",
+                           "Wait time": "In this plot, it calculates the waiting time a vehicle spend at the intersection. When you select time interval as 'none', you could see a red curve line with dots \
+                           representing the longest waiting times for vehicles in queues and orange bar representing average value of waiting time in every queue. When you select a actual value for time interval, you will see\
+                           the every waiting time for vehicles in the period."
                            }
     try:
         selectedInfoMeasurement = infoMeasurementDict[selectedPerformance]
@@ -205,7 +209,7 @@ def index(request):
     measuresList = sorted(["Saturation flow rate ", "Percentage of green duration", "Green duration",
                            "Queue length", "Active green", "Maximum capacity",
                            "Arrival on green percent", "Volume", "Arrival on green ratio", "Comparison volume",
-                           "Comparison arrival on green", "Comparison arrival on green ratio"])
+                           "Comparison arrival on green", "Comparison arrival on green ratio", "Wait time"])
 
 
 
@@ -220,8 +224,8 @@ def index(request):
             elif selectedPerformance == "Saturation flow rate ":
                 image, uuid_name= get_saturation_flow_rate(selectedLocation, selectedSgName, startTime, endTime, green_for_driver) 
                 
-            elif selectedPerformance == "Queue length":
-                image,uuid_name = get_queue(selectedLocation, selectedSgName, selectedDetector,selectedTimeInterval, startTime, endTime, green_for_driver)
+            elif selectedPerformance == "Queue length" or selectedPerformance == "Wait time":
+                image,uuid_name = get_queue(selectedLocation, selectedSgName, selectedDetector,selectedTimeInterval, startTime, endTime, selectedPerformance, green_for_driver)
                 
                 
             elif selectedPerformance == "Active green":
@@ -238,10 +242,14 @@ def index(request):
                 
             elif selectedPerformance == "Comparison volume" or selectedPerformance == "Comparison arrival on green" or selectedPerformance == "Comparison arrival on green ratio":
                 image, uuid_name = get_compared_arrival_on_green_ratio(selectedLocation, selectedDetectorList, selectedTimeInterval, startTime, endTime, selectedPerformance, green_for_driver)    
-        except:
+        except Exception as e:
+            # debug:
             data_is_valid= False 
-        
-
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+            print(exc_type, fname, exc_tb.tb_lineno)
+            traceback.print_exc()
+            
             
 
     csv_filename = str(uuid_name) + '.csv'

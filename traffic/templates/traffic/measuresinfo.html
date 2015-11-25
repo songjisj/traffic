@@ -5,13 +5,12 @@
         <meta charset="utf-8">
         <meta name="Author" content="Imtech Traffic & Infra Oy" />
         <meta name="Robots" content="noindex,nofollow" />
-        <link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
-        <script src="//code.jquery.com/jquery-1.10.2.js"></script>
-        <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+        <link rel="stylesheet" type="text/css" href="{% static "jquery.datetimepicker.css" %}"/> 
+        <link rel="stylesheet" href="{% static "bootstrap.min.css" %}">
+        <script type="text/javascript" src="{% static "jquery.js" %}"></script>
+        <script type="text/javascript" src="{% static "bootstrap.min.js" %}"></script>
         
-        <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
-        <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+
 
         <title>Traffic Signal Analysis</title>
 </head>
@@ -19,7 +18,7 @@
 <body>
 
     <div>
-      <div style="height: 55px; width: 1600px; overflow: hidden; padding-left: 0px; padding-top: 0px;">
+     <div class="container-fluid" style="height: 55px; overflow: hidden; padding-left: 0px; padding-top: 0px; background-color: #000000;">
         <div style="float: left; margin-left: 0px;">
          <div style="height: 55px; width=1600px; overflow: hidden; padding-left: 0px; padding-top: 0px;">
            <div style="height: 55px; width: 207px; overflow: hidden; float: left; padding-left: 0px; padding-top: 0px;">
@@ -27,7 +26,7 @@
                <img src="{% static "companyLogo.png" %}" style="width: 207px; height: 55px;">
              </div>
            </div>
-           <div style="height: 55px; width: 1393px; overflow: hidden; float: left; padding-left: 0px; padding-top: 0px;">
+           <div style="height: 55px; width: 1000px; overflow: hidden; float: left; padding-left: 0px; padding-top: 0px;">
              <div style="float: left; margin-left: 0px;">
                <img src="{% static "banner.jpg" %}" style="width: 100%; height: 55px;">
              </div>
@@ -40,7 +39,7 @@
 
     <div class="jumbotron">
         <div class="container-fluid" style="height:20px">
-            <div style="padding-top: 0px; position:absolute; top:45px" ><h1>Traffic Signal Analysis</h1></div>
+             <div style="padding-top: 0px; position:absolute; top:70px"><p style="font-size:40px; color:#606060 ; ">Traffic Signal Analysis</p></div>
             <br>
             <div class="navbar-header">
                 <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbarCollapse">
@@ -136,11 +135,11 @@ while x-axis is actual time of a day, indicating when the red time ends.  </p>
 <h3>Illustration</h3>
 
 <p style="font-size:18px">The following image shows the result of this measure via detector A60_2 under controlling of signal group A 
-at intersection TRE303 in Tampere from 18:00 to 19:00 on 10th, July, 2015. </p>
+at intersection TRE209 in Tampere from 14:15 to 18:00 on 9th, November, 2015. </p>
 
 <img src="{% static "traffic/Illustration/queuelength.png" %}"/> 
 
-<p style="font-size:18px">The next graph shows average queue and its maximum value in every period </p>
+<p style="font-size:18px">The next graph shows average queue and its maximum value in every 30 minutes from 1:30 to 18:00 on 9th, November, 2015.</p>
 
 <img src="{% static "traffic/Illustration/queuelengthininterval.png" %}"/> 
 
@@ -250,7 +249,7 @@ The ratio is another measure from different dimensions related to arrival during
 <h3>Explanation</h3>
 
 <p style="font-size:18px">The ratio of arrival during green is used to mine the relation between volume and arrival on green performance without time factor.
-As to the plot on this measurement, the x-axis is number of volume and y-axis shows the number of vehicle on green.
+As to the plot on this measurement, the x-axis is number of volume detected by this selected detector and y-axis shows the number of vehicle passing during green.
 The function can compare the performance in different directions. The color of dots indicate the value in different place.  </p>
 
 <h3>Illustration</h3>

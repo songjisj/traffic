@@ -41,7 +41,7 @@ if not os.path.exists(temp_folder_path):
 
 media_folder ="traffic/media/traffic/"
 maps_folder = media_folder + "maps/"
-
+average_length_per_vehicle = 8  # passenger car unit (PCU)
 
 
 
@@ -437,4 +437,26 @@ def download_file(file_name, file_download_name):
         response = HttpResponse('<h1>Sorry, currently no valid csv file. Please submit your selections at first. </h1>')
         return response        
    
-  
+def draw_dual_yaxis_for_queue_function(ax,ax2):
+    
+    #Define limits of figures
+    ymin = 0
+    ymax = 15 
+
+    #first plot
+    ax.set_ylim(ymin,ymax)
+    ax.yaxis.tick_left()
+    
+    ax2.axes.get_xaxis().set_visible(False) # Tring to hide the x-axes of second plot but I don't know it did not work
+    ax2.get_xaxis().tick_bottom() 
+    
+    #Function 'yconv' convert the number of vehicles in queue to length of queue in metre 
+    def yconv(y):
+        return y * average_length_per_vehicle
+    
+    ymin2 = yconv(ymin)
+    ymax2 = yconv(ymax)    
+    ax2.yaxis.tick_right()
+    ax2.set_ylim(ymin2,ymax2)     
+    
+    
